@@ -97,6 +97,7 @@ void framework::update(float elapsed_time/*Elapsed seconds from last frame*/)
 	ImGui::Begin("ImGUI");
 		ImGui::SliderFloat("Pos.x", &spritePos.x, 0, SCREEN_WIDTH);
 		ImGui::SliderFloat("Pos.y", &spritePos.y, 0, SCREEN_HEIGHT);
+		ImGui::SliderFloat("angle", &angle, 0, 360);
 	ImGui::End();
 #endif
 }
@@ -111,7 +112,8 @@ void framework::render(float elapsed_time/*Elapsed seconds from last frame*/)
 
 	// spritesの描画	(矩形)
 	// ポインタ、矩形左上の描画位置、矩形の大きさ、色
-	sprites[0]->render(immediate_context, spritePos.x,spritePos.y, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, DirectX::XMFLOAT4(0, 0.5f, 0, 1));
+	//sprites[0]->render(immediate_context, spritePos.x,spritePos.y, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, DirectX::XMFLOAT4(0, 0.5f, 0, 1));
+	sprites[0]->render(immediate_context, spritePos, DirectX::XMFLOAT2(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2), angle, DirectX::XMFLOAT4(0, 0.5f, 0, 1));;
 
 #ifdef USE_IMGUI
 	ImGui::Render();

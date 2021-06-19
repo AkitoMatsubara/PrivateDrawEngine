@@ -97,7 +97,8 @@ Sprite::~Sprite() {
 	vertex_buffer->Release();
 }
 
-void Sprite::render(ID3D11DeviceContext* immediate_context, float dx, float dy, float dw, float dh, DirectX::XMFLOAT4 color) {
+
+void Sprite::render(ID3D11DeviceContext* immediate_context, DirectX::XMFLOAT2 pos, DirectX::XMFLOAT2 size, float angle, DirectX::XMFLOAT4 color) {
 	// スクリーン(ビューポート)のサイズを取得する
 	D3D11_VIEWPORT viewport{};
 	UINT num_viewports{ 1 };
@@ -110,10 +111,34 @@ void Sprite::render(ID3D11DeviceContext* immediate_context, float dx, float dy, 
 	/*					| /  |						*/
 	/*		left_bottom	*----*	right_bottom		*/
 
-	DirectX::XMFLOAT3 left_top     = { dx     ,dy      ,0};	// 左上
-	DirectX::XMFLOAT3 left_bottom  = { dx     ,dy + dh ,0};	// 左下
-	DirectX::XMFLOAT3 right_top    = { dx + dw,dy      ,0};	// 右上
-	DirectX::XMFLOAT3 right_bottom = { dx + dw,dy + dh ,0};	// 右下
+	DirectX::XMFLOAT3 left_top      { pos.x         ,pos.y          ,0 };	// 左上
+	DirectX::XMFLOAT3 left_bottom   { pos.x         ,pos.y + size.y ,0 };	// 左下
+	DirectX::XMFLOAT3 right_top     { pos.x + size.x,pos.y          ,0 };	// 右上
+	DirectX::XMFLOAT3 right_bottom  { pos.x + size.x,pos.y + size.y ,0 };	// 右下
+
+	// 回転を実装 簡単に関数を実装する方法、ラムダ式というらしい
+	auto rotate = [](DirectX::XMFLOAT3& pos, DirectX::XMFLOAT2 center, float angle) {
+		pos.x -= center.x;	// 一度中心点分ずらす
+		pos.y -= center.y;
+
+		float cos{ cosf(DirectX::XMConvertToRadians(angle)) };	// DegreeなのでRadianに変換
+		float sin{ sinf(DirectX::XMConvertToRadians(angle)) };
+		float tx{ pos.x };	// 回転前の頂点座標
+		float ty{ pos.y };
+		pos.x = tx * cos - sin * ty;	// 回転の公式
+		pos.y = tx * sin + cos * ty;
+
+		pos.x += center.x;	// ずらした分戻す
+		pos.y += center.y;
+	};
+	// 回転の中心を矩形の中心点に
+	DirectX::XMFLOAT2 center;
+	center.x = pos.x + size.x * 0.5f;	// 位置-(大きさ/2)で頂点位置から半サイズ分動く=半分になる
+	center.y = pos.y + size.y * 0.5f;
+	rotate(left_top    , center, angle);
+	rotate(right_top   , center, angle);
+	rotate(left_bottom , center, angle);
+	rotate(right_bottom, center, angle);
 
 	// スクリーン座標系からNDC(正規化デバイス座標)への座標変換を行う
 	left_top     = Convert_Screen_to_NDC(left_top    , viewport);	// 頂点位置、スクリーンの大きさ

@@ -23,7 +23,8 @@ public:
 	~Sprite();	// すべてのCOMオブジェクトを解放する
 
 	// メンバ関数
-	void render(ID3D11DeviceContext* immediate_context, float dx, float dy, float dw, float dh, DirectX::XMFLOAT4 color);	// immediate(対象となるデータそのものをコード中に記したものを即値という)
+	void render(ID3D11DeviceContext* immediate_context, DirectX::XMFLOAT2 pos, DirectX::XMFLOAT2 size, float andle, DirectX::XMFLOAT4 color);	// immediate(対象となるデータそのものをコード中に記したものを即値という)
+
 	// dx,dy＝矩形の左上のスクリーン座標、dw,dh＝矩形サイズ
 	DirectX::XMFLOAT3 Convert_Screen_to_NDC(DirectX::XMFLOAT3 val, D3D11_VIEWPORT viewport);
 };
