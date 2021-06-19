@@ -43,6 +43,7 @@ public:
 	IDXGISwapChain* swap_chain;
 	ID3D11RenderTargetView* render_target_view;
 	ID3D11DepthStencilView* depth_stensil_view;
+	ID3D11SamplerState* sampler_states[3];
 
 	// Sprite*Œ^”z—ñ‚ğ—v‘f”‚W‚ÅéŒ¾
 	Sprite* sprites[8];

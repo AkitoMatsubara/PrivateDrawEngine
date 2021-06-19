@@ -1,21 +1,34 @@
 #include "sprite.h"
 #include "misc.h"
 #include <sstream>
+#include <WICTextureLoader.h>
 
 // 頂点情報のセット
-
 vFormat_t vertices[]
 {
-	{{-1.0, +1.0, 0},{1,1,1,1}},	// 左上 , RGB色
-	{{+1.0, +1.0, 0},{1,0,0,1}},	// 右上 , RGB色
-	{{-1.0, -1.0, 0},{0,1,0,1}},	// 左下 , RGB色
-	{{+1.0, -1.0, 0},{0,0,1,1}},	// 右下 , RGB色
+	{{-1.0,+1.0,0},{1,1,1,1},{0,0}},	// 左上,RGB色,UV座標
+	{{+1.0,+1.0,0},{1,0,0,1},{1,0}},	// 右上,RGB色,UV座標
+	{{-1.0,-1.0,0},{0,1,0,1},{0,1}},	// 左下,RGB色,UV座標
+	{{+1.0,-1.0,0},{0,0,1,1},{1,1}},	// 右下,RGB色,UV座標
 };
 
 
 // 頂点バッファオブジェクトの生成
-Sprite::Sprite(ID3D11Device* device) {
+Sprite::Sprite(ID3D11Device* device, const wchar_t* filename) {
 	HRESULT hr{ S_OK };
+
+	// 画像ファイルのロードとSRVオブジェクトの生成
+	ID3D11Resource* resource{};
+	hr = DirectX::CreateWICTextureFromFile(device, filename, &resource, &shader_resource_view);	// 正しく読み込まれればリソースとSRVが生成される
+	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+	resource->Release();
+
+	// テクスチャ情報の取得
+	ID3D11Texture2D* texture2d{};
+	hr = resource->QueryInterface<ID3D11Texture2D>(&texture2d);	// 特定のインターフェイスをサポートしているかを判別する
+	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+	texture2d->GetDesc(&texture2d_desc);
+	texture2d->Release();
 
 	// ByteWidth,BindFlags,StructuerByteStrideは可変情報、その他情報はあまり変化することはない
 	D3D11_BUFFER_DESC buffer_desc{};			// バッファの使われ方を設定する構造体
@@ -65,7 +78,9 @@ Sprite::Sprite(ID3D11Device* device) {
 		0								// 繰り返し回数(頂点データの時は０)	上記でインスタンスデータを設定した場合に意味を持つ
 		},
 		{"COLOR",0,DXGI_FORMAT_R32G32B32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0},
+		{"TEXCOORD",0,DXGI_FORMAT_R32G32_FLOAT,0,sizeof(float) * 7,D3D11_INPUT_PER_VERTEX_DATA,0},	// 6/20：D3D11_APPEND_ALIGNED_ELEMENTを設定するとバグる。要質問
 	};
+
 
 	//	引数：IL(入力レイアウト)の構成情報、ILの要素数、VSのポインタ、VSのサイズ、作成したILを保存するポインタ
 	hr = device->CreateInputLayout(input_element_desc, _countof(input_element_desc), vs_cso_data.get(), vs_cso_sz, &input_layout);
@@ -95,6 +110,7 @@ Sprite::~Sprite() {
 	pixel_shader->Release();
 	input_layout->Release();
 	vertex_buffer->Release();
+	shader_resource_view->Release();
 }
 
 
@@ -132,7 +148,7 @@ void Sprite::render(ID3D11DeviceContext* immediate_context, DirectX::XMFLOAT2 po
 		pos.y += center.y;
 	};
 	// 回転の中心を矩形の中心点に
-	DirectX::XMFLOAT2 center;
+	DirectX::XMFLOAT2 center{ 0,0 };
 	center.x = pos.x + size.x * 0.5f;	// 位置-(大きさ/2)で頂点位置から半サイズ分動く=半分になる
 	center.y = pos.y + size.y * 0.5f;
 	rotate(left_top    , center, angle);
@@ -147,6 +163,7 @@ void Sprite::render(ID3D11DeviceContext* immediate_context, DirectX::XMFLOAT2 po
 	right_bottom = Convert_Screen_to_NDC(right_bottom, viewport);
 
 	// 計算結果で頂点バッファオブジェクトを更新する
+	// テクスチャ座標を頂点バッファにセットする
 	HRESULT hr = { S_OK };
 	D3D11_MAPPED_SUBRESOURCE mapped_subrecource{};
 	// mapped_subrecourceをvertex_bufferにマッピング
@@ -163,8 +180,18 @@ void Sprite::render(ID3D11DeviceContext* immediate_context, DirectX::XMFLOAT2 po
 		for (int i = 0; i < 4; i++) {
 			vertices[i].color = color;
 		}
+
+		// UV座標を頂点バッファにセット
+		vertices[0].texcoord = { 0,0 };
+		vertices[1].texcoord = { 1,0 };
+		vertices[2].texcoord = { 0,1 };
+		vertices[3].texcoord = { 1,1 };
+
 	}
 	immediate_context->Unmap(vertex_buffer, 0);	// マッピング解除 頂点バッファを上書きしたら必ず実行。Map&Unmapはセットで使用する
+
+	// SRVバインド
+	immediate_context->PSSetShaderResources(0, 1, &shader_resource_view);	// レジスタ番号、シェーダリソースの数、SRVのポインタ
 
 	// 頂点バッファのバインド
 	UINT stride{ sizeof(vFormat_t) };

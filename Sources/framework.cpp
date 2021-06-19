@@ -68,8 +68,34 @@ bool framework::initialize()
 
 	depth_stencil_buffer->Release();
 
+	// サンプラーステートの生成
+	D3D11_SAMPLER_DESC sampler_desc;
+	sampler_desc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;	// 拡縮時の色の取得方法 https://msdn.microsoft.com/ja-jp/library/ee416129(v=vs.85).aspx
+	sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;		// UV座標が0～1の範囲外の場合の色の取得方法
+	sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampler_desc.MipLODBias = 0;							// 計算されたミップマップ レベルからのバイア
+	sampler_desc.MaxAnisotropy = 16;						// サンプリングに異方性補間を使用している場合の限界値。有効な値は 1 ～ 16
+	sampler_desc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;	// 比較オプション
+	sampler_desc.BorderColor[0] = 0;
+	sampler_desc.BorderColor[1] = 0;
+	sampler_desc.BorderColor[2] = 0;
+	sampler_desc.BorderColor[3] = 0;
+	sampler_desc.MinLOD = 0;								// アクセス可能なミニマップの下限値
+	sampler_desc.MaxLOD = D3D11_FLOAT32_MAX;				// アクセス可能なミニマップの上限値
+	hr = device->CreateSamplerState(&sampler_desc, &sampler_states[0]);
+	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+
+	sampler_desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	hr = device->CreateSamplerState(&sampler_desc, &sampler_states[1]);
+	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+
+	sampler_desc.Filter = D3D11_FILTER_ANISOTROPIC;
+	hr = device->CreateSamplerState(&sampler_desc, &sampler_states[2]);
+	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+
 	// spriteオブジェクトを生成(今回は先頭の１つだけを生成する)
-	sprites[0] = new Sprite(device);
+	sprites[0] = new Sprite(device,L".\\resources\\box.png");	// シェーダーはコンストラクタ内で指定しているため、別を使うには改良が必要
 
 	// ビューポートの設定
 	D3D11_VIEWPORT viewport{};
@@ -95,8 +121,8 @@ void framework::update(float elapsed_time/*Elapsed seconds from last frame*/)
 
 #ifdef USE_IMGUI
 	ImGui::Begin("ImGUI");
-		ImGui::SliderFloat("Pos.x", &spritePos.x, 0, SCREEN_WIDTH);
-		ImGui::SliderFloat("Pos.y", &spritePos.y, 0, SCREEN_HEIGHT);
+		ImGui::SliderFloat("Pos.x", &spritePos.x, -SCREEN_WIDTH, SCREEN_WIDTH);
+		ImGui::SliderFloat("Pos.y", &spritePos.y, -SCREEN_HEIGHT, SCREEN_HEIGHT);
 		ImGui::SliderFloat("angle", &angle, 0, 360);
 	ImGui::End();
 #endif
@@ -110,10 +136,15 @@ void framework::render(float elapsed_time/*Elapsed seconds from last frame*/)
 	immediate_context->ClearDepthStencilView(depth_stensil_view, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 	immediate_context->OMSetRenderTargets(1, &render_target_view, depth_stensil_view);
 
+	// サンプラーステートをバインド
+	immediate_context->PSSetSamplers(0, 1, &sampler_states[0]);
+	immediate_context->PSSetSamplers(1, 1, &sampler_states[1]);
+	immediate_context->PSSetSamplers(2, 1, &sampler_states[2]);
+
 	// spritesの描画	(矩形)
 	// ポインタ、矩形左上の描画位置、矩形の大きさ、色
 	//sprites[0]->render(immediate_context, spritePos.x,spritePos.y, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, DirectX::XMFLOAT4(0, 0.5f, 0, 1));
-	sprites[0]->render(immediate_context, spritePos, DirectX::XMFLOAT2(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2), angle, DirectX::XMFLOAT4(0, 0.5f, 0, 1));;
+	sprites[0]->render(immediate_context, spritePos, DirectX::XMFLOAT2(SCREEN_WIDTH/2, SCREEN_HEIGHT), angle, DirectX::XMFLOAT4(0, 0.5f, 0, 1));;
 
 #ifdef USE_IMGUI
 	ImGui::Render();
@@ -138,6 +169,10 @@ bool framework::uninitialize()
 	for (Sprite* p : sprites) {
 		delete p;
 	}
+	//// spritesオブジェクトの解放
+	//for (ID3D11SamplerState* s : sampler_states) {
+	//	delete s;
+	//}
 
 	return true;
 }

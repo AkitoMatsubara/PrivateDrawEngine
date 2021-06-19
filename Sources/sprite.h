@@ -6,20 +6,23 @@
 typedef struct VERTEX_FORMAT {
 	DirectX::XMFLOAT3 position;
 	DirectX::XMFLOAT4 color;
+	DirectX::XMFLOAT2 texcoord;	// TextuerCoordinateの略、UV座標の取得などによく使われる様子
 }vFormat_t;	// typedefの利点・変数宣言時に「struct VERTEX_FORMAT 変数名」と記述せず短く宣言できる
 
 class Sprite {
 private:
 	// メンバ変数
-	ID3D11VertexShader* vertex_shader;
-	ID3D11PixelShader*	pixel_shader;
-	ID3D11InputLayout*	input_layout;
-	ID3D11Buffer*		vertex_buffer;
+	ID3D11VertexShader*			vertex_shader;
+	ID3D11PixelShader*			pixel_shader;
+	ID3D11InputLayout*			input_layout;
+	ID3D11Buffer*				vertex_buffer;
+	ID3D11ShaderResourceView*	shader_resource_view;
+	D3D11_TEXTURE2D_DESC		texture2d_desc;
 
 
 public:
 	// コンストラクタ、デストラクタ
-	Sprite(ID3D11Device* device);
+	Sprite(ID3D11Device* device, const wchar_t* filename);
 	~Sprite();	// すべてのCOMオブジェクトを解放する
 
 	// メンバ関数
