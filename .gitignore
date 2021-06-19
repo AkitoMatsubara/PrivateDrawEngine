@@ -33,9 +33,20 @@
 
 # コメントは `#'
 
-*
+# 除外フォルダ
+/resources
+/others
+/.vs
+/x64
+
+# 例外フォルダ
 !/Shaders/
+!/Shaders/*
 !/Sources/
+!/Sources/*
+!/External/
+!/External/*
+
 !*.cpp
 !*.h
 !*.hlsli
