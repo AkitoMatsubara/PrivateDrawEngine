@@ -16,7 +16,7 @@
 // Name                 Index   Mask Register SysValue  Format   Used
 // -------------------- ----- ------ -------- -------- ------- ------
 // SV_POSITION              0   xyzw        0      POS   float       
-// COLOR                    0   xyzw        1     NONE   float       
+// COLOR                    0   xyzw        1     NONE   float   xyzw
 // TEXCOORD                 0   xy          2     NONE   float   xy  
 //
 //
@@ -30,8 +30,10 @@ ps_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
 dcl_sampler s0, mode_default
 dcl_resource_texture2d (float,float,float,float) t0
+dcl_input_ps linear v1.xyzw
 dcl_input_ps linear v2.xy
 dcl_output o0.xyzw
+dcl_temps 1
 //
 // Initial variable locations:
 //   v0.x <- pin.positon.x; v0.y <- pin.positon.y; v0.z <- pin.positon.z; v0.w <- pin.positon.w; 
@@ -40,6 +42,7 @@ dcl_output o0.xyzw
 //   o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
 //
 #line 24 "C:\Users\2190322\Desktop\描画エンジン開発   - 福井E"
-sample_indexable(texture2d)(float,float,float,float) o0.xyzw, v2.xyxx, t0.xyzw, s0
+sample_indexable(texture2d)(float,float,float,float) r0.xyzw, v2.xyxx, t0.xyzw, s0
+mul o0.xyzw, r0.xyzw, v1.xyzw
 ret 
-// Approximately 2 instruction slots used
+// Approximately 3 instruction slots used

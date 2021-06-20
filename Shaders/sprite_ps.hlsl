@@ -21,7 +21,6 @@ float4 main(VS_OUT pin) : SV_TARGET
         return float4(1, 0, 0, 1);  // 赤で描画する
     }
 #else
-    return color_map.Sample(point_sampler_state, pin.texcoord); // テクスチャをサンプリング
-    //return pin.color; // 頂点情報の色を渡す
+    return color_map.Sample(point_sampler_state, pin.texcoord)*pin.color; // テクスチャをサンプリング、頂点カラーを反映する
 #endif
 }
