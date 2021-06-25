@@ -94,6 +94,33 @@ bool framework::initialize()
 	hr = device->CreateSamplerState(&sampler_desc, &sampler_states[2]);
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 
+	// 深度ステンシルステートの生成
+	D3D11_DEPTH_STENCIL_DESC depth_stencil_desc{};
+	/*0-----------------------深度テスト:ON 深度ライト:ON-----------------------0*/
+	depth_stencil_desc.DepthEnable = TRUE;	                        // 深度テストの有効/無効
+	depth_stencil_desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;	// 深度ステンシルバッファへの書き込みのOn/Off D3D11_DEPTH_WRITE_MASK_ALL|D3D11_DEPTH_WRITE_MASK_ZERO
+	depth_stencil_desc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;	    // COMPARISON:比較	深度データの比較 今回は新規データが既存データ以下の場合に成功
+	hr = device->CreateDepthStencilState(&depth_stencil_desc, &depth_stencil_state[0]);
+	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+	/*1-----------------------深度テスト:ON 深度ライト:OFF-----------------------1*/
+	depth_stencil_desc.DepthEnable = TRUE;							 // 深度テストの有効/無効
+	depth_stencil_desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO; // 深度ステンシルバッファへの書き込みのOn/Off D3D11_DEPTH_WRITE_MASK_ALL|D3D11_DEPTH_WRITE_MASK_ZERO
+	depth_stencil_desc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;		 // COMPARISON:比較	深度データの比較 今回は新規データが既存データ以下の場合に成功
+	hr = device->CreateDepthStencilState(&depth_stencil_desc, &depth_stencil_state[1]);
+	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+	/*2-----------------------深度テスト:OFF 深度ライト:ON-----------------------2*/
+	depth_stencil_desc.DepthEnable = FALSE;	                        // 深度テストの有効/無効
+	depth_stencil_desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;	// 深度ステンシルバッファへの書き込みのOn/Off D3D11_DEPTH_WRITE_MASK_ALL|D3D11_DEPTH_WRITE_MASK_ZERO
+	depth_stencil_desc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;	    // COMPARISON:比較	深度データの比較 今回は新規データが既存データ以下の場合に成功
+	hr = device->CreateDepthStencilState(&depth_stencil_desc, &depth_stencil_state[2]);
+	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+	/*3-----------------------深度テスト:OFF 深度ライト:OFF-----------------------3*/
+	depth_stencil_desc.DepthEnable = FALSE;	                         // 深度テストの有効/無効
+	depth_stencil_desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO; // 深度ステンシルバッファへの書き込みのOn/Off D3D11_DEPTH_WRITE_MASK_ALL|D3D11_DEPTH_WRITE_MASK_ZERO
+	depth_stencil_desc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;	     // COMPARISON:比較	深度データの比較 今回は新規データが既存データ以下の場合に成功
+	hr = device->CreateDepthStencilState(&depth_stencil_desc, &depth_stencil_state[3]);
+	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+
 
 	// ビューポートの設定
 	D3D11_VIEWPORT viewport{};
@@ -169,10 +196,15 @@ void framework::render(float elapsed_time/*Elapsed seconds from last frame*/)
 
 	// spritesの描画	(矩形)
 	// ポインタ、矩形左上の描画位置、矩形の大きさ、色
-	//sprites[0]->render(immediate_context, spritePos, DirectX::XMFLOAT2(SCREEN_WIDTH/2, SCREEN_HEIGHT/2), angle, DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
-	//sprites[1]->render(immediate_context, sprites[1]->getPos(), sprites[1]->getSize(), sprites[1]->getAngle(), sprites[1]->getColor()
-	//	, DirectX::XMFLOAT2(0, 0), DirectX::XMFLOAT2(140, 240));
-	sprites[1]->render(immediate_context);
+
+	//sprites[1]->render(immediate_context);	// メンバ変数を使って描画
+
+	{
+		immediate_context->OMSetDepthStencilState(depth_stencil_state[3], 1);	// バインドする深度ステンシルステート、参照値？
+		sprites[0]->render(immediate_context, DirectX::XMFLOAT2(0, 0), DirectX::XMFLOAT2(1280, 720), 0, DirectX::XMFLOAT4(1, 1, 1, 1)); //画像全体を画面全体に描画する
+		sprites[1]->setSize(DirectX::XMFLOAT2(200.0f, 200.0f));
+		sprites[1]->render(immediate_context);
+	}
 
 #ifdef USE_IMGUI
 	ImGui::Render();
@@ -193,14 +225,13 @@ bool framework::uninitialize()
 	render_target_view->Release();
 	depth_stensil_view->Release();
 
-	// spritesオブジェクトの解放
+	for (auto& dss : depth_stencil_state) {
+		dss->Release();
+	}
+
 	for (Sprite* p : sprites) {
 		delete p;
 	}
-	//// spritesオブジェクトの解放
-	//for (ID3D11SamplerState* s : sampler_states) {
-	//	delete s;
-	//}
 
 	return true;
 }

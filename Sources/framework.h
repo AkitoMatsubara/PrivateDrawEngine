@@ -41,9 +41,10 @@ public:
 	ID3D11DeviceContext* immediate_context;	// 描画コマンドの追加や送信などの処理を扱っている。CPU側で追加された描画コマンドをGPU側に送信する。
 											//Immediateは生成したコマンドを即時実行することを表す。反対にDeferredというものが存在する。要検索
 	IDXGISwapChain* swap_chain;
-	ID3D11RenderTargetView* render_target_view;
-	ID3D11DepthStencilView* depth_stensil_view;
-	ID3D11SamplerState* sampler_states[3];
+	ID3D11RenderTargetView*		render_target_view;
+	ID3D11DepthStencilView*		depth_stensil_view;
+	ID3D11SamplerState*			sampler_states[3];
+	ID3D11DepthStencilState*	depth_stencil_state[4];
 
 	// Sprite*型配列を要素数８で宣言
 	Sprite* sprites[8];
