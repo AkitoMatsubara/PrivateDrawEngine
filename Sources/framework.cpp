@@ -94,8 +94,6 @@ bool framework::initialize()
 	hr = device->CreateSamplerState(&sampler_desc, &sampler_states[2]);
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 
-	// spriteオブジェクトを生成(今回は先頭の１つだけを生成する)
-	sprites[0] = new Sprite(device,L".\\resources\\box.png");	// シェーダーはコンストラクタ内で指定しているため、別を使うには改良が必要
 
 	// ビューポートの設定
 	D3D11_VIEWPORT viewport{};
@@ -107,7 +105,13 @@ bool framework::initialize()
 	viewport.MaxDepth = 1.0f;
 	immediate_context->RSSetViewports(1, &viewport);
 
-	return true;
+	// spriteオブジェクトを生成(今回は先頭の１つだけを生成する)
+	sprites[0] = new Sprite(device, L".\\resources\\box.png");	// シェーダーはコンストラクタ内で指定しているため、別を使うには改良が必要
+
+	sprites[1] = new Sprite(device, L".\\resources\\player-sprites.png");
+	sprites[1]->setTexSize(1920, 1200);
+
+return true;
 }
 
 void framework::update(float elapsed_time/*Elapsed seconds from last frame*/)
@@ -120,11 +124,33 @@ void framework::update(float elapsed_time/*Elapsed seconds from last frame*/)
 
 
 #ifdef USE_IMGUI
+	// imgui用変数
+	static float pos[2]{ sprites[1]->getPos().x,sprites[1]->getPos().y };
+	static float size[2]{ sprites[1]->getSize().x,sprites[1]->getSize().y };
+	static float angle{ sprites[1]->getAngle() };
+	static float TexPos[2]{ sprites[1]->getTexPos().x,sprites[1]->getTexPos().y };
+	static float TexSize[2]{ sprites[1]->getTexSize().x,sprites[1]->getTexSize().y };
+	static float Color[4] = { sprites[1]->getColor().x,sprites[1]->getColor().y,sprites[1]->getColor().z,sprites[1]->getColor().w };
+
+	//----------------------
+
 	ImGui::Begin("ImGUI");
-		ImGui::SliderFloat("Pos.x", &spritePos.x, -SCREEN_WIDTH, SCREEN_WIDTH);
-		ImGui::SliderFloat("Pos.y", &spritePos.y, -SCREEN_HEIGHT, SCREEN_HEIGHT);
+		ImGui::SliderFloat2("Position", pos, -SCREEN_WIDTH, SCREEN_WIDTH);
+		ImGui::SliderFloat2("Size", size, 0, 1960);
+		ImGui::SliderFloat2("TexPos", TexPos, 0, 1960);
+		ImGui::SliderFloat2("TexSize", TexSize, 0, 1960);
 		ImGui::SliderFloat("angle", &angle, 0, 360);
+		ImGui::ColorEdit4(u8"Color", (float*)&Color);
+
 	ImGui::End();
+
+	sprites[1]->setPos(DirectX::XMFLOAT2(pos[0], pos[1]));
+	sprites[1]->setSize(DirectX::XMFLOAT2(size[0], size[1]));
+	sprites[1]->setAngle(angle);
+	sprites[1]->setTexPos(DirectX::XMFLOAT2(TexPos[0], TexPos[1]));
+	sprites[1]->setTexSize(DirectX::XMFLOAT2(TexSize[0], TexSize[1]));
+	sprites[1]->setColor(DirectX::XMFLOAT4(Color[0], Color[1], Color[2], Color[3]));
+
 #endif
 }
 void framework::render(float elapsed_time/*Elapsed seconds from last frame*/)
@@ -143,8 +169,10 @@ void framework::render(float elapsed_time/*Elapsed seconds from last frame*/)
 
 	// spritesの描画	(矩形)
 	// ポインタ、矩形左上の描画位置、矩形の大きさ、色
-	//sprites[0]->render(immediate_context, spritePos.x,spritePos.y, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, DirectX::XMFLOAT4(0, 0.5f, 0, 1));
-	sprites[0]->render(immediate_context, spritePos, DirectX::XMFLOAT2(SCREEN_WIDTH/2, SCREEN_HEIGHT/2), angle, DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
+	//sprites[0]->render(immediate_context, spritePos, DirectX::XMFLOAT2(SCREEN_WIDTH/2, SCREEN_HEIGHT/2), angle, DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
+	//sprites[1]->render(immediate_context, sprites[1]->getPos(), sprites[1]->getSize(), sprites[1]->getAngle(), sprites[1]->getColor()
+	//	, DirectX::XMFLOAT2(0, 0), DirectX::XMFLOAT2(140, 240));
+	sprites[1]->render(immediate_context);
 
 #ifdef USE_IMGUI
 	ImGui::Render();

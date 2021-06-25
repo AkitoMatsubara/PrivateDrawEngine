@@ -49,9 +49,9 @@ public:
 	Sprite* sprites[8];
 
 	// 個人 ImGuiで数値を編集、格納して関数に渡す変数
-	DirectX::XMFLOAT2 spritePos;
-	DirectX::XMFLOAT2 spriteSize;
-	float angle;
+	//DirectX::XMFLOAT2 spritePos;
+	//DirectX::XMFLOAT2 spriteSize;
+	//float angle;
 
 	int run()
 	{

@@ -3,6 +3,7 @@
 #include <sstream>
 #include <WICTextureLoader.h>
 
+
 // 頂点情報のセット
 vFormat_t vertices[]
 {
@@ -14,7 +15,11 @@ vFormat_t vertices[]
 
 
 // 頂点バッファオブジェクトの生成
-Sprite::Sprite(ID3D11Device* device, const wchar_t* filename) {
+Sprite::Sprite(ID3D11Device* device, const wchar_t* filename)/*:
+	   Pos(DirectX::XMFLOAT2(0.0f, 0.0f)),    Size(DirectX::XMFLOAT2(0.0f, 0.0f)),
+	TexPos(DirectX::XMFLOAT2(0.0f, 0.0f)), TexSize(DirectX::XMFLOAT2(0.0f, 0.0f)),
+	angle(0.0f), Color(DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f))*/
+{
 	HRESULT hr{ S_OK };
 
 	// 画像ファイルのロードとSRVオブジェクトの生成
@@ -73,7 +78,7 @@ Sprite::Sprite(ID3D11Device* device, const wchar_t* filename) {
 		0,								// セマンティクス番号 同名でも識別できるように番号を割り当てる。番号を変更することでHLSLで別の情報だと認識できる
 		DXGI_FORMAT_R32G32B32_FLOAT,	// フォーマット	R23G23B23は実質float3
 		0,								// 入力スロット番号	入寮レイアウトをどの入力スロットに対して反映されるかを指定する
-		D3D11_APPEND_ALIGNED_ELEMENT,	// 要素から先頭までのオフセット値	各データの配列先頭が何倍と離れているか。D3D11_APPEND_ALIGNED_ELEMENTを指定でオフセット値を設定すると同義
+		D3D11_APPEND_ALIGNED_ELEMENT,	// 要素から先頭までのオフセット値	各データの配列先頭が何バイト離れているか。D3D11_APPEND_ALIGNED_ELEMENTを指定でオフセット値を設定すると同義
 		D3D11_INPUT_PER_VERTEX_DATA,	// 入力データの種類	頂点データとインスタンスデータの２種類
 		0								// 繰り返し回数(頂点データの時は０)	上記でインスタンスデータを設定した場合に意味を持つ
 		},
@@ -104,6 +109,12 @@ Sprite::Sprite(ID3D11Device* device, const wchar_t* filename) {
 	hr = device->CreatePixelShader(ps_cso_data.get(), ps_cso_sz, nullptr, &pixel_shader);	// シェーダのポインター、シェーダーサイズ、dynamic linkageで使うポインタ、作成したバッファを保存するポインタ
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 
+	Status.Pos     = DirectX::XMFLOAT2(0.0f, 0.0f);
+	Status.Size    = DirectX::XMFLOAT2(texture2d_desc.Width, texture2d_desc.Height);
+	Status.TexPos  = DirectX::XMFLOAT2(0.0f, 0.0f);
+	Status.TexSize = DirectX::XMFLOAT2(texture2d_desc.Width, texture2d_desc.Height);
+	Status.Angle   = 0.0f;
+	Status.Color   = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 Sprite::~Sprite() {
@@ -158,10 +169,10 @@ void Sprite::render(ID3D11DeviceContext* immediate_context, DirectX::XMFLOAT2 po
 	rotate(right_bottom, center, angle);
 
 	// スクリーン座標系からNDC(正規化デバイス座標)への座標変換を行う
-	left_top     = Convert_Screen_to_NDC(left_top    , viewport);	// 頂点位置、スクリーンの大きさ
-	left_bottom  = Convert_Screen_to_NDC(left_bottom , viewport);
-	right_top    = Convert_Screen_to_NDC(right_top   , viewport);
-	right_bottom = Convert_Screen_to_NDC(right_bottom, viewport);
+	left_top     = ConvertToNDC(left_top    , viewport);	// 頂点位置、スクリーンの大きさ
+	left_bottom  = ConvertToNDC(left_bottom , viewport);
+	right_top    = ConvertToNDC(right_top   , viewport);
+	right_bottom = ConvertToNDC(right_bottom, viewport);
 
 	// 計算結果で頂点バッファオブジェクトを更新する
 	// テクスチャ座標を頂点バッファにセットする
@@ -221,9 +232,244 @@ void Sprite::render(ID3D11DeviceContext* immediate_context, DirectX::XMFLOAT2 po
 
 }
 
-DirectX::XMFLOAT3 Sprite::Convert_Screen_to_NDC(DirectX::XMFLOAT3 pos, D3D11_VIEWPORT viewport) {
+void Sprite::render(ID3D11DeviceContext* immediate_context, DirectX::XMFLOAT2 pos, DirectX::XMFLOAT2 size, float angle, DirectX::XMFLOAT4 color, DirectX::XMFLOAT2 sPos, DirectX::XMFLOAT2 sSize) {
+	// スクリーン(ビューポート)のサイズを取得する
+	D3D11_VIEWPORT viewport{};
+	UINT num_viewports{ 1 };
+	immediate_context->RSGetViewports(&num_viewports, &viewport);
+
+	// 引数から矩形の各頂点の位置を計算する
+	/*		left_top	*----*	right_top			*/
+	/*					|   /|						*/
+	/*					|  / |						*/
+	/*					| /  |						*/
+	/*		left_bottom	*----*	right_bottom		*/
+
+	DirectX::XMFLOAT3 left_top      { pos.x         ,pos.y          ,0 };	// 左上
+	DirectX::XMFLOAT3 right_top     { pos.x + size.x,pos.y          ,0 };	// 右上
+	DirectX::XMFLOAT3 left_bottom   { pos.x         ,pos.y + size.y ,0 };	// 左下
+	DirectX::XMFLOAT3 right_bottom  { pos.x + size.x,pos.y + size.y ,0 };	// 右下
+
+	// 回転を実装 簡単に関数を実装する方法、ラムダ式というらしい
+	auto rotate = [](DirectX::XMFLOAT3& pos, DirectX::XMFLOAT2 center, float angle) {
+		pos.x -= center.x;	// 一度中心点分ずらす
+		pos.y -= center.y;
+
+		float cos{ cosf(DirectX::XMConvertToRadians(angle)) };	// DegreeなのでRadianに変換
+		float sin{ sinf(DirectX::XMConvertToRadians(angle)) };
+		float tx{ pos.x };	// 回転前の頂点座標
+		float ty{ pos.y };
+		pos.x = tx * cos - sin * ty;	// 回転の公式
+		pos.y = tx * sin + cos * ty;
+
+		pos.x += center.x;	// ずらした分戻す
+		pos.y += center.y;
+	};
+	// 回転の中心を矩形の中心点に
+	DirectX::XMFLOAT2 center{ 0,0 };
+	center.x = pos.x + size.x * 0.5f;	// 位置-(大きさ/2)で頂点位置から半サイズ分動く=半分になる
+	center.y = pos.y + size.y * 0.5f;
+	rotate(left_top    , center, angle);
+	rotate(left_bottom , center, angle);
+	rotate(right_top   , center, angle);
+	rotate(right_bottom, center, angle);
+
+	// スクリーン座標系からNDC(正規化デバイス座標)への座標変換を行う
+	left_top     = ConvertToNDC(left_top    , viewport);	// 頂点位置、スクリーンの大きさ
+	left_bottom  = ConvertToNDC(left_bottom , viewport);
+	right_top    = ConvertToNDC(right_top   , viewport);
+	right_bottom = ConvertToNDC(right_bottom, viewport);
+
+	DirectX::XMFLOAT2 TexLeft_top    { (sPos.x)           / texture2d_desc.Width , (sPos.y)				/ texture2d_desc.Height };
+	DirectX::XMFLOAT2 TexRight_top   { (sPos.x + sSize.x) / texture2d_desc.Width , (sPos.y)				/ texture2d_desc.Height };
+	DirectX::XMFLOAT2 TexLeft_bottom { (sPos.x)           / texture2d_desc.Width , (sPos.y + sSize.y)	/ texture2d_desc.Height };
+	DirectX::XMFLOAT2 TexRight_bottom{ (sPos.x + sSize.x) / texture2d_desc.Width , (sPos.y + sSize.y)	/ texture2d_desc.Height };
+
+
+	// 計算結果で頂点バッファオブジェクトを更新する
+	// テクスチャ座標を頂点バッファにセットする
+	HRESULT hr = { S_OK };
+	D3D11_MAPPED_SUBRESOURCE mapped_subrecource{};
+	// mapped_subrecourceをvertex_bufferにマッピング
+	hr = immediate_context->Map(vertex_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_subrecource);	// 動的な定数バッファーを Map して書き込むときは D3D11_MAP_WRITE_DISCARD を使用する
+	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+
+	vFormat_t* vertices{ reinterpret_cast<vFormat_t*>(mapped_subrecource.pData) };	// reinterpret_cast：ありえないような変換のときに使用する？
+	if (vertices != nullptr) {	// 情報の上書き
+		vertices[0].position = left_top;
+		vertices[1].position = right_top;
+		vertices[2].position = left_bottom;
+		vertices[3].position = right_bottom;
+
+		for (int i = 0; i < 4; i++) {
+			vertices[i].color = color;
+		}
+
+		// UV座標を頂点バッファにセット
+		vertices[0].texcoord = TexLeft_top;
+		vertices[1].texcoord = TexRight_top;
+		vertices[2].texcoord = TexLeft_bottom;
+		vertices[3].texcoord = TexRight_bottom;
+
+	}
+	immediate_context->Unmap(vertex_buffer, 0);	// マッピング解除 頂点バッファを上書きしたら必ず実行。Map&Unmapはセットで使用する
+
+	// SRVバインド
+	immediate_context->PSSetShaderResources(0, 1, &shader_resource_view);	// レジスタ番号、シェーダリソースの数、SRVのポインタ
+
+	// 頂点バッファのバインド
+	UINT stride{ sizeof(vFormat_t) };
+	UINT offset{ 0 };
+	immediate_context->IASetVertexBuffers(
+		0,				// 入力スロットの開始番号
+		1,				// 頂点バッファの数
+		&vertex_buffer,	// 頂点バッファの配列
+		&stride,		// １頂点のサイズの配列
+		&offset);		// 頂点バッファの開始位置をずらすオフセットの配列
+
+	//プリミティブタイプ及びデータの順序に関する情報のバインド
+	immediate_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);	// プリミティブの形状を指定できる？ 今回は連続三角形に変更
+
+	// 入力レイアウトオブジェクトのバインド
+	immediate_context->IASetInputLayout(input_layout);	// 入力レイアウトの設定
+
+	// シェーダのバインド
+	immediate_context->VSSetShader(vertex_shader, nullptr, 0);
+	immediate_context->PSSetShader(pixel_shader, nullptr, 0);
+
+	// プリミティブの描画
+	immediate_context->Draw(4, 0);	// 頂点の数、描画開始時点で使う頂点バッファの最初のインデックス
+
+
+
+}
+
+void Sprite::render(ID3D11DeviceContext* immediate_context) {
+	// スクリーン(ビューポート)のサイズを取得する
+	D3D11_VIEWPORT viewport{};
+	UINT num_viewports{ 1 };
+	immediate_context->RSGetViewports(&num_viewports, &viewport);
+
+	// 引数から矩形の各頂点の位置を計算する
+	/*		left_top	*----*	right_top			*/
+	/*					|   /|						*/
+	/*					|  / |						*/
+	/*					| /  |						*/
+	/*		left_bottom	*----*	right_bottom		*/
+
+	DirectX::XMFLOAT3 left_top      { Status.Pos.x                ,Status.Pos.y          ,0 };	// 左上
+	DirectX::XMFLOAT3 right_top     { Status.Pos.x + Status.Size.x,Status.Pos.y          ,0 };	// 右上
+	DirectX::XMFLOAT3 left_bottom   { Status.Pos.x                ,Status.Pos.y + Status.Size.y ,0 };	// 左下
+	DirectX::XMFLOAT3 right_bottom  { Status.Pos.x + Status.Size.x,Status.Pos.y + Status.Size.y ,0 };	// 右下
+
+	// 回転を実装 簡単に関数を実装する方法、ラムダ式というらしい
+	auto rotate = [](DirectX::XMFLOAT3& pos, DirectX::XMFLOAT2 center, float angle) {
+		pos.x -= center.x;	// 一度中心点分ずらす
+		pos.y -= center.y;
+
+		float cos{ cosf(DirectX::XMConvertToRadians(angle)) };	// DegreeなのでRadianに変換
+		float sin{ sinf(DirectX::XMConvertToRadians(angle)) };
+		float tx{ pos.x };	// 回転前の頂点座標
+		float ty{ pos.y };
+		pos.x = tx * cos - sin * ty;	// 回転の公式
+		pos.y = tx * sin + cos * ty;
+
+		pos.x += center.x;	// ずらした分戻す
+		pos.y += center.y;
+	};
+	// 回転の中心を矩形の中心点に
+	DirectX::XMFLOAT2 center{ 0,0 };
+	center.x = Status.Pos.x + Status.Size.x * 0.5f;	// 位置-(大きさ/2)で頂点位置から半サイズ分動く=半分になる
+	center.y = Status.Pos.y + Status.Size.y * 0.5f;
+	rotate(left_top    , center, Status.Angle);
+	rotate(left_bottom , center, Status.Angle);
+	rotate(right_top   , center, Status.Angle);
+	rotate(right_bottom, center, Status.Angle);
+
+	// スクリーン座標系からNDC(正規化デバイス座標)への座標変換を行う
+	left_top     = ConvertToNDC(left_top    , viewport);	// 頂点位置、スクリーンの大きさ
+	left_bottom  = ConvertToNDC(left_bottom , viewport);
+	right_top    = ConvertToNDC(right_top   , viewport);
+	right_bottom = ConvertToNDC(right_bottom, viewport);
+
+	// テクスチャ座標
+	DirectX::XMFLOAT2 TexLeft_top    { (Status.TexPos.x)                    / texture2d_desc.Width ,(Status.TexPos.y)					 / texture2d_desc.Height };
+	DirectX::XMFLOAT2 TexRight_top   { (Status.TexPos.x + Status.TexSize.x) / texture2d_desc.Width ,(Status.TexPos.y)					 / texture2d_desc.Height };
+	DirectX::XMFLOAT2 TexLeft_bottom { (Status.TexPos.x)                    / texture2d_desc.Width ,(Status.TexPos.y + Status.TexSize.y) / texture2d_desc.Height };
+	DirectX::XMFLOAT2 TexRight_bottom{ (Status.TexPos.x + Status.TexSize.x) / texture2d_desc.Width ,(Status.TexPos.y + Status.TexSize.y) / texture2d_desc.Height };
+
+
+	// 計算結果で頂点バッファオブジェクトを更新する
+	// テクスチャ座標を頂点バッファにセットする
+	HRESULT hr = { S_OK };
+	D3D11_MAPPED_SUBRESOURCE mapped_subrecource{};
+	// mapped_subrecourceをvertex_bufferにマッピング
+	hr = immediate_context->Map(vertex_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_subrecource);	// 動的な定数バッファーを Map して書き込むときは D3D11_MAP_WRITE_DISCARD を使用する
+	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+
+	vFormat_t* vertices{ reinterpret_cast<vFormat_t*>(mapped_subrecource.pData) };	// reinterpret_cast：ありえないような変換のときに使用する？
+	if (vertices != nullptr) {	// 情報の上書き
+		vertices[0].position = left_top;
+		vertices[1].position = right_top;
+		vertices[2].position = left_bottom;
+		vertices[3].position = right_bottom;
+
+		for (int i = 0; i < 4; i++) {
+			vertices[i].color = Status.Color;
+		}
+
+		// UV座標を頂点バッファにセット
+		vertices[0].texcoord = TexLeft_top;
+		vertices[1].texcoord = TexRight_top;
+		vertices[2].texcoord = TexLeft_bottom;
+		vertices[3].texcoord = TexRight_bottom;
+
+	}
+	immediate_context->Unmap(vertex_buffer, 0);	// マッピング解除 頂点バッファを上書きしたら必ず実行。Map&Unmapはセットで使用する
+
+	// SRVバインド
+	immediate_context->PSSetShaderResources(0, 1, &shader_resource_view);	// レジスタ番号、シェーダリソースの数、SRVのポインタ
+
+	// 頂点バッファのバインド
+	UINT stride{ sizeof(vFormat_t) };
+	UINT offset{ 0 };
+	immediate_context->IASetVertexBuffers(
+		0,				// 入力スロットの開始番号
+		1,				// 頂点バッファの数
+		&vertex_buffer,	// 頂点バッファの配列
+		&stride,		// １頂点のサイズの配列
+		&offset);		// 頂点バッファの開始位置をずらすオフセットの配列
+
+	//プリミティブタイプ及びデータの順序に関する情報のバインド
+	immediate_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);	// プリミティブの形状を指定できる？ 今回は連続三角形に変更
+
+	// 入力レイアウトオブジェクトのバインド
+	immediate_context->IASetInputLayout(input_layout);	// 入力レイアウトの設定
+
+	// シェーダのバインド
+	immediate_context->VSSetShader(vertex_shader, nullptr, 0);
+	immediate_context->PSSetShader(pixel_shader, nullptr, 0);
+
+	// プリミティブの描画
+	immediate_context->Draw(4, 0);	// 頂点の数、描画開始時点で使う頂点バッファの最初のインデックス
+
+
+
+}
+
+DirectX::XMFLOAT3 Sprite::ConvertToNDC(DirectX::XMFLOAT3 pos, D3D11_VIEWPORT viewport) {
 	pos.x = (pos.x * 2 / viewport.Width) - 1.0f;	// x値を２倍、その後スクリーンサイズで割って１を引くと正規化される
 	pos.y = 1.0f - (pos.y * 2.0f / viewport.Height);	// y値を２倍、スクリーンサイズで割ったもので１を引くと正規化	xと違うのはおそらく左手右手座標系の関係
 	// 今回はsprite(画像)なのでz値は変更する必要なし
 	return pos;
+}
+
+void Sprite::imguiWindow(){
+}
+
+DirectX::XMFLOAT2 Sprite::division(DirectX::XMFLOAT2 val1, DirectX::XMFLOAT2 val2) {
+	DirectX::XMFLOAT2 valOut;
+	valOut.x = val1.x / val2.x;
+	valOut.y = val1.y / val2.y;
+	return valOut;
 }
