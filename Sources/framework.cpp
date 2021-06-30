@@ -136,7 +136,7 @@ bool framework::initialize()
 	sprites[0] = new Sprite(device, L".\\resources\\box.png");	// シェーダーはコンストラクタ内で指定しているため、別を使うには改良が必要
 
 	sprites[1] = new Sprite(device, L".\\resources\\player-sprites.png");
-	sprites[1]->setTexSize(1920, 1200);
+	sprites[1]->setTexSize(1280, 720);
 
 return true;
 }
@@ -202,7 +202,6 @@ void framework::render(float elapsed_time/*Elapsed seconds from last frame*/)
 	{
 		immediate_context->OMSetDepthStencilState(depth_stencil_state[3], 1);	// バインドする深度ステンシルステート、参照値？
 		sprites[0]->render(immediate_context, DirectX::XMFLOAT2(0, 0), DirectX::XMFLOAT2(1280, 720), 0, DirectX::XMFLOAT4(1, 1, 1, 1)); //画像全体を画面全体に描画する
-		sprites[1]->setSize(DirectX::XMFLOAT2(200.0f, 200.0f));
 		sprites[1]->render(immediate_context);
 	}
 
