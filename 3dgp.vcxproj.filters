@@ -38,18 +38,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Sources\high_resolution_timer.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="Sources\misc.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="Sources\sprite.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="Sources\framework.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="External\imgui\imconfig.h">
       <Filter>imGui</Filter>
     </ClInclude>
@@ -73,6 +61,21 @@
     </ClInclude>
     <ClInclude Include="External\imgui\imstb_truetype.h">
       <Filter>imGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\high_resolution_timer.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\misc.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\sprite.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\framework.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\Blender.h">
+      <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -8,9 +8,9 @@
 vFormat_t vertices[]
 {
 	{{-1.0,+1.0,0},{1,1,1,1},{0,0}},	// 左上,RGB色,UV座標
-	{{+1.0,+1.0,0},{1,0,0,1},{1,0}},	// 右上,RGB色,UV座標
-	{{-1.0,-1.0,0},{0,1,0,1},{0,1}},	// 左下,RGB色,UV座標
-	{{+1.0,-1.0,0},{0,0,1,1},{1,1}},	// 右下,RGB色,UV座標
+	{{+1.0,+1.0,0},{1,1,1,1},{1,0}},	// 右上,RGB色,UV座標
+	{{-1.0,-1.0,0},{1,1,1,1},{0,1}},	// 左下,RGB色,UV座標
+	{{+1.0,-1.0,0},{1,1,1,1},{1,1}},	// 右下,RGB色,UV座標
 };
 
 
@@ -78,13 +78,13 @@ Sprite::Sprite(ID3D11Device* device, const wchar_t* filename)/*:
 		0,								// セマンティクス番号 同名でも識別できるように番号を割り当てる。番号を変更することでHLSLで別の情報だと認識できる
 		DXGI_FORMAT_R32G32B32_FLOAT,	// フォーマット	R23G23B23は実質float3
 		0,								// 入力スロット番号	入寮レイアウトをどの入力スロットに対して反映されるかを指定する
-		D3D11_APPEND_ALIGNED_ELEMENT,	// 要素から先頭までのオフセット値	各データの配列先頭が何バイト離れているか。D3D11_APPEND_ALIGNED_ELEMENTを指定でオフセット値を設定すると同義
+		D3D11_APPEND_ALIGNED_ELEMENT,	// 要素から先頭までのオフセット値	各データの配列先頭が何バイト離れているか。
+										// D3D11_APPEND_ALIGNED_ELEMENTを指定でオフセット値を自動計算 手計算ならフォーマットサイズを加算していく
 		D3D11_INPUT_PER_VERTEX_DATA,	// 入力データの種類	頂点データとインスタンスデータの２種類
 		0								// 繰り返し回数(頂点データの時は０)	上記でインスタンスデータを設定した場合に意味を持つ
 		},
-		{"COLOR",0,DXGI_FORMAT_R32G32B32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0},
-		{"TEXCOORD",0,DXGI_FORMAT_R32G32_FLOAT,0,			sizeof(float) * 7,D3D11_INPUT_PER_VERTEX_DATA,0},
-		//{"TEXCOORD",0,DXGI_FORMAT_R32G32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0},	// 6/20：D3D11_APPEND_ALIGNED_ELEMENTを設定するとバグる。要質問
+		{"COLOR"   ,0,DXGI_FORMAT_R32G32B32A32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0},
+		{"TEXCOORD",0,DXGI_FORMAT_R32G32_FLOAT		,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0},
 	};
 
 

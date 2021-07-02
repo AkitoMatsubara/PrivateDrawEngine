@@ -2,8 +2,9 @@
 
 //#define DRAW_JAPAN // 日の丸描画
 
-Texture2D color_map : register(t0);
-SamplerState point_sampler_state : register(s0);
+Texture2D diffuse_map : register(t0);   // Diffuse＝拡散
+
+SamplerState diffuse_sampler_state : register(s0);
 SamplerState linear_sampler_state : register(s1);      // linear：線形
 SamplerState anisotropic_sampler_state : register(s2); // anisotropic：異方性
 
@@ -21,6 +22,6 @@ float4 main(VS_OUT pin) : SV_TARGET
         return float4(1, 0, 0, 1);  // 赤で描画する
     }
 #else
-    return color_map.Sample(point_sampler_state, pin.texcoord)*pin.color; // テクスチャをサンプリング、頂点カラーを反映する
+    return diffuse_map.Sample(diffuse_sampler_state, pin.texcoord) * pin.color; // テクスチャをサンプリング、頂点カラーを反映する
 #endif
 }

@@ -7,6 +7,7 @@
 #include "misc.h"
 #include "high_resolution_timer.h"
 #include "sprite.h"
+#include "Blender.h"
 #include <d3d11.h>
 
 #ifdef USE_IMGUI
@@ -45,6 +46,7 @@ public:
 	ID3D11DepthStencilView*		depth_stensil_view;
 	ID3D11SamplerState*			sampler_states[3];
 	ID3D11DepthStencilState*	depth_stencil_state[4];
+	Blender blender;
 
 	// Sprite*Œ^”z—ñ‚ğ—v‘f”‚W‚ÅéŒ¾
 	Sprite* sprites[8];
