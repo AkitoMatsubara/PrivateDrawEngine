@@ -7,6 +7,7 @@
 #include "misc.h"
 #include "high_resolution_timer.h"
 #include "sprite.h"
+#include "sprite_Batch.h"
 #include "Blender.h"
 #include <d3d11.h>
 
@@ -50,6 +51,7 @@ public:
 
 	// Sprite*Œ^”z—ñ‚ğ—v‘f”‚W‚ÅéŒ¾
 	Sprite* sprites[8];
+	sprite_Batch* sprite_batches[8];
 
 	// ŒÂl ImGui‚Å”’l‚ğ•ÒWAŠi”[‚µ‚ÄŠÖ”‚É“n‚·•Ï”
 	//DirectX::XMFLOAT2 spritePos;

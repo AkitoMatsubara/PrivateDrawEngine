@@ -126,112 +126,6 @@ Sprite::~Sprite() {
 }
 
 
-void Sprite::render(ID3D11DeviceContext* immediate_context, DirectX::XMFLOAT2 pos, DirectX::XMFLOAT2 size, float angle, DirectX::XMFLOAT4 color) {
-	// スクリーン(ビューポート)のサイズを取得する
-	D3D11_VIEWPORT viewport{};
-	UINT num_viewports{ 1 };
-	immediate_context->RSGetViewports(&num_viewports, &viewport);
-
-	// 引数から矩形の各頂点の位置を計算する
-	/*		left_top	*----*	right_top			*/
-	/*					|   /|						*/
-	/*					|  / |						*/
-	/*					| /  |						*/
-	/*		left_bottom	*----*	right_bottom		*/
-
-	DirectX::XMFLOAT3 left_top      { pos.x         ,pos.y          ,0 };	// 左上
-	DirectX::XMFLOAT3 left_bottom   { pos.x         ,pos.y + size.y ,0 };	// 左下
-	DirectX::XMFLOAT3 right_top     { pos.x + size.x,pos.y          ,0 };	// 右上
-	DirectX::XMFLOAT3 right_bottom  { pos.x + size.x,pos.y + size.y ,0 };	// 右下
-
-	// 回転を実装 簡単に関数を実装する方法、ラムダ式というらしい
-	auto rotate = [](DirectX::XMFLOAT3& pos, DirectX::XMFLOAT2 center, float angle) {
-		pos.x -= center.x;	// 一度中心点分ずらす
-		pos.y -= center.y;
-
-		float cos{ cosf(DirectX::XMConvertToRadians(angle)) };	// DegreeなのでRadianに変換
-		float sin{ sinf(DirectX::XMConvertToRadians(angle)) };
-		float tx{ pos.x };	// 回転前の頂点座標
-		float ty{ pos.y };
-		pos.x = tx * cos - sin * ty;	// 回転の公式
-		pos.y = tx * sin + cos * ty;
-
-		pos.x += center.x;	// ずらした分戻す
-		pos.y += center.y;
-	};
-	// 回転の中心を矩形の中心点に
-	DirectX::XMFLOAT2 center{ 0,0 };
-	center.x = pos.x + size.x * 0.5f;	// 位置-(大きさ/2)で頂点位置から半サイズ分動く=半分になる
-	center.y = pos.y + size.y * 0.5f;
-	rotate(left_top    , center, angle);
-	rotate(right_top   , center, angle);
-	rotate(left_bottom , center, angle);
-	rotate(right_bottom, center, angle);
-
-	// スクリーン座標系からNDC(正規化デバイス座標)への座標変換を行う
-	left_top     = ConvertToNDC(left_top    , viewport);	// 頂点位置、スクリーンの大きさ
-	left_bottom  = ConvertToNDC(left_bottom , viewport);
-	right_top    = ConvertToNDC(right_top   , viewport);
-	right_bottom = ConvertToNDC(right_bottom, viewport);
-
-	// 計算結果で頂点バッファオブジェクトを更新する
-	// テクスチャ座標を頂点バッファにセットする
-	HRESULT hr = { S_OK };
-	D3D11_MAPPED_SUBRESOURCE mapped_subrecource{};
-	// mapped_subrecourceをvertex_bufferにマッピング
-	hr = immediate_context->Map(vertex_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_subrecource);	// 動的な定数バッファーを Map して書き込むときは D3D11_MAP_WRITE_DISCARD を使用する
-	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-
-	vFormat_t* vertices{ reinterpret_cast<vFormat_t*>(mapped_subrecource.pData) };	// reinterpret_cast：ありえないような変換のときに使用する？
-	if (vertices != nullptr) {	// 情報の上書き
-		vertices[0].position = left_top;
-		vertices[1].position = right_top;
-		vertices[2].position = left_bottom;
-		vertices[3].position = right_bottom;
-
-		for (int i = 0; i < 4; i++) {
-			vertices[i].color = color;
-		}
-
-		// UV座標を頂点バッファにセット
-		vertices[0].texcoord = { 0,0 };
-		vertices[1].texcoord = { 1,0 };
-		vertices[2].texcoord = { 0,1 };
-		vertices[3].texcoord = { 1,1 };
-
-	}
-	immediate_context->Unmap(vertex_buffer, 0);	// マッピング解除 頂点バッファを上書きしたら必ず実行。Map&Unmapはセットで使用する
-
-	// SRVバインド
-	immediate_context->PSSetShaderResources(0, 1, &shader_resource_view);	// レジスタ番号、シェーダリソースの数、SRVのポインタ
-
-	// 頂点バッファのバインド
-	UINT stride{ sizeof(vFormat_t) };
-	UINT offset{ 0 };
-	immediate_context->IASetVertexBuffers(
-		0,				// 入力スロットの開始番号
-		1,				// 頂点バッファの数
-		&vertex_buffer,	// 頂点バッファの配列
-		&stride,		// １頂点のサイズの配列
-		&offset);		// 頂点バッファの開始位置をずらすオフセットの配列
-
-	//プリミティブタイプ及びデータの順序に関する情報のバインド
-	immediate_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);	// プリミティブの形状を指定できる？ 今回は連続三角形に変更
-
-	// 入力レイアウトオブジェクトのバインド
-	immediate_context->IASetInputLayout(input_layout);	// 入力レイアウトの設定
-
-	// シェーダのバインド
-	immediate_context->VSSetShader(vertex_shader, nullptr, 0);
-	immediate_context->PSSetShader(pixel_shader, nullptr, 0);
-
-	// プリミティブの描画
-	immediate_context->Draw(4, 0);	// 頂点の数、描画開始時点で使う頂点バッファの最初のインデックス
-
-
-
-}
-
 void Sprite::render(ID3D11DeviceContext* immediate_context, DirectX::XMFLOAT2 pos, DirectX::XMFLOAT2 size, float angle, DirectX::XMFLOAT4 color, DirectX::XMFLOAT2 sPos, DirectX::XMFLOAT2 sSize) {
 	// スクリーン(ビューポート)のサイズを取得する
 	D3D11_VIEWPORT viewport{};
@@ -250,21 +144,22 @@ void Sprite::render(ID3D11DeviceContext* immediate_context, DirectX::XMFLOAT2 po
 	DirectX::XMFLOAT3 left_bottom   { pos.x         ,pos.y + size.y ,0 };	// 左下
 	DirectX::XMFLOAT3 right_bottom  { pos.x + size.x,pos.y + size.y ,0 };	// 右下
 
-	// 回転を実装 簡単に関数を実装する方法、ラムダ式というらしい
-	auto rotate = [](DirectX::XMFLOAT3& pos, DirectX::XMFLOAT2 center, float angle) {
-		pos.x -= center.x;	// 一度中心点分ずらす
-		pos.y -= center.y;
+	//// 回転を実装 簡単に関数を実装する方法、ラムダ式というらしい
+	//auto rotate = [](DirectX::XMFLOAT3& pos, DirectX::XMFLOAT2 center, float angle) {
+	//	pos.x -= center.x;	// 一度中心点分ずらす
+	//	pos.y -= center.y;
 
-		float cos{ cosf(DirectX::XMConvertToRadians(angle)) };	// DegreeなのでRadianに変換
-		float sin{ sinf(DirectX::XMConvertToRadians(angle)) };
-		float tx{ pos.x };	// 回転前の頂点座標
-		float ty{ pos.y };
-		pos.x = tx * cos - sin * ty;	// 回転の公式
-		pos.y = tx * sin + cos * ty;
+	//	float cos{ cosf(DirectX::XMConvertToRadians(angle)) };	// DegreeなのでRadianに変換
+	//	float sin{ sinf(DirectX::XMConvertToRadians(angle)) };
+	//	float tx{ pos.x };	// 回転前の頂点座標
+	//	float ty{ pos.y };
+	//	pos.x = tx * cos - sin * ty;	// 回転の公式
+	//	pos.y = tx * sin + cos * ty;
 
-		pos.x += center.x;	// ずらした分戻す
-		pos.y += center.y;
-	};
+	//	pos.x += center.x;	// ずらした分戻す
+	//	pos.y += center.y;
+	//};
+
 	// 回転の中心を矩形の中心点に
 	DirectX::XMFLOAT2 center{ 0,0 };
 	center.x = pos.x + size.x * 0.5f;	// 位置-(大きさ/2)で頂点位置から半サイズ分動く=半分になる
@@ -362,25 +257,27 @@ void Sprite::render(ID3D11DeviceContext* immediate_context) {
 	DirectX::XMFLOAT3 left_bottom   { Status.Pos.x                ,Status.Pos.y + Status.Size.y ,0 };	// 左下
 	DirectX::XMFLOAT3 right_bottom  { Status.Pos.x + Status.Size.x,Status.Pos.y + Status.Size.y ,0 };	// 右下
 
-	// 回転を実装 簡単に関数を実装する方法、ラムダ式というらしい
-	auto rotate = [](DirectX::XMFLOAT3& pos, DirectX::XMFLOAT2 center, float angle) {
-		pos.x -= center.x;	// 一度中心点分ずらす
-		pos.y -= center.y;
+	//// 回転を実装 簡単に関数を実装する方法、ラムダ式というらしい
+	//auto rotate = [](DirectX::XMFLOAT3& pos, DirectX::XMFLOAT2 center, float angle) {
+	//	pos.x -= center.x;	// 一度中心点分ずらす
+	//	pos.y -= center.y;
 
-		float cos{ cosf(DirectX::XMConvertToRadians(angle)) };	// DegreeなのでRadianに変換
-		float sin{ sinf(DirectX::XMConvertToRadians(angle)) };
-		float tx{ pos.x };	// 回転前の頂点座標
-		float ty{ pos.y };
-		pos.x = tx * cos - sin * ty;	// 回転の公式
-		pos.y = tx * sin + cos * ty;
+	//	float cos{ cosf(DirectX::XMConvertToRadians(angle)) };	// DegreeなのでRadianに変換
+	//	float sin{ sinf(DirectX::XMConvertToRadians(angle)) };
+	//	float tx{ pos.x };	// 回転前の頂点座標
+	//	float ty{ pos.y };
+	//	pos.x = tx * cos - sin * ty;	// 回転の公式
+	//	pos.y = tx * sin + cos * ty;
 
-		pos.x += center.x;	// ずらした分戻す
-		pos.y += center.y;
-	};
+	//	pos.x += center.x;	// ずらした分戻す
+	//	pos.y += center.y;
+	//};
+
 	// 回転の中心を矩形の中心点に
 	DirectX::XMFLOAT2 center{ 0,0 };
 	center.x = Status.Pos.x + Status.Size.x * 0.5f;	// 位置-(大きさ/2)で頂点位置から半サイズ分動く=半分になる
 	center.y = Status.Pos.y + Status.Size.y * 0.5f;
+	// 頂点回転
 	rotate(left_top    , center, Status.Angle);
 	rotate(left_bottom , center, Status.Angle);
 	rotate(right_top   , center, Status.Angle);
@@ -472,4 +369,20 @@ DirectX::XMFLOAT2 Sprite::division(DirectX::XMFLOAT2 val1, DirectX::XMFLOAT2 val
 	valOut.x = val1.x / val2.x;
 	valOut.y = val1.y / val2.y;
 	return valOut;
+}
+
+inline void Sprite::rotate(DirectX::XMFLOAT3& pos, DirectX::XMFLOAT2 center, float angle) {
+	pos.x -= center.x;	// 一度中心点分ずらす
+	pos.y -= center.y;
+
+	float cos{ cosf(DirectX::XMConvertToRadians(angle)) };	// DegreeなのでRadianに変換
+	float sin{ sinf(DirectX::XMConvertToRadians(angle)) };
+	float tx{ pos.x };	// 回転前の頂点座標
+	float ty{ pos.y };
+	pos.x = tx * cos - sin * ty;	// 回転の公式
+	pos.y = tx * sin + cos * ty;
+
+	pos.x += center.x;	// ずらした分戻す
+	pos.y += center.y;
+
 }

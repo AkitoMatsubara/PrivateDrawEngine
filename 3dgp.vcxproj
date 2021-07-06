@@ -227,6 +227,7 @@
     <ClInclude Include="Headers\high_resolution_timer.h" />
     <ClInclude Include="Headers\misc.h" />
     <ClInclude Include="Headers\sprite.h" />
+    <ClInclude Include="Headers\sprite_Batch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui\imgui.cpp" />
@@ -238,6 +239,7 @@
     <ClCompile Include="Sources\framework.cpp" />
     <ClCompile Include="Sources\main.cpp" />
     <ClCompile Include="Sources\sprite.cpp" />
+    <ClCompile Include="Sources\sprite_Batch.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

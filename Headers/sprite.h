@@ -36,7 +36,7 @@ private:
 	Status_t Status;
 
 
-	// メンバ変数
+	// 内部使用メンバ関数
 	// dx,dy＝矩形の左上のスクリーン座標、dw,dh＝矩形サイズ
 	DirectX::XMFLOAT3 ConvertToNDC(DirectX::XMFLOAT3 val, D3D11_VIEWPORT viewport);
 
@@ -46,9 +46,7 @@ public:
 	~Sprite();	// すべてのCOMオブジェクトを解放する
 
 	// メンバ関数
-	void render(ID3D11DeviceContext* immediate_context, DirectX::XMFLOAT2 pos, DirectX::XMFLOAT2 size, float andle, DirectX::XMFLOAT4 color);	// immediate(対象となるデータそのものをコード中に記したものを即値という)
-
-	// クリッピング可能render関数
+	// クリッピング可能render関数	メンバ変数でできるならいらない？と思い削除
 	void render(ID3D11DeviceContext* immediate_context, DirectX::XMFLOAT2 pos, DirectX::XMFLOAT2 size, float andle, DirectX::XMFLOAT4 color
 		, DirectX::XMFLOAT2 sPos, DirectX::XMFLOAT2 sSize);	// immediate(対象となるデータそのものをコード中に記したものを即値という)
 
@@ -60,6 +58,9 @@ public:
 
 	// DirectX::XMFLOAT2同士の割り算
 	DirectX::XMFLOAT2 division(DirectX::XMFLOAT2 val1, DirectX::XMFLOAT2 val2);
+
+	// render内で使う頂点回転用関数
+	void rotate(DirectX::XMFLOAT3& pos, DirectX::XMFLOAT2 center, float angle);
 
 	// セッター
 	void setPos    (DirectX::XMFLOAT2 pos)     { Status.Pos     = pos; }

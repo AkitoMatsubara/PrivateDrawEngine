@@ -1,5 +1,8 @@
 ﻿#include "framework.h"
 
+#define COMPARISON
+static bool spriteBatch = false;
+
 framework::framework(HWND hwnd) : hwnd(hwnd)
 {
 }
@@ -137,9 +140,13 @@ bool framework::initialize()
 
 	// spriteオブジェクトを生成(今回は先頭の１つだけを生成する)
 	sprites[0] = new Sprite(device, L".\\resources\\box.png");	// シェーダーはコンストラクタ内で指定しているため、別を使うには改良が必要
+	sprites[0]->setSize(1280, 720);
 
-	sprites[1] = new Sprite(device, L".\\resources\\player-sprites.png");
-	sprites[1]->setSize(1280, 720);
+
+	sprites[1] = new Sprite(device, L".\\resources\\player-sprites.png");	// L：ワイド文字の使用許可、全角の文字を使用する場合に必要らしい
+	sprites[1]->setSize(64, 64);											// ちなみに変数型_tもワイド文字の型らしい wchar_t
+
+	sprite_batches[0] = new sprite_Batch(device, L".\\resources\\player-sprites.png", 2048);
 
 return true;
 }
@@ -171,6 +178,7 @@ void framework::update(float elapsed_time/*Elapsed seconds from last frame*/)
 		ImGui::SliderFloat2("TexSize", TexSize, 0, 1960);
 		ImGui::SliderFloat("angle", &angle, 0, 360);
 		ImGui::ColorEdit4(u8"Color", (float*)&Color);
+		ImGui::Checkbox(u8"SpriteBatch", &spriteBatch);
 
 	ImGui::End();
 
@@ -199,11 +207,44 @@ void framework::render(float elapsed_time/*Elapsed seconds from last frame*/)
 
 	// spritesの描画	(矩形)
 	{
-		immediate_context->OMSetBlendState(blender.states[Blender::BS_NONE], nullptr, 0xFFFFFFFF);	// ブレンドインターフェースのポインタ、ブレンドファクターの配列値、サンプルカバレッジ(今回はデフォルト指定)
 		immediate_context->OMSetDepthStencilState(depth_stencil_state[3], 1);	// バインドする深度ステンシルステート、参照値？
-		sprites[0]->render(immediate_context, DirectX::XMFLOAT2(0, 0), DirectX::XMFLOAT2(1280, 720), 0, DirectX::XMFLOAT4(1, 1, 1, 1)); //画像全体を画面全体に描画する
+		//sprites[0]->render(immediate_context); //画像全体を画面全体に描画する
 		immediate_context->OMSetBlendState(blender.states[Blender::BS_ALPHA], nullptr, 0xFFFFFFFF);	// ブレンドインターフェースのポインタ、ブレンドファクターの配列値、サンプルカバレッジ(今回はデフォルト指定)
-		sprites[1]->render(immediate_context);
+		//sprites[1]->render(immediate_context);
+
+		/*----------------------fps変動確認テスト----------------------*/
+#ifdef COMPARISON
+		{
+			static float x{ 0 }, y{ 0 };
+			if (!spriteBatch) {
+				for (size_t i = 0; i < 1092; i++) {
+					// 大体fps200前後
+					sprites[1]->render(immediate_context, DirectX::XMFLOAT2(x, static_cast<float>(static_cast<int>(y) % 720)), sprites[1]->getSize(), sprites[1]->getAngle(),
+						sprites[1]->getColor(), DirectX::XMFLOAT2(140 * 0, 240 * 0), DirectX::XMFLOAT2(140, 240));
+					x += 32;
+					if (x > 1280 - 64) {
+						x = 0;
+						y += 24;
+					}
+				}
+			}
+			else {
+				sprite_batches[0]->begin(immediate_context);
+				for (size_t i = 0; i < 1092; ++i) {
+					// 大体fps500前後
+					sprites[1]->render(immediate_context, DirectX::XMFLOAT2(x, static_cast<float>(static_cast<int>(y) % 720)), sprites[1]->getSize(), sprites[1]->getAngle(),
+						sprites[1]->getColor(), DirectX::XMFLOAT2(140 * 0, 240 * 0), DirectX::XMFLOAT2(140, 240));
+					x += 32;
+					if (x > 1280 - 64) {
+						x = 0;
+						y += 24;
+					}
+				}
+				sprite_batches[0]->end(immediate_context);
+			}
+		}
+#endif
+		/*------------------------------------------------*/
 	}
 
 #ifdef USE_IMGUI
