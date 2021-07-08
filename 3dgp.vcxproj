@@ -119,7 +119,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;USE_IMGUI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>.\Sources;.\External\DirectXTK-master\Inc;.\External\imgui;.\Headers;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\Sources;.\External\DirectXTK-master\Inc;.\External\imgui;.\Headers;%(AdditionalIncludeDirectories);.\Headers</AdditionalIncludeDirectories>
       <LanguageStandard>Default</LanguageStandard>
     </ClCompile>
     <Link>
@@ -173,14 +173,14 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>.\Sources;.\External\DirectXTK-master\Inc;.\External\imgui;$(DXSDK_DIR)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\Sources;.\External\DirectXTK-master\Inc;.\External\imgui;$(DXSDK_DIR)include;%(AdditionalIncludeDirectories);.\Headers</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>.\External\DirectXTK-master\Bin\Desktop_2019\x64\Debug;$(DXSDK_DIR)lib¥x64</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);.\External\DirectXTK-master\Bin\Desktop_2019\x64\Debug</AdditionalLibraryDirectories>
       <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;d3d11.lib;DirectXTK.lib;d3dcompiler.lib;d3dx11.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <FxCompile>
@@ -226,8 +226,10 @@
     <ClInclude Include="Headers\framework.h" />
     <ClInclude Include="Headers\high_resolution_timer.h" />
     <ClInclude Include="Headers\misc.h" />
+    <ClInclude Include="Headers\shader.h" />
     <ClInclude Include="Headers\sprite.h" />
     <ClInclude Include="Headers\sprite_Batch.h" />
+    <ClInclude Include="Headers\texture.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui\imgui.cpp" />
@@ -238,8 +240,10 @@
     <ClCompile Include="External\imgui\imgui_widgets.cpp" />
     <ClCompile Include="Sources\framework.cpp" />
     <ClCompile Include="Sources\main.cpp" />
+    <ClCompile Include="Sources\shader.cpp" />
     <ClCompile Include="Sources\sprite.cpp" />
     <ClCompile Include="Sources\sprite_Batch.cpp" />
+    <ClCompile Include="Sources\texture.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

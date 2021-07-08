@@ -80,6 +80,12 @@
     <ClInclude Include="Headers\sprite_Batch.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="Headers\texture.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\shader.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sources\main.cpp">
@@ -110,6 +116,12 @@
       <Filter>imGui</Filter>
     </ClCompile>
     <ClCompile Include="Sources\sprite_Batch.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\texture.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\shader.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
   </ItemGroup>

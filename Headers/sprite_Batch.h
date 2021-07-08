@@ -9,16 +9,18 @@
 
 #include "sprite.h"
 
+
 // spriteと違いspriteBatchは複数の描画に対して一度しか読み込まなくて良い的な感じ
 class sprite_Batch {
 private:
 	// メンバ変数
-	ID3D11VertexShader* vertex_shader;
-	ID3D11PixelShader* pixel_shader;
-	ID3D11InputLayout* input_layout;
-	ID3D11Buffer* vertex_buffer;
-	ID3D11ShaderResourceView* shader_resource_view;
-	D3D11_TEXTURE2D_DESC texture2d_desc;
+	ComPtr<ID3D11VertexShader>			vertex_shader;
+	ComPtr<ID3D11PixelShader>			pixel_shader;
+	ComPtr<ID3D11InputLayout>			input_layout;
+	ComPtr<ID3D11Buffer>				vertex_buffer;
+	ComPtr<ID3D11ShaderResourceView>	shader_resource_view;
+
+	D3D11_TEXTURE2D_DESC				texture2d_desc;
 
 	Status_t Status{};
 
@@ -28,54 +30,58 @@ private:
 
 	// 内部使用メンバ関数
 	// dx,dy＝矩形の左上のスクリーン座標、dw,dh＝矩形サイズ
-	DirectX::XMFLOAT3 ConvertToNDC(DirectX::XMFLOAT3 val, D3D11_VIEWPORT viewport);
+	XMFLOAT3 ConvertToNDC(XMFLOAT3 val, D3D11_VIEWPORT viewport);
 
 public:
 	// コンストラクタ、デストラクタ
-	sprite_Batch(ID3D11Device* device, const wchar_t* filename, size_t max_sprites);
-	sprite_Batch(ID3D11Device* device, const wchar_t* filename);
+	sprite_Batch(ID3D11Device* device, const wchar_t* filename, size_t max_sprites = 1, const char* vs_cso_name = "Shaders\\sprite_vs.cso", const char* ps_cso_name = "Shaders\\sprite_ps.cso");
+	sprite_Batch(ID3D11Device* device, const wchar_t* filename, const char* vs_cso_name = "Shaders\\sprite_vs.cso", const char* ps_cso_name = "Shaders\\sprite_ps.cso");
 	~sprite_Batch();	// すべてのCOMオブジェクトを解放する
 
 	// メンバ関数
 	void begin(ID3D11DeviceContext* immediate_context);
 	void end(ID3D11DeviceContext* immediate_context);	// 頂点バッファの更新、各ステートのバインド、ドローコールを記述
 
-		// クリッピング可能render関数	メンバ変数でできるならいらない？と思い削除
-	void render(ID3D11DeviceContext* immediate_context, DirectX::XMFLOAT2 pos, DirectX::XMFLOAT2 size, float andle, DirectX::XMFLOAT4 color
-		, DirectX::XMFLOAT2 sPos, DirectX::XMFLOAT2 sSize);	// immediate(対象となるデータそのものをコード中に記したものを即値という)
+	// 頂点情報の生成、更新
+	void CreateVertexData(ID3D11DeviceContext* immediate_context, XMFLOAT2 pos, XMFLOAT2 size, float angle, XMFLOAT4 color
+		, XMFLOAT2 TexPos, XMFLOAT2 TexSize);
+
+	// メンバ変数でできるならいらない？と思い削除←やっぱいるわ課題的に
+	void Render(ID3D11DeviceContext* immediate_context, XMFLOAT2 pos, XMFLOAT2 size, float andle, XMFLOAT4 color
+		, XMFLOAT2 TexPos, XMFLOAT2 TexSize);	// immediate(対象となるデータそのものをコード中に記したものを即値という)
 
 
 	// メンバ変数のパラメータで描画
-	void render(ID3D11DeviceContext* immediate_context);	// immediate(対象となるデータそのものをコード中に記したものを即値という)
+	void Render(ID3D11DeviceContext* immediate_context);	// immediate(対象となるデータそのものをコード中に記したものを即値という)
+
+		// テクスチャ位置だけ指定するRender 課題的に(ry
+	void Render(ID3D11DeviceContext* immediate_context, XMFLOAT2 TexPos, XMFLOAT2 TexSize);
 
 	// Statusを編集するimguiウィンドウ
 	void imguiWindow();
 
-	// DirectX::XMFLOAT2同士の割り算
-	DirectX::XMFLOAT2 division(DirectX::XMFLOAT2 val1, DirectX::XMFLOAT2 val2);
-
-	// render内で使う頂点回転用関数
-	void rotate(DirectX::XMFLOAT3& pos, DirectX::XMFLOAT2 center, float angle);
+	// XMFLOAT2同士の割り算
+	XMFLOAT2 division(XMFLOAT2 val1, XMFLOAT2 val2);
 
 	// セッター
-	void setPos(DirectX::XMFLOAT2 pos) { Status.Pos = pos; }
-	void setSize(DirectX::XMFLOAT2 Size) { Status.Size = Size; }
-	void setTexPos(DirectX::XMFLOAT2 texPos) { Status.TexPos = texPos; }
-	void setTexSize(DirectX::XMFLOAT2 texSize) { Status.TexSize = texSize; }
-	void setAngle(float angle) { Status.Angle = angle; }
-	void setColor(DirectX::XMFLOAT4 color) { Status.Color = color; }
+	void setPos    (XMFLOAT2 pos)     { Status.Pos     = pos; }
+	void setSize   (XMFLOAT2 Size)    { Status.Size    = Size; }
+	void setTexPos (XMFLOAT2 texPos)  { Status.TexPos  = texPos; }
+	void setTexSize(XMFLOAT2 texSize) { Status.TexSize = texSize; }
+	void setAngle  (float angle)      { Status.Angle   = angle; }
+	void setColor  (XMFLOAT4 color)   { Status.Color   = color; }
 
-	void setPos(float posX, float posY) { Status.Pos = DirectX::XMFLOAT2(posX, posY); }
-	void setSize(float SizeX, float SizeY) { Status.Size = DirectX::XMFLOAT2(SizeX, SizeY); }
-	void setTexPos(float texPosX, float texPosY) { Status.TexPos = DirectX::XMFLOAT2(texPosX, texPosY); }
-	void setTexSize(float texSizeX, float texSizeY) { Status.TexSize = DirectX::XMFLOAT2(texSizeX, texSizeY); }
-	void setColor(float r, float g, float b, float a) { Status.Color = DirectX::XMFLOAT4(r, g, b, a); }
+	void setPos    (float posX, float posY)             { Status.Pos     = XMFLOAT2(posX, posY); }
+	void setSize   (float SizeX, float SizeY)           { Status.Size    = XMFLOAT2(SizeX, SizeY); }
+	void setTexPos (float texPosX, float texPosY)       { Status.TexPos  = XMFLOAT2(texPosX, texPosY); }
+	void setTexSize(float texSizeX, float texSizeY)     { Status.TexSize = XMFLOAT2(texSizeX, texSizeY); }
+	void setColor  (float r, float g, float b, float a) { Status.Color   = XMFLOAT4(r, g, b, a); }
 
 	// ゲッター
-	DirectX::XMFLOAT2 getPos() { return Status.Pos; }
-	DirectX::XMFLOAT2 getSize() { return Status.Size; }
-	DirectX::XMFLOAT2 getTexPos() { return Status.TexPos; }
-	DirectX::XMFLOAT2 getTexSize() { return Status.TexSize; }
-	float getAngle() { return Status.Angle; }
-	DirectX::XMFLOAT4 getColor() { return Status.Color; }
+	XMFLOAT2 getPos()     { return Status.Pos; }
+	XMFLOAT2 getSize()    { return Status.Size; }
+	XMFLOAT2 getTexPos()  { return Status.TexPos; }
+	XMFLOAT2 getTexSize() { return Status.TexSize; }
+	float	 getAngle()   { return Status.Angle; }
+	XMFLOAT4 getColor()   { return Status.Color; }
 };

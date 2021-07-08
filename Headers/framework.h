@@ -10,6 +10,10 @@
 #include "sprite_Batch.h"
 #include "Blender.h"
 #include <d3d11.h>
+#include <wrl.h>
+
+using namespace Microsoft::WRL;
+using namespace std;
 
 #ifdef USE_IMGUI
 #include "imgui.h"
@@ -39,19 +43,22 @@ public:
 	framework(framework&&) noexcept = delete;
 	framework& operator=(framework&&) noexcept = delete;
 
-	ID3D11Device* device;
-	ID3D11DeviceContext* immediate_context;	// 描画コマンドの追加や送信などの処理を扱っている。CPU側で追加された描画コマンドをGPU側に送信する。
-											//Immediateは生成したコマンドを即時実行することを表す。反対にDeferredというものが存在する。要検索
-	IDXGISwapChain* swap_chain;
-	ID3D11RenderTargetView*		render_target_view;
-	ID3D11DepthStencilView*		depth_stensil_view;
-	ID3D11SamplerState*			sampler_states[3];
-	ID3D11DepthStencilState*	depth_stencil_state[4];
+	ComPtr<ID3D11Device> device;
+
+	ComPtr<ID3D11DeviceContext> immediate_context;	// 描画コマンドの追加や送信などの処理を扱っている。CPU側で追加された描画コマンドをGPU側に送信する。
+													//Immediateは生成したコマンドを即時実行することを表す。反対にDeferredというものが存在する。要検索
+
+	ComPtr<IDXGISwapChain> swap_chain;
+	ComPtr<ID3D11RenderTargetView>		render_target_view;
+	ComPtr<ID3D11DepthStencilView>		depth_stensil_view;
+	ComPtr<ID3D11SamplerState>			sampler_states[3];
+	ComPtr<ID3D11DepthStencilState>		depth_stencil_state[4];
 	Blender blender;
 
 	// Sprite*型配列を要素数８で宣言
-	Sprite* sprites[8];
-	sprite_Batch* sprite_batches[8];
+	unique_ptr<Sprite> sprites[8];
+	unique_ptr<sprite_Batch> sprite_batches[8];
+	unique_ptr<Sprite> sprite_text;	// 文字表示的なやつ
 
 	// 個人 ImGuiで数値を編集、格納して関数に渡す変数
 	//DirectX::XMFLOAT2 spritePos;
@@ -72,7 +79,7 @@ public:
 		ImGui::CreateContext();
 		ImGui::GetIO().Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\consola.ttf", 14.0f, nullptr, glyphRangesJapanese);
 		ImGui_ImplWin32_Init(hwnd);
-		ImGui_ImplDX11_Init(device, immediate_context);
+		ImGui_ImplDX11_Init(device.Get(), immediate_context.Get());
 		ImGui::StyleColorsDark();
 #endif
 

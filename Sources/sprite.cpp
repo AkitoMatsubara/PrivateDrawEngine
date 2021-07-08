@@ -3,6 +3,8 @@
 #include <sstream>
 #include <WICTextureLoader.h>
 
+#include "texture.h"
+#include "shader.h"
 
 // 頂点情報のセット
 vFormat_t vertices[]
@@ -15,25 +17,25 @@ vFormat_t vertices[]
 
 
 // 頂点バッファオブジェクトの生成
-Sprite::Sprite(ID3D11Device* device, const wchar_t* filename)/*:
-	   Pos(DirectX::XMFLOAT2(0.0f, 0.0f)),    Size(DirectX::XMFLOAT2(0.0f, 0.0f)),
-	TexPos(DirectX::XMFLOAT2(0.0f, 0.0f)), TexSize(DirectX::XMFLOAT2(0.0f, 0.0f)),
-	angle(0.0f), Color(DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f))*/
+Sprite::Sprite(ID3D11Device* device, const wchar_t* filename, const char* vs_cso_name ,const char* ps_cso_name )
 {
 	HRESULT hr{ S_OK };
 
-	// 画像ファイルのロードとSRVオブジェクトの生成
-	ID3D11Resource* resource{};
-	hr = DirectX::CreateWICTextureFromFile(device, filename, &resource, &shader_resource_view);	// 正しく読み込まれればリソースとSRVが生成される
-	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-	resource->Release();
 
-	// テクスチャ情報の取得
-	ID3D11Texture2D* texture2d{};
-	hr = resource->QueryInterface<ID3D11Texture2D>(&texture2d);	// 特定のインターフェイスをサポートしているかを判別する
-	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-	texture2d->GetDesc(&texture2d_desc);
-	texture2d->Release();
+	//// 画像ファイルのロードとSRVオブジェクトの生成
+	//ID3D11Resource* resource{};
+	//hr = CreateWICTextureFromFile(device, filename, &resource, &shader_resource_view);	// 正しく読み込まれればリソースとSRVが生成される
+	//_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+	//resource->Release();
+	//// テクスチャ情報の取得
+	//ID3D11Texture2D* texture2d{};
+	//hr = resource->QueryInterface<ID3D11Texture2D>(&texture2d);	// 特定のインターフェイスをサポートしているかを判別する
+	//_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+	//texture2d->GetDesc(&texture2d_desc);
+	//texture2d->Release();
+
+	// テクスチャのロード(上記処理をモジュール化)
+	load_texture_from_file(device, filename, shader_resource_view.GetAddressOf(), &texture2d_desc);
 
 	// ByteWidth,BindFlags,StructuerByteStrideは可変情報、その他情報はあまり変化することはない
 	D3D11_BUFFER_DESC buffer_desc{};			// バッファの使われ方を設定する構造体
@@ -49,26 +51,9 @@ Sprite::Sprite(ID3D11Device* device, const wchar_t* filename)/*:
 	subresource_data.SysMemPitch = 0;					// メモリのピッチ 2D or 3Dテクスチャの場合に使用する
 	subresource_data.SysMemSlicePitch = 0;				//	深度レベル	 同上
 
-	hr = device->CreateBuffer(&buffer_desc, &subresource_data, &vertex_buffer);		// 作成するバッファ情報、作成するバッファの初期化情報、作成したバッファを保存するポインタ
+	hr = device->CreateBuffer(&buffer_desc, &subresource_data, vertex_buffer.GetAddressOf());		// 作成するバッファ情報、作成するバッファの初期化情報、作成したバッファを保存するポインタ
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));	// _ASSERT_EXPR：第一引数条件が満たされなければ第二引数のメッセージを表示する
 
-	// 頂点シェーダーオブジェクトの生成
-	const char* vs_cso_name{ "Shaders\\sprite_vs.cso" };
-
-	FILE* fp{};
-	fopen_s(&fp, vs_cso_name, "rb");	// ファイルポインタ、ファイル名、rb：読み取り専用のバイナリモード
-	_ASSERT_EXPR_A(fp, "_PS.CSO File not found.");
-
-	fseek(fp, 0, SEEK_END);	// ファイルポインタ、移動バイト数、ファイルの先頭(_SET)、現在位置(_CUR)、終端(_END)
-	long vs_cso_sz{ ftell(fp) };	// ファイルの読み書き位置を取得
-	fseek(fp, 0, SEEK_SET);
-
-	std::unique_ptr<unsigned char[]>vs_cso_data{ std::make_unique<unsigned char[]>(vs_cso_sz) };	// unique_ptrにmake_uniqueで実体生成
-	fread(vs_cso_data.get(), vs_cso_sz, 1, fp);	// 読み込みデータの格納先、読み込みデータのバイト長さ、読み込みデータの数、ファイルポインタ
-	fclose(fp);
-
-	hr = device->CreateVertexShader(vs_cso_data.get(), vs_cso_sz, nullptr, &vertex_shader);	// シェーダのポインター、シェーダーサイズ、dynamic linkageで使うポインタ、作成したバッファを保存するポインタ
-	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 
 	// 入力レイアウトオブジェクトの生成
 	D3D11_INPUT_ELEMENT_DESC input_element_desc[]
@@ -87,46 +72,64 @@ Sprite::Sprite(ID3D11Device* device, const wchar_t* filename)/*:
 		{"TEXCOORD",0,DXGI_FORMAT_R32G32_FLOAT		,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0},
 	};
 
+	// 頂点シェーダーオブジェクトの生成
+	//FILE* fp{};
+	//fopen_s(&fp, vs_cso_name, "rb");	// ファイルポインタ、ファイル名、rb：読み取り専用のバイナリモード
+	//_ASSERT_EXPR_A(fp, L"_VS.CSO File not found.");
+	//fseek(fp, 0, SEEK_END);	// ファイルポインタ、移動バイト数、ファイルの先頭(_SET)、現在位置(_CUR)、終端(_END)
+	//long vs_cso_sz{ ftell(fp) };	// ファイルの読み書き位置を取得
+	//fseek(fp, 0, SEEK_SET);
+	//std::unique_ptr<unsigned char[]>vs_cso_data{ std::make_unique<unsigned char[]>(vs_cso_sz) };	// unique_ptrにmake_uniqueで実体生成
+	//fread(vs_cso_data.get(), vs_cso_sz, 1, fp);	// 読み込みデータの格納先、読み込みデータのバイト長さ、読み込みデータの数、ファイルポインタ
+	//fclose(fp);
+	//hr = device->CreateVertexShader(vs_cso_data.get(), vs_cso_sz, nullptr, &vertex_shader);	// シェーダのポインター、シェーダーサイズ、dynamic linkageで使うポインタ、作成したバッファを保存するポインタ
+	//_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+	////	引数：IL(入力レイアウト)の構成情報、ILの要素数、VSのポインタ、VSのサイズ、作成したILを保存するポインタ
+	//hr = device->CreateInputLayout(input_element_desc, _countof(input_element_desc), vs_cso_data.get(), vs_cso_sz, &input_layout);
+	//_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 
-	//	引数：IL(入力レイアウト)の構成情報、ILの要素数、VSのポインタ、VSのサイズ、作成したILを保存するポインタ
-	hr = device->CreateInputLayout(input_element_desc, _countof(input_element_desc), vs_cso_data.get(), vs_cso_sz, &input_layout);
-	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+
+
+
+	// 頂点シェーダーオブジェクトの生成
+	create_vs_from_cso(device, vs_cso_name, &vertex_shader, &input_layout, input_element_desc, _countof(input_element_desc));
 
 	// ピクセルシェーダオブジェクトの生成
-	const char* ps_cso_name{ "Shaders\\sprite_ps.cso" };
+	//fopen_s(&fp, ps_cso_name, "rb");	// ファイルポインタ、ファイル名、rb：読み取り専用のバイナリモード
+	//_ASSERT_EXPR_A(fp, L"_PS.CSO File not found.");
+	//fseek(fp, 0, SEEK_END);	// ファイルポインタ、移動バイト数、ファイルの先頭(_SET)、現在位置(_CUR)、終端(_END)
+	//long ps_cso_sz{ ftell(fp) };	// ファイルの読み書き位置を取得
+	//fseek(fp, 0, SEEK_SET);
+	//std::unique_ptr<unsigned char[]>ps_cso_data{ std::make_unique<unsigned char[]>(ps_cso_sz) };	// unique_ptrにmake_uniqueで実体生成
+	//fread(ps_cso_data.get(), ps_cso_sz, 1, fp);	// 読み込みデータの格納先、読み込みデータのバイト長さ、読み込みデータの数、ファイルポインタ
+	//fclose(fp);
+	//hr = device->CreatePixelShader(ps_cso_data.get(), ps_cso_sz, nullptr, &pixel_shader);	// シェーダのポインター、シェーダーサイズ、dynamic linkageで使うポインタ、作成したバッファを保存するポインタ
+	//_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 
-	fopen_s(&fp, ps_cso_name, "rb");	// ファイルポインタ、ファイル名、rb：読み取り専用のバイナリモード
-	_ASSERT_EXPR_A(fp, "_VS.CSO File not found.");
+	// ピクセルシェーダオブジェクトの生成
+	create_ps_from_cso(device, ps_cso_name, &pixel_shader);
 
-	fseek(fp, 0, SEEK_END);	// ファイルポインタ、移動バイト数、ファイルの先頭(_SET)、現在位置(_CUR)、終端(_END)
-	long ps_cso_sz{ ftell(fp) };	// ファイルの読み書き位置を取得
-	fseek(fp, 0, SEEK_SET);
-
-	std::unique_ptr<unsigned char[]>ps_cso_data{ std::make_unique<unsigned char[]>(ps_cso_sz) };	// unique_ptrにmake_uniqueで実体生成
-	fread(ps_cso_data.get(), ps_cso_sz, 1, fp);	// 読み込みデータの格納先、読み込みデータのバイト長さ、読み込みデータの数、ファイルポインタ
-	fclose(fp);
-
-	hr = device->CreatePixelShader(ps_cso_data.get(), ps_cso_sz, nullptr, &pixel_shader);	// シェーダのポインター、シェーダーサイズ、dynamic linkageで使うポインタ、作成したバッファを保存するポインタ
-	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-
-	Status.Pos     = DirectX::XMFLOAT2(0.0f, 0.0f);
-	Status.Size    = DirectX::XMFLOAT2(texture2d_desc.Width, texture2d_desc.Height);
-	Status.TexPos  = DirectX::XMFLOAT2(0.0f, 0.0f);
-	Status.TexSize = DirectX::XMFLOAT2(texture2d_desc.Width, texture2d_desc.Height);
+	Status.Pos = XMFLOAT2(0.0f, 0.0f);
+	Status.Size    = XMFLOAT2(texture2d_desc.Width, texture2d_desc.Height);
+	Status.TexPos  = XMFLOAT2(0.0f, 0.0f);
+	Status.TexSize = XMFLOAT2(texture2d_desc.Width, texture2d_desc.Height);
 	Status.Angle   = 0.0f;
-	Status.Color   = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	Status.Color   = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 Sprite::~Sprite() {
-	vertex_shader->Release();
-	pixel_shader->Release();
-	input_layout->Release();
-	vertex_buffer->Release();
-	shader_resource_view->Release();
+	//vertex_shader->Release();
+	//pixel_shader->Release();
+	//input_layout->Release();
+	//vertex_buffer->Release();
+	//shader_resource_view->Release();
+
+	rerease_all_textures();
 }
 
 
-void Sprite::render(ID3D11DeviceContext* immediate_context, DirectX::XMFLOAT2 pos, DirectX::XMFLOAT2 size, float angle, DirectX::XMFLOAT4 color, DirectX::XMFLOAT2 sPos, DirectX::XMFLOAT2 sSize) {
+void Sprite::CreateVertexData(ID3D11DeviceContext* immediate_context, XMFLOAT2 pos, XMFLOAT2 size, float angle, XMFLOAT4 color
+	, XMFLOAT2 TexPos, XMFLOAT2 TexSize) {
 	// スクリーン(ビューポート)のサイズを取得する
 	D3D11_VIEWPORT viewport{};
 	UINT num_viewports{ 1 };
@@ -139,18 +142,18 @@ void Sprite::render(ID3D11DeviceContext* immediate_context, DirectX::XMFLOAT2 po
 	/*					| /  |						*/
 	/*		left_bottom	*----*	right_bottom		*/
 
-	DirectX::XMFLOAT3 left_top      { pos.x         ,pos.y          ,0 };	// 左上
-	DirectX::XMFLOAT3 right_top     { pos.x + size.x,pos.y          ,0 };	// 右上
-	DirectX::XMFLOAT3 left_bottom   { pos.x         ,pos.y + size.y ,0 };	// 左下
-	DirectX::XMFLOAT3 right_bottom  { pos.x + size.x,pos.y + size.y ,0 };	// 右下
+	XMFLOAT3 left_top    { pos.x         ,pos.y          ,0 };	// 左上
+	XMFLOAT3 right_top   { pos.x + size.x,pos.y          ,0 };	// 右上
+	XMFLOAT3 left_bottom { pos.x         ,pos.y + size.y ,0 };	// 左下
+	XMFLOAT3 right_bottom{ pos.x + size.x,pos.y + size.y ,0 };	// 右下
 
 	//// 回転を実装 簡単に関数を実装する方法、ラムダ式というらしい
-	//auto rotate = [](DirectX::XMFLOAT3& pos, DirectX::XMFLOAT2 center, float angle) {
+	//auto rotate = [](XMFLOAT3& pos, XMFLOAT2 center, float angle) {
 	//	pos.x -= center.x;	// 一度中心点分ずらす
 	//	pos.y -= center.y;
 
-	//	float cos{ cosf(DirectX::XMConvertToRadians(angle)) };	// DegreeなのでRadianに変換
-	//	float sin{ sinf(DirectX::XMConvertToRadians(angle)) };
+	//	float cos{ cosf(XMConvertToRadians(angle)) };	// DegreeなのでRadianに変換
+	//	float sin{ sinf(XMConvertToRadians(angle)) };
 	//	float tx{ pos.x };	// 回転前の頂点座標
 	//	float ty{ pos.y };
 	//	pos.x = tx * cos - sin * ty;	// 回転の公式
@@ -161,24 +164,24 @@ void Sprite::render(ID3D11DeviceContext* immediate_context, DirectX::XMFLOAT2 po
 	//};
 
 	// 回転の中心を矩形の中心点に
-	DirectX::XMFLOAT2 center{ 0,0 };
+	XMFLOAT2 center{ 0,0 };
 	center.x = pos.x + size.x * 0.5f;	// 位置-(大きさ/2)で頂点位置から半サイズ分動く=半分になる
 	center.y = pos.y + size.y * 0.5f;
-	rotate(left_top    , center, angle);
-	rotate(left_bottom , center, angle);
-	rotate(right_top   , center, angle);
+	rotate(left_top, center, angle);
+	rotate(left_bottom, center, angle);
+	rotate(right_top, center, angle);
 	rotate(right_bottom, center, angle);
 
 	// スクリーン座標系からNDC(正規化デバイス座標)への座標変換を行う
-	left_top     = ConvertToNDC(left_top    , viewport);	// 頂点位置、スクリーンの大きさ
-	left_bottom  = ConvertToNDC(left_bottom , viewport);
-	right_top    = ConvertToNDC(right_top   , viewport);
+	left_top = ConvertToNDC(left_top, viewport);	// 頂点位置、スクリーンの大きさ
+	left_bottom = ConvertToNDC(left_bottom, viewport);
+	right_top = ConvertToNDC(right_top, viewport);
 	right_bottom = ConvertToNDC(right_bottom, viewport);
 
-	DirectX::XMFLOAT2 TexLeft_top    { (sPos.x)           / texture2d_desc.Width , (sPos.y)				/ texture2d_desc.Height };
-	DirectX::XMFLOAT2 TexRight_top   { (sPos.x + sSize.x) / texture2d_desc.Width , (sPos.y)				/ texture2d_desc.Height };
-	DirectX::XMFLOAT2 TexLeft_bottom { (sPos.x)           / texture2d_desc.Width , (sPos.y + sSize.y)	/ texture2d_desc.Height };
-	DirectX::XMFLOAT2 TexRight_bottom{ (sPos.x + sSize.x) / texture2d_desc.Width , (sPos.y + sSize.y)	/ texture2d_desc.Height };
+	XMFLOAT2 TexLeft_top    { (TexPos.x)             / texture2d_desc.Width , (TexPos.y)				/ texture2d_desc.Height };
+	XMFLOAT2 TexRight_top   { (TexPos.x + TexSize.x) / texture2d_desc.Width , (TexPos.y)				/ texture2d_desc.Height };
+	XMFLOAT2 TexLeft_bottom { (TexPos.x)             / texture2d_desc.Width , (TexPos.y + TexSize.y)	/ texture2d_desc.Height };
+	XMFLOAT2 TexRight_bottom{ (TexPos.x + TexSize.x) / texture2d_desc.Width , (TexPos.y + TexSize.y)	/ texture2d_desc.Height };
 
 
 	// 計算結果で頂点バッファオブジェクトを更新する
@@ -186,7 +189,7 @@ void Sprite::render(ID3D11DeviceContext* immediate_context, DirectX::XMFLOAT2 po
 	HRESULT hr = { S_OK };
 	D3D11_MAPPED_SUBRESOURCE mapped_subrecource{};
 	// mapped_subrecourceをvertex_bufferにマッピング
-	hr = immediate_context->Map(vertex_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_subrecource);	// 動的な定数バッファーを Map して書き込むときは D3D11_MAP_WRITE_DISCARD を使用する
+	hr = immediate_context->Map(vertex_buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_subrecource);	// 動的な定数バッファーを Map して書き込むときは D3D11_MAP_WRITE_DISCARD を使用する
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 
 	vFormat_t* vertices{ reinterpret_cast<vFormat_t*>(mapped_subrecource.pData) };	// reinterpret_cast：ありえないような変換のときに使用する？
@@ -207,182 +210,69 @@ void Sprite::render(ID3D11DeviceContext* immediate_context, DirectX::XMFLOAT2 po
 		vertices[3].texcoord = TexRight_bottom;
 
 	}
-	immediate_context->Unmap(vertex_buffer, 0);	// マッピング解除 頂点バッファを上書きしたら必ず実行。Map&Unmapはセットで使用する
+	immediate_context->Unmap(vertex_buffer.Get(), 0);	// マッピング解除 頂点バッファを上書きしたら必ず実行。Map&Unmapはセットで使用する
 
 	// SRVバインド
-	immediate_context->PSSetShaderResources(0, 1, &shader_resource_view);	// レジスタ番号、シェーダリソースの数、SRVのポインタ
+	immediate_context->PSSetShaderResources(0, 1, shader_resource_view.GetAddressOf());	// レジスタ番号、シェーダリソースの数、SRVのポインタ
 
 	// 頂点バッファのバインド
 	UINT stride{ sizeof(vFormat_t) };
 	UINT offset{ 0 };
 	immediate_context->IASetVertexBuffers(
-		0,				// 入力スロットの開始番号
-		1,				// 頂点バッファの数
-		&vertex_buffer,	// 頂点バッファの配列
-		&stride,		// １頂点のサイズの配列
-		&offset);		// 頂点バッファの開始位置をずらすオフセットの配列
+		0,								// 入力スロットの開始番号
+		1,								// 頂点バッファの数
+		vertex_buffer.GetAddressOf(),	// 頂点バッファの配列
+		&stride,						// １頂点のサイズの配列
+		&offset);						// 頂点バッファの開始位置をずらすオフセットの配列
 
 	//プリミティブタイプ及びデータの順序に関する情報のバインド
 	immediate_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);	// プリミティブの形状を指定できる？ 今回は連続三角形に変更
 
 	// 入力レイアウトオブジェクトのバインド
-	immediate_context->IASetInputLayout(input_layout);	// 入力レイアウトの設定
+	immediate_context->IASetInputLayout(input_layout.Get());	// 入力レイアウトの設定
 
 	// シェーダのバインド
-	immediate_context->VSSetShader(vertex_shader, nullptr, 0);
-	immediate_context->PSSetShader(pixel_shader, nullptr, 0);
+	immediate_context->VSSetShader(vertex_shader.Get(), nullptr, 0);
+	immediate_context->PSSetShader(pixel_shader.Get(), nullptr, 0);
 
 	// プリミティブの描画
 	immediate_context->Draw(4, 0);	// 頂点の数、描画開始時点で使う頂点バッファの最初のインデックス
 
-
-
 }
 
-void Sprite::render(ID3D11DeviceContext* immediate_context) {
-	// スクリーン(ビューポート)のサイズを取得する
-	D3D11_VIEWPORT viewport{};
-	UINT num_viewports{ 1 };
-	immediate_context->RSGetViewports(&num_viewports, &viewport);
+void Sprite::Render(ID3D11DeviceContext* immediate_context, XMFLOAT2 pos, XMFLOAT2 size, float angle, XMFLOAT4 color, XMFLOAT2 TexPos, XMFLOAT2 TexSize) {
+	CreateVertexData(immediate_context, pos, size, angle, color, TexPos, TexSize);
+}
 
-	// 引数から矩形の各頂点の位置を計算する
-	/*		left_top	*----*	right_top			*/
-	/*					|   /|						*/
-	/*					|  / |						*/
-	/*					| /  |						*/
-	/*		left_bottom	*----*	right_bottom		*/
+void Sprite::Render(ID3D11DeviceContext* immediate_context) {
+	CreateVertexData(immediate_context, Status.Pos, Status.Size, Status.Angle, Status.Color, Status.TexPos, Status.TexSize);
+}
 
-	DirectX::XMFLOAT3 left_top      { Status.Pos.x                ,Status.Pos.y          ,0 };	// 左上
-	DirectX::XMFLOAT3 right_top     { Status.Pos.x + Status.Size.x,Status.Pos.y          ,0 };	// 右上
-	DirectX::XMFLOAT3 left_bottom   { Status.Pos.x                ,Status.Pos.y + Status.Size.y ,0 };	// 左下
-	DirectX::XMFLOAT3 right_bottom  { Status.Pos.x + Status.Size.x,Status.Pos.y + Status.Size.y ,0 };	// 右下
+void Sprite::Render(ID3D11DeviceContext* immediate_context, XMFLOAT2 Pos, XMFLOAT2 Size) {
+	CreateVertexData(immediate_context, Pos, Size, 0, Status.Color, Status.TexPos, Status.TexSize);
+}
 
-	//// 回転を実装 簡単に関数を実装する方法、ラムダ式というらしい
-	//auto rotate = [](DirectX::XMFLOAT3& pos, DirectX::XMFLOAT2 center, float angle) {
-	//	pos.x -= center.x;	// 一度中心点分ずらす
-	//	pos.y -= center.y;
-
-	//	float cos{ cosf(DirectX::XMConvertToRadians(angle)) };	// DegreeなのでRadianに変換
-	//	float sin{ sinf(DirectX::XMConvertToRadians(angle)) };
-	//	float tx{ pos.x };	// 回転前の頂点座標
-	//	float ty{ pos.y };
-	//	pos.x = tx * cos - sin * ty;	// 回転の公式
-	//	pos.y = tx * sin + cos * ty;
-
-	//	pos.x += center.x;	// ずらした分戻す
-	//	pos.y += center.y;
-	//};
-
-	// 回転の中心を矩形の中心点に
-	DirectX::XMFLOAT2 center{ 0,0 };
-	center.x = Status.Pos.x + Status.Size.x * 0.5f;	// 位置-(大きさ/2)で頂点位置から半サイズ分動く=半分になる
-	center.y = Status.Pos.y + Status.Size.y * 0.5f;
-	// 頂点回転
-	rotate(left_top    , center, Status.Angle);
-	rotate(left_bottom , center, Status.Angle);
-	rotate(right_top   , center, Status.Angle);
-	rotate(right_bottom, center, Status.Angle);
-
-	// スクリーン座標系からNDC(正規化デバイス座標)への座標変換を行う
-	left_top     = ConvertToNDC(left_top    , viewport);	// 頂点位置、スクリーンの大きさ
-	left_bottom  = ConvertToNDC(left_bottom , viewport);
-	right_top    = ConvertToNDC(right_top   , viewport);
-	right_bottom = ConvertToNDC(right_bottom, viewport);
-
-	// テクスチャ座標
-	DirectX::XMFLOAT2 TexLeft_top    { (Status.TexPos.x)                    / texture2d_desc.Width ,(Status.TexPos.y)					 / texture2d_desc.Height };
-	DirectX::XMFLOAT2 TexRight_top   { (Status.TexPos.x + Status.TexSize.x) / texture2d_desc.Width ,(Status.TexPos.y)					 / texture2d_desc.Height };
-	DirectX::XMFLOAT2 TexLeft_bottom { (Status.TexPos.x)                    / texture2d_desc.Width ,(Status.TexPos.y + Status.TexSize.y) / texture2d_desc.Height };
-	DirectX::XMFLOAT2 TexRight_bottom{ (Status.TexPos.x + Status.TexSize.x) / texture2d_desc.Width ,(Status.TexPos.y + Status.TexSize.y) / texture2d_desc.Height };
-
-
-	// 計算結果で頂点バッファオブジェクトを更新する
-	// テクスチャ座標を頂点バッファにセットする
-	HRESULT hr = { S_OK };
-	D3D11_MAPPED_SUBRESOURCE mapped_subrecource{};
-	// mapped_subrecourceをvertex_bufferにマッピング
-	hr = immediate_context->Map(vertex_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_subrecource);	// 動的な定数バッファーを Map して書き込むときは D3D11_MAP_WRITE_DISCARD を使用する
-	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-
-	vFormat_t* vertices{ reinterpret_cast<vFormat_t*>(mapped_subrecource.pData) };	// reinterpret_cast：ありえないような変換のときに使用する？
-	if (vertices != nullptr) {	// 情報の上書き
-		vertices[0].position = left_top;
-		vertices[1].position = right_top;
-		vertices[2].position = left_bottom;
-		vertices[3].position = right_bottom;
-
-		for (int i = 0; i < 4; i++) {
-			vertices[i].color = Status.Color;
-		}
-
-		// UV座標を頂点バッファにセット
-		vertices[0].texcoord = TexLeft_top;
-		vertices[1].texcoord = TexRight_top;
-		vertices[2].texcoord = TexLeft_bottom;
-		vertices[3].texcoord = TexRight_bottom;
-
+void Sprite::Text_Out(ID3D11DeviceContext* immediate_context, std::string s, XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 color) {
+	XMFLOAT2 TexPos(static_cast<float>(texture2d_desc.Width / 16), static_cast<float>(texture2d_desc.Height / 16));
+	float carriage = 0;
+	for (const char c : s) {
+		Render(immediate_context, XMFLOAT2(pos.x + carriage, pos.y), size, 0, color,
+			XMFLOAT2(TexPos.x * (c & 0x0F), TexPos.y * (c >> 4)), TexPos);
+		carriage += size.x;
 	}
-	immediate_context->Unmap(vertex_buffer, 0);	// マッピング解除 頂点バッファを上書きしたら必ず実行。Map&Unmapはセットで使用する
-
-	// SRVバインド
-	immediate_context->PSSetShaderResources(0, 1, &shader_resource_view);	// レジスタ番号、シェーダリソースの数、SRVのポインタ
-
-	// 頂点バッファのバインド
-	UINT stride{ sizeof(vFormat_t) };
-	UINT offset{ 0 };
-	immediate_context->IASetVertexBuffers(
-		0,				// 入力スロットの開始番号
-		1,				// 頂点バッファの数
-		&vertex_buffer,	// 頂点バッファの配列
-		&stride,		// １頂点のサイズの配列
-		&offset);		// 頂点バッファの開始位置をずらすオフセットの配列
-
-	//プリミティブタイプ及びデータの順序に関する情報のバインド
-	immediate_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);	// プリミティブの形状を指定できる？ 今回は連続三角形に変更
-
-	// 入力レイアウトオブジェクトのバインド
-	immediate_context->IASetInputLayout(input_layout);	// 入力レイアウトの設定
-
-	// シェーダのバインド
-	immediate_context->VSSetShader(vertex_shader, nullptr, 0);
-	immediate_context->PSSetShader(pixel_shader, nullptr, 0);
-
-	// プリミティブの描画
-	immediate_context->Draw(4, 0);	// 頂点の数、描画開始時点で使う頂点バッファの最初のインデックス
-
-
-
 }
 
-DirectX::XMFLOAT3 Sprite::ConvertToNDC(DirectX::XMFLOAT3 pos, D3D11_VIEWPORT viewport) {
+XMFLOAT3 Sprite::ConvertToNDC(XMFLOAT3 pos, D3D11_VIEWPORT viewport) {
 	pos.x = (pos.x * 2 / viewport.Width) - 1.0f;	// x値を２倍、その後スクリーンサイズで割って１を引くと正規化される
 	pos.y = 1.0f - (pos.y * 2.0f / viewport.Height);	// y値を２倍、スクリーンサイズで割ったもので１を引くと正規化	xと違うのはおそらく左手右手座標系の関係
 	// 今回はsprite(画像)なのでz値は変更する必要なし
 	return pos;
 }
 
-void Sprite::imguiWindow(){
-}
 
-DirectX::XMFLOAT2 Sprite::division(DirectX::XMFLOAT2 val1, DirectX::XMFLOAT2 val2) {
-	DirectX::XMFLOAT2 valOut;
+XMFLOAT2 Sprite::division(XMFLOAT2 val1, XMFLOAT2 val2) {
+	XMFLOAT2 valOut;
 	valOut.x = val1.x / val2.x;
 	valOut.y = val1.y / val2.y;
 	return valOut;
-}
-
-inline void Sprite::rotate(DirectX::XMFLOAT3& pos, DirectX::XMFLOAT2 center, float angle) {
-	pos.x -= center.x;	// 一度中心点分ずらす
-	pos.y -= center.y;
-
-	float cos{ cosf(DirectX::XMConvertToRadians(angle)) };	// DegreeなのでRadianに変換
-	float sin{ sinf(DirectX::XMConvertToRadians(angle)) };
-	float tx{ pos.x };	// 回転前の頂点座標
-	float ty{ pos.y };
-	pos.x = tx * cos - sin * ty;	// 回転の公式
-	pos.y = tx * sin + cos * ty;
-
-	pos.x += center.x;	// ずらした分戻す
-	pos.y += center.y;
-
 }

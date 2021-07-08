@@ -136,17 +136,19 @@ bool framework::initialize()
 	immediate_context->RSSetViewports(1, &viewport);
 
 	// Blenderの設定
-	blender.setBlender(device);
+	blender.setBlender(device.Get());
 
 	// spriteオブジェクトを生成(今回は先頭の１つだけを生成する)
-	sprites[0] = new Sprite(device, L".\\resources\\box.png");	// シェーダーはコンストラクタ内で指定しているため、別を使うには改良が必要
+	sprites[0] = make_unique<Sprite>(device.Get(), L".\\resources\\box.png");	// シェーダーはコンストラクタ内で指定しているため、別を使うには改良が必要
 	sprites[0]->setSize(1280, 720);
 
 
-	sprites[1] = new Sprite(device, L".\\resources\\player-sprites.png");	// L：ワイド文字の使用許可、全角の文字を使用する場合に必要らしい
+	sprites[1] = make_unique<Sprite>(device.Get(), L".\\resources\\player-sprites.png");	// L：ワイド文字の使用許可、全角の文字を使用する場合に必要らしい
 	sprites[1]->setSize(64, 64);											// ちなみに変数型_tもワイド文字の型らしい wchar_t
 
-	sprite_batches[0] = new sprite_Batch(device, L".\\resources\\player-sprites.png", 2048);
+	sprite_batches[0] = make_unique<sprite_Batch>(device.Get(), L".\\resources\\player-sprites.png", 2048);
+
+	sprite_text= make_unique<Sprite>(device.Get(), L".\\resources\\fonts\\font0.png");
 
 return true;
 }
@@ -196,9 +198,9 @@ void framework::render(float elapsed_time/*Elapsed seconds from last frame*/)
 	HRESULT hr{ S_OK };
 
 	FLOAT color[]{ 0.2f,0.2f,0.2f,1.0f };	// 背景色
-	immediate_context->ClearRenderTargetView(render_target_view, color);	// クリア対象のView、クリアする色
-	immediate_context->ClearDepthStencilView(depth_stensil_view, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-	immediate_context->OMSetRenderTargets(1, &render_target_view, depth_stensil_view);
+	immediate_context->ClearRenderTargetView(render_target_view.Get(), color);	// クリア対象のView、クリアする色
+	immediate_context->ClearDepthStencilView(depth_stensil_view.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	immediate_context->OMSetRenderTargets(1, render_target_view.GetAddressOf(), depth_stensil_view.Get());
 
 	// サンプラーステートをバインド
 	immediate_context->PSSetSamplers(0, 1, &sampler_states[0]);
@@ -207,9 +209,9 @@ void framework::render(float elapsed_time/*Elapsed seconds from last frame*/)
 
 	// spritesの描画	(矩形)
 	{
-		immediate_context->OMSetDepthStencilState(depth_stencil_state[3], 1);	// バインドする深度ステンシルステート、参照値？
+		immediate_context->OMSetDepthStencilState(depth_stencil_state[3].Get(), 1);	// バインドする深度ステンシルステート、参照値？
 		//sprites[0]->render(immediate_context); //画像全体を画面全体に描画する
-		immediate_context->OMSetBlendState(blender.states[Blender::BS_ALPHA], nullptr, 0xFFFFFFFF);	// ブレンドインターフェースのポインタ、ブレンドファクターの配列値、サンプルカバレッジ(今回はデフォルト指定)
+		immediate_context->OMSetBlendState(blender.states[Blender::BS_ALPHA].Get(), nullptr, 0xFFFFFFFF);	// ブレンドインターフェースのポインタ、ブレンドファクターの配列値、サンプルカバレッジ(今回はデフォルト指定)
 		//sprites[1]->render(immediate_context);
 
 		/*----------------------fps変動確認テスト----------------------*/
@@ -218,9 +220,10 @@ void framework::render(float elapsed_time/*Elapsed seconds from last frame*/)
 			static float x{ 0 }, y{ 0 };
 			if (!spriteBatch) {
 				for (size_t i = 0; i < 1092; i++) {
-					// 大体fps200前後
-					sprites[1]->render(immediate_context, DirectX::XMFLOAT2(x, static_cast<float>(static_cast<int>(y) % 720)), sprites[1]->getSize(), sprites[1]->getAngle(),
-						sprites[1]->getColor(), DirectX::XMFLOAT2(140 * 0, 240 * 0), DirectX::XMFLOAT2(140, 240));
+					// 大体fps200前後	ComPtr使ったらfpsガン下がりしたが？
+					//sprites[1]->Render(immediate_context.Get(), DirectX::XMFLOAT2(x, static_cast<float>(static_cast<int>(y) % 720)), sprites[1]->getSize(), sprites[1]->getAngle(),
+					//	sprites[1]->getColor(), DirectX::XMFLOAT2(140 * 0, 240 * 0), DirectX::XMFLOAT2(140, 240));
+					sprites[1]->Render(immediate_context.Get(), XMFLOAT2(0, 0), XMFLOAT2(1280, 720));
 					x += 32;
 					if (x > 1280 - 64) {
 						x = 0;
@@ -229,10 +232,10 @@ void framework::render(float elapsed_time/*Elapsed seconds from last frame*/)
 				}
 			}
 			else {
-				sprite_batches[0]->begin(immediate_context);
+				sprite_batches[0]->begin(immediate_context.Get());
 				for (size_t i = 0; i < 1092; ++i) {
 					// 大体fps500前後
-					sprites[1]->render(immediate_context, DirectX::XMFLOAT2(x, static_cast<float>(static_cast<int>(y) % 720)), sprites[1]->getSize(), sprites[1]->getAngle(),
+					sprite_batches[0]->Render(immediate_context.Get(), DirectX::XMFLOAT2(x, static_cast<float>(static_cast<int>(y) % 720)), sprites[1]->getSize(), sprites[1]->getAngle(),
 						sprites[1]->getColor(), DirectX::XMFLOAT2(140 * 0, 240 * 0), DirectX::XMFLOAT2(140, 240));
 					x += 32;
 					if (x > 1280 - 64) {
@@ -240,10 +243,13 @@ void framework::render(float elapsed_time/*Elapsed seconds from last frame*/)
 						y += 24;
 					}
 				}
-				sprite_batches[0]->end(immediate_context);
+				sprite_batches[0]->end(immediate_context.Get());
 			}
 		}
 #endif
+		immediate_context->OMSetBlendState(blender.states[Blender::BS_ADD].Get(), nullptr, 0xFFFFFFFF);	// ブレンドインターフェースのポインタ、ブレンドファクターの配列値、サンプルカバレッジ(今回はデフォルト指定)
+
+		sprite_text->Text_Out(immediate_context.Get(), "Hage",sprites[1]->getPos(), sprites[1]->getSize(), sprites[1]->getColor());	// テキスト描画
 		/*------------------------------------------------*/
 	}
 
@@ -260,23 +266,23 @@ void framework::render(float elapsed_time/*Elapsed seconds from last frame*/)
 
 bool framework::uninitialize()
 {
-	device->Release();
-	immediate_context->Release();
-	swap_chain->Release();
-	render_target_view->Release();
-	depth_stensil_view->Release();
+	//device->Release();
+	//immediate_context->Release();
+	//swap_chain->Release();
+	//render_target_view->Release();
+	//depth_stensil_view->Release();
 
-	for (auto& b : blender.states) {
-		b->Release();
-	}
+	//for (auto& b : blender.states) {
+	//	b->Release();
+	//}
 
-	for (auto& dss : depth_stencil_state) {
-		dss->Release();
-	}
+	//for (auto& dss : depth_stencil_state) {
+	//	dss->Release();
+	//}
 
-	for (Sprite* p : sprites) {
-		delete p;
-	}
+	//for (Sprite* p : sprites) {
+	//	delete p;
+	//}
 
 	return true;
 }
