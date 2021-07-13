@@ -17,24 +17,45 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Shaders\sprite">
-      <UniqueIdentifier>{84eba98d-01c4-4874-a130-d1203f310183}</UniqueIdentifier>
-    </Filter>
     <Filter Include="imGui">
       <UniqueIdentifier>{84d01fef-4c85-496c-8319-d6704909a54e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Sources\Sprite">
+      <UniqueIdentifier>{4932be0c-edef-48d0-b5ae-0e63bc444e71}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Sprite">
+      <UniqueIdentifier>{84eba98d-01c4-4874-a130-d1203f310183}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Headers\Sprite">
+      <UniqueIdentifier>{de5c1a20-e0cf-4a16-a29f-3db1346cfcda}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Geometric primitive">
+      <UniqueIdentifier>{9669e442-127f-4d58-aade-b6eb6e7c2123}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Sources\Geometric_primitive">
+      <UniqueIdentifier>{b3f9812c-1a28-4a7c-9e66-bfa6b1a9da00}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\sprite_ps.hlsl">
-      <Filter>Shaders\sprite</Filter>
+      <Filter>Shaders\Sprite</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\sprite_vs.hlsl">
-      <Filter>Shaders\sprite</Filter>
+      <Filter>Shaders\Sprite</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\geometric_primitive_ps.hlsl">
+      <Filter>Shaders\Geometric primitive</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\geometric_primitive_vs.hlsl">
+      <Filter>Shaders\Geometric primitive</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\sprite.hlsli">
-      <Filter>Shaders\sprite</Filter>
+      <Filter>Shaders\Sprite</Filter>
+    </None>
+    <None Include="Shaders\geometric_primitive.hlsli">
+      <Filter>Shaders\Geometric primitive</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -68,16 +89,10 @@
     <ClInclude Include="Headers\misc.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="Headers\sprite.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="Headers\framework.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="Headers\Blender.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="Headers\sprite_Batch.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="Headers\texture.h">
@@ -86,12 +101,18 @@
     <ClInclude Include="Headers\shader.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="Headers\sprite.h">
+      <Filter>Headers\Sprite</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\sprite_Batch.h">
+      <Filter>Headers\Sprite</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\Geometric_primitive.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sources\main.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\sprite.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="Sources\framework.cpp">
@@ -115,14 +136,20 @@
     <ClCompile Include="External\imgui\imgui_widgets.cpp">
       <Filter>imGui</Filter>
     </ClCompile>
-    <ClCompile Include="Sources\sprite_Batch.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
     <ClCompile Include="Sources\texture.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="Sources\shader.cpp">
       <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\sprite.cpp">
+      <Filter>Sources\Sprite</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\sprite_Batch.cpp">
+      <Filter>Sources\Sprite</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\Geometric_primitive.cpp">
+      <Filter>Sources\Geometric_primitive</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

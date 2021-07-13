@@ -12,14 +12,14 @@ sprite_Batch::sprite_Batch(ID3D11Device* device, const wchar_t* filename, size_t
 {
 	HRESULT hr{ S_OK };
 
-	std::unique_ptr<vFormat_t[]> vertices{ std::make_unique<vFormat_t[]>(max_vertices) };
+	std::unique_ptr<Vertex[]> vertices{ std::make_unique<Vertex[]>(max_vertices) };
 
 	// テクスチャのロード
 	load_texture_from_file(device, filename, shader_resource_view.GetAddressOf(), &texture2d_desc);
 
 	// ByteWidth,BindFlags,StructuerByteStrideは可変情報、その他情報はあまり変化することはない
 	D3D11_BUFFER_DESC buffer_desc{};			                // バッファの使われ方を設定する構造体
-	buffer_desc.ByteWidth = sizeof(vFormat_t) * max_vertices;	// バッファの大きさ
+	buffer_desc.ByteWidth = sizeof(Vertex) * max_vertices;		// バッファの大きさ
 	buffer_desc.Usage = D3D11_USAGE_DYNAMIC;			        // バッファへの各項目でのアクセス許可を指定 現在はGPU（読み取り専用）とCPU（書き込み専用）の両方からアクセスできる設定
 	buffer_desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;	        // バインド方法 この設定頂点バッファやコンスタントバッファとして使用することを決める
 	buffer_desc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE;        // リソースに対してのCPUアクセス方法 ０でアクセス不要の設定になる。現在は書き込み専用
@@ -57,12 +57,12 @@ sprite_Batch::sprite_Batch(ID3D11Device* device, const wchar_t* filename, size_t
 	// ピクセルシェーダオブジェクトの生成
 	create_ps_from_cso(device, ps_cso_name, pixel_shader.GetAddressOf());
 
-	Status.Pos     = XMFLOAT2(0.0f, 0.0f);
-	Status.Size    = XMFLOAT2(texture2d_desc.Width, texture2d_desc.Height);
-	Status.TexPos  = XMFLOAT2(0.0f, 0.0f);
-	Status.TexSize = XMFLOAT2(texture2d_desc.Width, texture2d_desc.Height);
-	Status.Angle   = 0.0f;
-	Status.Color   = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	param.Pos     = XMFLOAT2(0.0f, 0.0f);
+	param.Size    = XMFLOAT2(texture2d_desc.Width, texture2d_desc.Height);
+	param.TexPos  = XMFLOAT2(0.0f, 0.0f);
+	param.TexSize = XMFLOAT2(texture2d_desc.Width, texture2d_desc.Height);
+	param.Angle   = 0.0f;
+	param.Color   = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 sprite_Batch::~sprite_Batch() {
@@ -95,16 +95,16 @@ void sprite_Batch::end(ID3D11DeviceContext* immediate_context) {
 
 	size_t vertex_count = vertices.size();
 	_ASSERT_EXPR(max_vertices >= vertex_count, "Buffer overflow");
-	vFormat_t* data{ reinterpret_cast<vFormat_t*>(mapped_subrecource.pData) };	// reinterpret_cast：ありえないような変換のときに使用する？
+	Vertex* data{ reinterpret_cast<Vertex*>(mapped_subrecource.pData) };	// reinterpret_cast：ありえないような変換のときに使用する？
 	if (data != nullptr) {	// 情報の上書き
 		// verticesのデータをコピー
-		const vFormat_t* p = vertices.data();
-		memcpy_s(data, max_vertices * sizeof(vFormat_t), p, vertex_count * sizeof(vFormat_t));	// memcpy_s：Buffer間でのバイトのコピー(コピー先ポインタ、コピー先サイズ、コピー元ポインタ、コピー元サイズ)
+		const Vertex* p = vertices.data();
+		memcpy_s(data, max_vertices * sizeof(Vertex), p, vertex_count * sizeof(Vertex));	// memcpy_s：Buffer間でのバイトのコピー(コピー先ポインタ、コピー先サイズ、コピー元ポインタ、コピー元サイズ)
 	}
 	immediate_context->Unmap(vertex_buffer.Get(), 0);	// マッピング解除 頂点バッファを上書きしたら必ず実行。Map&Unmapはセットで使用する
 
 	// 頂点バッファのバインド
-	UINT stride{ sizeof(vFormat_t) };
+	UINT stride{ sizeof(Vertex) };
 	UINT offset{ 0 };
 	immediate_context->IASetVertexBuffers(
 		0,				               // 入力スロットの開始番号
@@ -187,11 +187,11 @@ void sprite_Batch::Render(ID3D11DeviceContext* immediate_context, XMFLOAT2 pos, 
 }
 
 void sprite_Batch::Render(ID3D11DeviceContext* immediate_context) {
-	CreateVertexData(immediate_context, Status.Pos, Status.Size, Status.Angle, Status.Color, Status.TexPos, Status.TexSize);
+	CreateVertexData(immediate_context, param.Pos, param.Size, param.Angle, param.Color, param.TexPos, param.TexSize);
 }
 
 void sprite_Batch::Render(ID3D11DeviceContext* immediate_context, XMFLOAT2 Pos, XMFLOAT2 Size) {
-	CreateVertexData(immediate_context, Pos, Size, 0, Status.Color, Status.TexPos, Status.TexSize);
+	CreateVertexData(immediate_context, Pos, Size, 0, param.Color, param.TexPos, param.TexSize);
 }
 
 XMFLOAT3 sprite_Batch::ConvertToNDC(XMFLOAT3 pos, D3D11_VIEWPORT viewport) {

@@ -8,6 +8,7 @@
 #include "high_resolution_timer.h"
 #include "sprite.h"
 #include "sprite_Batch.h"
+#include "Geometric_primitive.h"
 #include "Blender.h"
 #include <d3d11.h>
 #include <wrl.h>
@@ -46,7 +47,7 @@ public:
 	ComPtr<ID3D11Device> device;
 
 	ComPtr<ID3D11DeviceContext> immediate_context;	// 描画コマンドの追加や送信などの処理を扱っている。CPU側で追加された描画コマンドをGPU側に送信する。
-													//Immediateは生成したコマンドを即時実行することを表す。反対にDeferredというものが存在する。要検索
+													// Immediateは生成したコマンドを即時実行することを表す。反対にDeferredというものが存在する。要検索
 
 	ComPtr<IDXGISwapChain> swap_chain;
 	ComPtr<ID3D11RenderTargetView>		render_target_view;
@@ -60,10 +61,20 @@ public:
 	unique_ptr<sprite_Batch> sprite_batches[8];
 	unique_ptr<Sprite> sprite_text;	// 文字表示的なやつ
 
+	// Geometric_primitive用
+	struct scene_constants {	// シーン定数バッファ
+		XMFLOAT4X4 view_projection;	// VP変換行列
+		XMFLOAT4 light_direction;	// ライトの向き
+	};
+	ComPtr<ID3D11Buffer> constant_buffer[8];
+
+	// Geometric_primitiveの変数やつ
+	unique_ptr< Geometric_primitive> geometric_primitive[8];
+
+
 	// 個人 ImGuiで数値を編集、格納して関数に渡す変数
-	//DirectX::XMFLOAT2 spritePos;
-	//DirectX::XMFLOAT2 spriteSize;
-	//float angle;
+	float light_dir[3] { 0.0f,0.0f,1.0f };
+	XMFLOAT3 eyePos = XMFLOAT3(0.0f, 0.0f, -10.0f);
 
 	int run()
 	{
@@ -181,4 +192,6 @@ private:
 		}
 	}
 };
+
+
 

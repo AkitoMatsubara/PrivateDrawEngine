@@ -1,13 +1,13 @@
 #pragma once
-#include <d3d11.h>
-#include <DirectXMath.h>
-#include <vector>
+//#include <d3d11.h>
+//#include <DirectXMath.h>
 
-#include "imgui.h"
-#include "imgui_impl_dx11.h"
-#include "imgui_impl_win32.h"
+//#include "imgui.h"
+//#include "imgui_impl_dx11.h"
+//#include "imgui_impl_win32.h"
 
 #include "sprite.h"
+#include <vector>
 
 
 // spriteと違いspriteBatchは複数の描画に対して一度しか読み込まなくて良い的な感じ
@@ -22,11 +22,11 @@ private:
 
 	D3D11_TEXTURE2D_DESC				texture2d_desc;
 
-	Status_t Status{};
+	SpriteParam param{};
 
 	// Sprite_Batch追加変数
 	const size_t max_vertices;
-	std::vector<vFormat_t> vertices;
+	std::vector<Vertex> vertices;
 
 	// 内部使用メンバ関数
 	// dx,dy＝矩形の左上のスクリーン座標、dw,dh＝矩形サイズ
@@ -64,24 +64,24 @@ public:
 	XMFLOAT2 division(XMFLOAT2 val1, XMFLOAT2 val2);
 
 	// セッター
-	void setPos    (XMFLOAT2 pos)     { Status.Pos     = pos; }
-	void setSize   (XMFLOAT2 Size)    { Status.Size    = Size; }
-	void setTexPos (XMFLOAT2 texPos)  { Status.TexPos  = texPos; }
-	void setTexSize(XMFLOAT2 texSize) { Status.TexSize = texSize; }
-	void setAngle  (float angle)      { Status.Angle   = angle; }
-	void setColor  (XMFLOAT4 color)   { Status.Color   = color; }
+	void setPos    (XMFLOAT2 pos)     { param.Pos     = pos; }
+	void setSize   (XMFLOAT2 Size)    { param.Size    = Size; }
+	void setTexPos (XMFLOAT2 texPos)  { param.TexPos  = texPos; }
+	void setTexSize(XMFLOAT2 texSize) { param.TexSize = texSize; }
+	void setAngle  (float angle)      { param.Angle   = angle; }
+	void setColor  (XMFLOAT4 color)   { param.Color   = color; }
 
-	void setPos    (float posX, float posY)             { Status.Pos     = XMFLOAT2(posX, posY); }
-	void setSize   (float SizeX, float SizeY)           { Status.Size    = XMFLOAT2(SizeX, SizeY); }
-	void setTexPos (float texPosX, float texPosY)       { Status.TexPos  = XMFLOAT2(texPosX, texPosY); }
-	void setTexSize(float texSizeX, float texSizeY)     { Status.TexSize = XMFLOAT2(texSizeX, texSizeY); }
-	void setColor  (float r, float g, float b, float a) { Status.Color   = XMFLOAT4(r, g, b, a); }
+	void setPos    (float posX, float posY)             { param.Pos     = XMFLOAT2(posX, posY); }
+	void setSize   (float SizeX, float SizeY)           { param.Size    = XMFLOAT2(SizeX, SizeY); }
+	void setTexPos (float texPosX, float texPosY)       { param.TexPos  = XMFLOAT2(texPosX, texPosY); }
+	void setTexSize(float texSizeX, float texSizeY)     { param.TexSize = XMFLOAT2(texSizeX, texSizeY); }
+	void setColor  (float r, float g, float b, float a) { param.Color   = XMFLOAT4(r, g, b, a); }
 
 	// ゲッター
-	XMFLOAT2 getPos()     { return Status.Pos; }
-	XMFLOAT2 getSize()    { return Status.Size; }
-	XMFLOAT2 getTexPos()  { return Status.TexPos; }
-	XMFLOAT2 getTexSize() { return Status.TexSize; }
-	float	 getAngle()   { return Status.Angle; }
-	XMFLOAT4 getColor()   { return Status.Color; }
+	XMFLOAT2 getPos()     { return param.Pos; }
+	XMFLOAT2 getSize()    { return param.Size; }
+	XMFLOAT2 getTexPos()  { return param.TexPos; }
+	XMFLOAT2 getTexSize() { return param.TexSize; }
+	float	 getAngle()   { return param.Angle; }
+	XMFLOAT4 getColor()   { return param.Color; }
 };

@@ -3,11 +3,15 @@
 #include <sstream>
 #include <WICTextureLoader.h>
 
+#include "imgui.h"
+#include "imgui_impl_dx11.h"
+#include "imgui_impl_win32.h"
+
 #include "texture.h"
 #include "shader.h"
 
 // 頂点情報のセット
-vFormat_t vertices[]
+Vertex vertices[]
 {
 	{{-1.0,+1.0,0},{1,1,1,1},{0,0}},	// 左上,RGB色,UV座標
 	{{+1.0,+1.0,0},{1,1,1,1},{1,0}},	// 右上,RGB色,UV座標
@@ -20,7 +24,6 @@ vFormat_t vertices[]
 Sprite::Sprite(ID3D11Device* device, const wchar_t* filename, const char* vs_cso_name ,const char* ps_cso_name )
 {
 	HRESULT hr{ S_OK };
-
 
 	//// 画像ファイルのロードとSRVオブジェクトの生成
 	//ID3D11Resource* resource{};
@@ -49,7 +52,7 @@ Sprite::Sprite(ID3D11Device* device, const wchar_t* filename, const char* vs_cso
 	D3D11_SUBRESOURCE_DATA subresource_data{};			// 作成するバッファの初期化データを保存する構造体
 	subresource_data.pSysMem = vertices;				// バッファを初期化するデータを指定 どの情報で初期化するか
 	subresource_data.SysMemPitch = 0;					// メモリのピッチ 2D or 3Dテクスチャの場合に使用する
-	subresource_data.SysMemSlicePitch = 0;				//	深度レベル	 同上
+	subresource_data.SysMemSlicePitch = 0;				// 深度レベル	 同上
 
 	hr = device->CreateBuffer(&buffer_desc, &subresource_data, vertex_buffer.GetAddressOf());		// 作成するバッファ情報、作成するバッファの初期化情報、作成したバッファを保存するポインタ
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));	// _ASSERT_EXPR：第一引数条件が満たされなければ第二引数のメッセージを表示する
@@ -89,8 +92,6 @@ Sprite::Sprite(ID3D11Device* device, const wchar_t* filename, const char* vs_cso
 	//_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 
 
-
-
 	// 頂点シェーダーオブジェクトの生成
 	create_vs_from_cso(device, vs_cso_name, &vertex_shader, &input_layout, input_element_desc, _countof(input_element_desc));
 
@@ -109,12 +110,12 @@ Sprite::Sprite(ID3D11Device* device, const wchar_t* filename, const char* vs_cso
 	// ピクセルシェーダオブジェクトの生成
 	create_ps_from_cso(device, ps_cso_name, &pixel_shader);
 
-	Status.Pos = XMFLOAT2(0.0f, 0.0f);
-	Status.Size    = XMFLOAT2(texture2d_desc.Width, texture2d_desc.Height);
-	Status.TexPos  = XMFLOAT2(0.0f, 0.0f);
-	Status.TexSize = XMFLOAT2(texture2d_desc.Width, texture2d_desc.Height);
-	Status.Angle   = 0.0f;
-	Status.Color   = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	param.Pos = XMFLOAT2(0.0f, 0.0f);
+	param.Size    = XMFLOAT2(texture2d_desc.Width, texture2d_desc.Height);
+	param.TexPos  = XMFLOAT2(0.0f, 0.0f);
+	param.TexSize = XMFLOAT2(texture2d_desc.Width, texture2d_desc.Height);
+	param.Angle   = 0.0f;
+	param.Color   = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 Sprite::~Sprite() {
@@ -192,7 +193,7 @@ void Sprite::CreateVertexData(ID3D11DeviceContext* immediate_context, XMFLOAT2 p
 	hr = immediate_context->Map(vertex_buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_subrecource);	// 動的な定数バッファーを Map して書き込むときは D3D11_MAP_WRITE_DISCARD を使用する
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 
-	vFormat_t* vertices{ reinterpret_cast<vFormat_t*>(mapped_subrecource.pData) };	// reinterpret_cast：ありえないような変換のときに使用する？
+	Vertex* vertices{ reinterpret_cast<Vertex*>(mapped_subrecource.pData) };	// reinterpret_cast：ありえないような変換のときに使用する？
 	if (vertices != nullptr) {	// 情報の上書き
 		vertices[0].position = left_top;
 		vertices[1].position = right_top;
@@ -216,7 +217,7 @@ void Sprite::CreateVertexData(ID3D11DeviceContext* immediate_context, XMFLOAT2 p
 	immediate_context->PSSetShaderResources(0, 1, shader_resource_view.GetAddressOf());	// レジスタ番号、シェーダリソースの数、SRVのポインタ
 
 	// 頂点バッファのバインド
-	UINT stride{ sizeof(vFormat_t) };
+	UINT stride{ sizeof(Vertex) };
 	UINT offset{ 0 };
 	immediate_context->IASetVertexBuffers(
 		0,								// 入力スロットの開始番号
@@ -245,11 +246,11 @@ void Sprite::Render(ID3D11DeviceContext* immediate_context, XMFLOAT2 pos, XMFLOA
 }
 
 void Sprite::Render(ID3D11DeviceContext* immediate_context) {
-	CreateVertexData(immediate_context, Status.Pos, Status.Size, Status.Angle, Status.Color, Status.TexPos, Status.TexSize);
+	CreateVertexData(immediate_context, param.Pos, param.Size, param.Angle, param.Color, param.TexPos, param.TexSize);
 }
 
 void Sprite::Render(ID3D11DeviceContext* immediate_context, XMFLOAT2 Pos, XMFLOAT2 Size) {
-	CreateVertexData(immediate_context, Pos, Size, 0, Status.Color, Status.TexPos, Status.TexSize);
+	CreateVertexData(immediate_context, Pos, Size, 0, param.Color, param.TexPos, param.TexSize);
 }
 
 void Sprite::Text_Out(ID3D11DeviceContext* immediate_context, std::string s, XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 color) {
@@ -267,6 +268,33 @@ XMFLOAT3 Sprite::ConvertToNDC(XMFLOAT3 pos, D3D11_VIEWPORT viewport) {
 	pos.y = 1.0f - (pos.y * 2.0f / viewport.Height);	// y値を２倍、スクリーンサイズで割ったもので１を引くと正規化	xと違うのはおそらく左手右手座標系の関係
 	// 今回はsprite(画像)なのでz値は変更する必要なし
 	return pos;
+}
+
+void Sprite::imguiWindow() {
+	static float pos[2]     { param.Pos.x    ,param.Pos.y };
+	static float size[2]    { param.Size.x   ,param.Size.y };
+	static float angle      { param.Angle};
+	static float TexPos[2]  { param.TexPos.x ,param.TexPos .y };
+	static float TexSize[2] { param.TexSize.x,param.TexSize.y };
+	static float Color[4] = { param.Color.x  ,param.Color.y,param.Color.z,param.Color.w };
+
+	ImGui::Begin("Sprite_param");
+
+	ImGui::SliderFloat2("Position", pos, -1280, 720);
+	ImGui::SliderFloat2("Size", size, 0, 1960);
+	ImGui::SliderFloat2("TexPos", TexPos, 0, 1960);
+	ImGui::SliderFloat2("TexSize", TexSize, 0, 1960);
+	ImGui::SliderFloat("angle", &angle, 0, 360);
+	ImGui::ColorEdit4(u8"Color", (float*)&Color);
+
+	ImGui::End();
+	setPos(DirectX::XMFLOAT2(pos[0], pos[1]));
+	setSize(DirectX::XMFLOAT2(size[0], size[1]));
+	setAngle(angle);
+	setTexPos(DirectX::XMFLOAT2(TexPos[0], TexPos[1]));
+	setTexSize(DirectX::XMFLOAT2(TexSize[0], TexSize[1]));
+	setColor(DirectX::XMFLOAT4(Color[0], Color[1], Color[2], Color[3]));
+
 }
 
 

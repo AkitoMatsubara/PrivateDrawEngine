@@ -3,10 +3,6 @@
 #include <DirectXMath.h>
 #include <iostream>
 
-#include "imgui.h"
-#include "imgui_impl_dx11.h"
-#include "imgui_impl_win32.h"
-
 #include <wrl.h>
 using namespace Microsoft::WRL;
 using namespace DirectX;
@@ -15,21 +11,21 @@ using namespace std;
 
 
 // 頂点フォーマット
-typedef struct VERTEX_FORMAT {
+struct Vertex {
 	XMFLOAT3 position;
 	XMFLOAT4 color;
 	XMFLOAT2 texcoord;	// TextuerCoordinateの略、UV座標の取得などによく使われる様子
-}vFormat_t;	// typedefの利点・変数宣言時に「struct VERTEX_FORMAT 変数名」と記述せず短く宣言できる
+};
 
 // 矩形用のステータス
-typedef struct STATUS {
+struct SpriteParam {
 	XMFLOAT2 Pos;		// 描画位置
 	XMFLOAT2 Size;		// 描画サイズ
 	XMFLOAT2 TexPos;	// テクスチャの開始位置
 	XMFLOAT2 TexSize;	// テクスチャの使用サイズ
 	float Angle;		// 回転角度
-	XMFLOAT4 Color;	// 加算色
-}Status_t;	// 「_t」はtypedefで定義した構造体につける慣習がある：https://www.cc.kyoto-su.ac.jp/~yamada/programming/struct.html
+	XMFLOAT4 Color;		// 加算色
+};
 
 class Sprite {
 private:
@@ -42,11 +38,10 @@ private:
 
 	D3D11_TEXTURE2D_DESC	texture2d_desc;
 
-	Status_t Status;
+	SpriteParam param;
 
 
 	// 内部使用メンバ関数
-	// dx,dy＝矩形の左上のスクリーン座標、dw,dh＝矩形サイズ
 	XMFLOAT3 ConvertToNDC(XMFLOAT3 val, D3D11_VIEWPORT viewport);
 
 public:
@@ -73,7 +68,7 @@ public:
 	// テキスト画像からテキストを切り抜いて描画(画像なのでフォーマット固定)
 	void Text_Out(ID3D11DeviceContext* immediate_context, std::string s, XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 color);
 
-	// Statusを編集するimguiウィンドウ
+	// paramを編集するimguiウィンドウ
 	void imguiWindow();
 
 	// XMFLOAT2同士の割り算
@@ -81,26 +76,26 @@ public:
 
 
 	// セッター
-	void setPos    (XMFLOAT2 pos)     { Status.Pos     = pos; }
-	void setSize   (XMFLOAT2 Size)    { Status.Size    = Size; }
-	void setTexPos (XMFLOAT2 texPos)  { Status.TexPos  = texPos; }
-	void setTexSize(XMFLOAT2 texSize) { Status.TexSize = texSize; }
-	void setAngle  (float angle)      { Status.Angle   = angle; }
-	void setColor  (XMFLOAT4 color)   { Status.Color   = color; }
+	void setPos    (XMFLOAT2 pos)     { param.Pos     = pos; }
+	void setSize   (XMFLOAT2 Size)    { param.Size    = Size; }
+	void setTexPos (XMFLOAT2 texPos)  { param.TexPos  = texPos; }
+	void setTexSize(XMFLOAT2 texSize) { param.TexSize = texSize; }
+	void setAngle  (float angle)      { param.Angle   = angle; }
+	void setColor  (XMFLOAT4 color)   { param.Color   = color; }
 
-	void setPos    (float posX, float posY)           { Status.Pos     = XMFLOAT2(posX, posY); }
-	void setSize   (float SizeX, float SizeY)         { Status.Size    = XMFLOAT2(SizeX, SizeY); }
-	void setTexPos (float texPosX, float texPosY)     { Status.TexPos  = XMFLOAT2(texPosX, texPosY); }
-	void setTexSize(float texSizeX, float texSizeY)   { Status.TexSize = XMFLOAT2(texSizeX, texSizeY); }
-	void setColor(float r, float g, float b, float a) { Status.Color   = XMFLOAT4(r, g, b, a); }
+	void setPos    (float posX, float posY)           { param.Pos     = XMFLOAT2(posX, posY); }
+	void setSize   (float SizeX, float SizeY)         { param.Size    = XMFLOAT2(SizeX, SizeY); }
+	void setTexPos (float texPosX, float texPosY)     { param.TexPos  = XMFLOAT2(texPosX, texPosY); }
+	void setTexSize(float texSizeX, float texSizeY)   { param.TexSize = XMFLOAT2(texSizeX, texSizeY); }
+	void setColor(float r, float g, float b, float a) { param.Color   = XMFLOAT4(r, g, b, a); }
 
 	// ゲッター
-	XMFLOAT2 getPos()     { return Status.Pos;}
-	XMFLOAT2 getSize()    { return Status.Size;}
-	XMFLOAT2 getTexPos()  { return Status.TexPos;}
-	XMFLOAT2 getTexSize() { return Status.TexSize;}
-	float getAngle() { return Status.Angle; }
-	XMFLOAT4 getColor  () { return Status.Color;}
+	XMFLOAT2 getPos()     { return param.Pos;}
+	XMFLOAT2 getSize()    { return param.Size;}
+	XMFLOAT2 getTexPos()  { return param.TexPos;}
+	XMFLOAT2 getTexSize() { return param.TexSize;}
+	float getAngle() { return param.Angle; }
+	XMFLOAT4 getColor  () { return param.Color;}
 };
 
 // render内で使う頂点回転用関数 sprite_Batchでも使用するのでclass Sprite外ヘッダーに記述
