@@ -1,11 +1,13 @@
 ﻿#include "framework.h"
 
-#define COMPARISON	// SpriteとSprite_Batchの描画速度比較
-static bool spriteBatch = false;
+//#define COMPARISON	// SpriteとSprite_Batchの描画速度比較
+//static bool spriteBatch = false;
 
-
+framework* framework::instance = nullptr;
+static bool mesh = false;
 framework::framework(HWND hwnd) : hwnd(hwnd)
 {
+	instance = this;
 }
 
 bool framework::initialize()
@@ -102,28 +104,25 @@ bool framework::initialize()
 
 		// 深度ステンシルステートの生成
 		D3D11_DEPTH_STENCIL_DESC depth_stencil_desc{};
+		depth_stencil_desc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;	    // COMPARISON:比較	深度データの比較 今回は新規データが既存データ以下の場合に成功
 		/*0-----------------------深度テスト:ON 深度ライト:ON-----------------------0*/
 		depth_stencil_desc.DepthEnable = TRUE;	                        // 深度テストの有効/無効
 		depth_stencil_desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;	// 深度ステンシルバッファへの書き込みのOn/Off D3D11_DEPTH_WRITE_MASK_ALL|D3D11_DEPTH_WRITE_MASK_ZERO
-		depth_stencil_desc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;	    // COMPARISON:比較	深度データの比較 今回は新規データが既存データ以下の場合に成功
 		hr = device->CreateDepthStencilState(&depth_stencil_desc, &depth_stencil_state[0]);
 		_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 		/*1-----------------------深度テスト:ON 深度ライト:OFF-----------------------1*/
 		depth_stencil_desc.DepthEnable = TRUE;							 // 深度テストの有効/無効
 		depth_stencil_desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO; // 深度ステンシルバッファへの書き込みのOn/Off D3D11_DEPTH_WRITE_MASK_ALL|D3D11_DEPTH_WRITE_MASK_ZERO
-		depth_stencil_desc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;		 // COMPARISON:比較	深度データの比較 今回は新規データが既存データ以下の場合に成功
 		hr = device->CreateDepthStencilState(&depth_stencil_desc, &depth_stencil_state[1]);
 		_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 		/*2-----------------------深度テスト:OFF 深度ライト:ON-----------------------2*/
 		depth_stencil_desc.DepthEnable = FALSE;	                        // 深度テストの有効/無効
 		depth_stencil_desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;	// 深度ステンシルバッファへの書き込みのOn/Off D3D11_DEPTH_WRITE_MASK_ALL|D3D11_DEPTH_WRITE_MASK_ZERO
-		depth_stencil_desc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;	    // COMPARISON:比較	深度データの比較 今回は新規データが既存データ以下の場合に成功
 		hr = device->CreateDepthStencilState(&depth_stencil_desc, &depth_stencil_state[2]);
 		_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 		/*3-----------------------深度テスト:OFF 深度ライト:OFF-----------------------3*/
 		depth_stencil_desc.DepthEnable = FALSE;	                         // 深度テストの有効/無効
 		depth_stencil_desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO; // 深度ステンシルバッファへの書き込みのOn/Off D3D11_DEPTH_WRITE_MASK_ALL|D3D11_DEPTH_WRITE_MASK_ZERO
-		depth_stencil_desc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;	     // COMPARISON:比較	深度データの比較 今回は新規データが既存データ以下の場合に成功
 		hr = device->CreateDepthStencilState(&depth_stencil_desc, &depth_stencil_state[3]);
 		_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 
@@ -154,23 +153,24 @@ bool framework::initialize()
 	// 各種クラス設定
 	{
 		// spriteオブジェクトを生成(今回は先頭の１つだけを生成する)
-		sprites[0] = make_unique<Sprite>(device.Get(), L".\\resources\\box.png");	// シェーダーはコンストラクタ内で指定しているため、別を使うには改良が必要
-		sprites[0]->setSize(1280, 720);
-
-
-		sprites[1] = make_unique<Sprite>(device.Get(), L".\\resources\\player-sprites.png");	// L：ワイド文字の使用許可、全角の文字を使用する場合に必要らしい
-		sprites[1]->setSize(64, 64);											// ちなみに変数型_tもワイド文字の型らしい wchar_t
+		sprites = make_unique<Sprite>(device.Get(), L".\\resources\\screenshot.jpg");	// シェーダーはコンストラクタ内で指定しているため、別を使うには改良が必要
+		sprites->setSize(1280, 720);
 
 		sprite_batches[0] = make_unique<sprite_Batch>(device.Get(), L".\\resources\\player-sprites.png", 2048);
 
 		sprite_text = make_unique<Sprite>(device.Get(), L".\\resources\\fonts\\font0.png");
 
 		// Geometric_primitiveオブジェクトの生成
-		geometric_primitive[0] = make_unique<Geometric_primitive>(device.Get());
+		{
+			grid = make_unique<Geometric_Cube>(device.Get());
+			grid->setPos(XMFLOAT3(0, -1, 0));
+			grid->setSize(XMFLOAT3(10, 0.1f, 10));
+		}
+		obj_1= make_unique<Geometric_Capsule>(device.Get());
+		obj_2= make_unique<Geometric_Capsule>(device.Get());
 	}
 	return true;
 }
-
 
 void framework::update(float elapsed_time/*Elapsed seconds from last frame*/)
 {
@@ -186,21 +186,23 @@ void framework::update(float elapsed_time/*Elapsed seconds from last frame*/)
 
 	// 2D用 内部関数で完結させてる？
 	{
-		//sprites[1]->imguiWindow();
+		sprites->ImguiWindow();
 	}
 	// 3D用パラメータ
 	{
-		geometric_primitive[0]->imguiWindow();
+		obj_1->imguiWindow("1");
+		obj_2->imguiWindow("2");
 	}
 
 	// ライト調整等グローバル設定
 	{
 		ImGui::Begin("Light");
 		ImGui::SliderFloat3("Light_Direction", light_dir, -10.0f, 10.0f);
+		ImGui::Checkbox("Mesh Render", &mesh);
 		ImGui::End();
 
 		// カメラ操作
-		static float speed = 5.0f;
+		static float speed = 7.0f;
 		if (GetKeyState('D') < 0)  eyePos.x += speed * elapsed_time;	// 右に
 		if (GetKeyState('A') < 0)  eyePos.x -= speed * elapsed_time;	// 左に
 		if (GetKeyState('W') < 0)  eyePos.z += speed * elapsed_time;	// 前に
@@ -226,6 +228,16 @@ void framework::render(float elapsed_time/*Elapsed seconds from last frame*/)
 	immediate_context->PSSetSamplers(1, 1, &sampler_states[1]);
 	immediate_context->PSSetSamplers(2, 1, &sampler_states[2]);
 
+	immediate_context->OMSetDepthStencilState(depth_stencil_state[0].Get(), 1);	// バインドする深度ステンシルステート、参照値？
+	immediate_context->OMSetBlendState(blender.states[Blender::BS_NONE].Get(), nullptr, 0xFFFFFFFF);	// ブレンドインターフェースのポインタ、ブレンドファクターの配列値、サンプルカバレッジ(今回はデフォルト指定)
+
+	// 2Dオブジェクトの描画設定
+	{
+		immediate_context->OMSetDepthStencilState(depth_stencil_state[1].Get(), 1);	// 3Dオブジェクtの後ろに出すため一旦
+		sprites->Render(immediate_context.Get());
+
+	}
+	// 3Dオブジェクトの描画設定
 	{
 		D3D11_VIEWPORT viewport;
 		UINT num_viewports{ 1 };
@@ -243,67 +255,27 @@ void framework::render(float elapsed_time/*Elapsed seconds from last frame*/)
 
 		scene_constants data{};
 		XMStoreFloat4x4(&data.view_projection, V * P);	// Matrixから4x4へ変換
-		data.light_direction = { light_dir[0],light_dir[1],light_dir[2],0 };				// ライトの位置
+		data.light_direction = { light_dir[0],light_dir[1],light_dir[2],0 };				// ライトの向き
 		immediate_context->UpdateSubresource(constant_buffer[0].Get(), 0, 0, &data, 0, 0);
 		immediate_context->VSSetConstantBuffers(1, 1, constant_buffer[0].GetAddressOf());	// cBufferはドローコールのたびに消去されるので都度設定する必要がある
-		immediate_context->OMSetDepthStencilState(depth_stencil_state[0].Get(), 1);	// バインドする深度ステンシルステート、参照値？
-		immediate_context->OMSetBlendState(blender.states[Blender::BS_ALPHA].Get(), nullptr, 0xFFFFFFFF);	// ブレンドインターフェースのポインタ、ブレンドファクターの配列値、サンプルカバレッジ(今回はデフォルト指定)
+		immediate_context->OMSetDepthStencilState(depth_stencil_state[0].Get(), 1);	// 前後関係をしっかりするため再設定
+
 		{
+			// geometric_primitiveに移植 現状必要なし？
 			//XMMATRIX S{ XMMatrixScaling(geometric_primitive[0]->getSize().x,geometric_primitive[0]->getSize().y,geometric_primitive[0]->getSize().z) };				// 拡縮
 			//XMMATRIX R{ XMMatrixRotationRollPitchYaw(geometric_primitive[0]->getAngle().x,geometric_primitive[0]->getAngle().y,geometric_primitive[0]->getAngle().z) };	// 回転
 			//XMMATRIX T{ XMMatrixTranslation(geometric_primitive[0]->getPos().x,geometric_primitive[0]->getPos().y,geometric_primitive[0]->getPos().z) };			// 平行移動
 			//XMFLOAT4X4 world;
 			//XMStoreFloat4x4(&world, S * R * T);	// ワールド変換行列作成
 			//geometric_primitive[0]->Render(immediate_context.Get(), world, geometric_primitive[0]->getColor());
-
-			geometric_primitive[0]->Render(immediate_context.Get(), geometric_primitive[0]->getColor());
+			grid->wireframe = true;
+			grid->Render(immediate_context.Get());
+			obj_1->Render(immediate_context.Get());
+			obj_2->Render(immediate_context.Get());
 		}
 
 	}
 
-
-	// spritesの描画	(矩形)
-//	{
-		//sprites[1]->Render(immediate_context.Get());
-//
-//		/*----------------------fps変動確認テスト----------------------*/
-#ifdef COMPARISON
-		{
-			static float x{ 0 }, y{ 0 };
-			//if (!spriteBatch) {
-			//	for (size_t i = 0; i < 1092; i++) {
-			//		// 大体fps200前後	ComPtr使ったらfpsガン下がりしたが？
-			//		//sprites[1]->Render(immediate_context.Get(), DirectX::XMFLOAT2(x, static_cast<float>(static_cast<int>(y) % 720)), sprites[1]->getSize(), sprites[1]->getAngle(),
-			//		//	sprites[1]->getColor(), DirectX::XMFLOAT2(140 * 0, 240 * 0), DirectX::XMFLOAT2(140, 240));
-			//		sprites[1]->Render(immediate_context.Get(), XMFLOAT2(0, 0), XMFLOAT2(1280, 720));
-			//		x += 32;
-			//		if (x > 1280 - 64) {
-			//			x = 0;
-			//			y += 24;
-			//		}
-			//	}
-			//}
-			//else {
-				//sprite_batches[0]->begin(immediate_context.Get());
-				//for (size_t i = 0; i < 1092; ++i) {
-				//	// 大体fps500前後
-				//	sprite_batches[0]->Render(immediate_context.Get(), DirectX::XMFLOAT2(x, static_cast<float>(static_cast<int>(y) % 720)), sprites[1]->getSize(), sprites[1]->getAngle(),
-				//		sprites[1]->getColor(), DirectX::XMFLOAT2(140 * 0, 240 * 0), DirectX::XMFLOAT2(140, 240));
-				//	x += 32;
-				//	if (x > 1280 - 64) {
-				//		x = 0;
-				//		y += 24;
-				//	}
-				//}
-				//sprite_batches[0]->end(immediate_context.Get());
-			//}
-		}
-#endif
-//		immediate_context->OMSetBlendState(blender.states[Blender::BS_ADD].Get(), nullptr, 0xFFFFFFFF);	// ブレンドインターフェースのポインタ、ブレンドファクターの配列値、サンプルカバレッジ(今回はデフォルト指定)
-//
-//		sprite_text->Text_Out(immediate_context.Get(), "Hage",sprites[1]->getPos(), sprites[1]->getSize(), sprites[1]->getColor());	// テキスト描画
-//		/*------------------------------------------------*/
-//	}
 
 #ifdef USE_IMGUI
 	ImGui::Render();

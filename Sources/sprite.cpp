@@ -110,6 +110,36 @@ Sprite::Sprite(ID3D11Device* device, const wchar_t* filename, const char* vs_cso
 	// ピクセルシェーダオブジェクトの生成
 	create_ps_from_cso(device, ps_cso_name, &pixel_shader);
 
+	// ラスタライザオブジェクトの生成
+	D3D11_RASTERIZER_DESC rasterizer_desc{};
+	/*-----塗りつぶし 前面描画-----*/
+	rasterizer_desc.FillMode = D3D11_FILL_SOLID;	// レンダリングに使う塗りつぶしモード D3D11_FILL_SOLID|D3D11_FILL_WIREFRAME
+	rasterizer_desc.CullMode = D3D11_CULL_BACK;	// 描画する法線方向 D3D11_CULL_NONE(両面描画)|D3D11_CULL_FRONT(後面描画)|D3D11_CULL_BACK(前面描画)
+	rasterizer_desc.FrontCounterClockwise = FALSE;	// 三角形が前面か背面かを決定する TRUEの時、頂点が反対周りだと前向きとみなされる
+	rasterizer_desc.DepthBias = 0;					// 深度バイアス 同一深度上に表示するときに優先度を決めるのに使用したりする
+	rasterizer_desc.DepthBiasClamp = 0;			// 上記同様     ピクセルの最大深度バイアス
+	rasterizer_desc.SlopeScaledDepthBias = 0;		// 上記同様     特定のピクセルの傾きのスカラー
+	rasterizer_desc.DepthClipEnable = TRUE;		// 距離に基づいてクリッピングを有効にするか
+	rasterizer_desc.ScissorEnable = FALSE;			// シザー矩形カリングを使用するか シザー矩形：描画領域の指定によく使われる
+	rasterizer_desc.MultisampleEnable = FALSE;		// マルチサンプリングアンチエイリアス(MSAA)のRTVを使用している時、tureで四辺形ラインアンチエイリアス、falseでアルファラインアンチエイリアスを使用
+													// MSAAを使用するにはリソース生成時にDX11_SAMPLE_DESC::Countを1より上の値を設定する必要がある
+	rasterizer_desc.AntialiasedLineEnable = FALSE;	// MSAAのRTVを使用している時、線分描画でMultisampleEnableがfalseの時にアンチエイリアスを有効にする
+	hr = device->CreateRasterizerState(&rasterizer_desc, rasterizer_states[0].GetAddressOf());
+	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+	/*-----ワイヤーフレーム 前面描画-----*/
+	rasterizer_desc.FillMode = D3D11_FILL_WIREFRAME;
+	rasterizer_desc.CullMode = D3D11_CULL_BACK;
+	rasterizer_desc.AntialiasedLineEnable = TRUE;
+	hr = device->CreateRasterizerState(&rasterizer_desc, rasterizer_states[1].GetAddressOf());
+	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+	/*-----ワイヤーフレーム 両面描画-----*/
+	rasterizer_desc.FillMode = D3D11_FILL_WIREFRAME;
+	rasterizer_desc.CullMode = D3D11_CULL_NONE;
+	rasterizer_desc.AntialiasedLineEnable = TRUE;
+	hr = device->CreateRasterizerState(&rasterizer_desc, rasterizer_states[2].GetAddressOf());
+	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+
+
 	param.Pos = XMFLOAT2(0.0f, 0.0f);
 	param.Size    = XMFLOAT2(texture2d_desc.Width, texture2d_desc.Height);
 	param.TexPos  = XMFLOAT2(0.0f, 0.0f);
@@ -174,9 +204,9 @@ void Sprite::CreateVertexData(ID3D11DeviceContext* immediate_context, XMFLOAT2 p
 	rotate(right_bottom, center, angle);
 
 	// スクリーン座標系からNDC(正規化デバイス座標)への座標変換を行う
-	left_top = ConvertToNDC(left_top, viewport);	// 頂点位置、スクリーンの大きさ
-	left_bottom = ConvertToNDC(left_bottom, viewport);
-	right_top = ConvertToNDC(right_top, viewport);
+	left_top     = ConvertToNDC(left_top    , viewport);	// 頂点位置、スクリーンの大きさ
+	left_bottom  = ConvertToNDC(left_bottom , viewport);
+	right_top    = ConvertToNDC(right_top   , viewport);
 	right_bottom = ConvertToNDC(right_bottom, viewport);
 
 	XMFLOAT2 TexLeft_top    { (TexPos.x)             / texture2d_desc.Width , (TexPos.y)				/ texture2d_desc.Height };
@@ -236,6 +266,8 @@ void Sprite::CreateVertexData(ID3D11DeviceContext* immediate_context, XMFLOAT2 p
 	immediate_context->VSSetShader(vertex_shader.Get(), nullptr, 0);
 	immediate_context->PSSetShader(pixel_shader.Get(), nullptr, 0);
 
+	// ラスタライザステートの設定
+	immediate_context->RSSetState(rasterizer_states[0].Get());
 	// プリミティブの描画
 	immediate_context->Draw(4, 0);	// 頂点の数、描画開始時点で使う頂点バッファの最初のインデックス
 
@@ -270,7 +302,7 @@ XMFLOAT3 Sprite::ConvertToNDC(XMFLOAT3 pos, D3D11_VIEWPORT viewport) {
 	return pos;
 }
 
-void Sprite::imguiWindow() {
+void Sprite::ImguiWindow() {
 	static float pos[2]     { param.Pos.x    ,param.Pos.y };
 	static float size[2]    { param.Size.x   ,param.Size.y };
 	static float angle      { param.Angle};
@@ -298,7 +330,7 @@ void Sprite::imguiWindow() {
 }
 
 
-XMFLOAT2 Sprite::division(XMFLOAT2 val1, XMFLOAT2 val2) {
+XMFLOAT2 Sprite::Division(XMFLOAT2 val1, XMFLOAT2 val2) {
 	XMFLOAT2 valOut;
 	valOut.x = val1.x / val2.x;
 	valOut.y = val1.y / val2.y;

@@ -19,7 +19,7 @@ sprite_Batch::sprite_Batch(ID3D11Device* device, const wchar_t* filename, size_t
 
 	// ByteWidth,BindFlags,StructuerByteStrideは可変情報、その他情報はあまり変化することはない
 	D3D11_BUFFER_DESC buffer_desc{};			                // バッファの使われ方を設定する構造体
-	buffer_desc.ByteWidth = sizeof(Vertex) * max_vertices;		// バッファの大きさ
+	buffer_desc.ByteWidth = sizeof(Vertex) * (UINT)max_vertices;// バッファの大きさ
 	buffer_desc.Usage = D3D11_USAGE_DYNAMIC;			        // バッファへの各項目でのアクセス許可を指定 現在はGPU（読み取り専用）とCPU（書き込み専用）の両方からアクセスできる設定
 	buffer_desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;	        // バインド方法 この設定頂点バッファやコンスタントバッファとして使用することを決める
 	buffer_desc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE;        // リソースに対してのCPUアクセス方法 ０でアクセス不要の設定になる。現在は書き込み専用
@@ -119,13 +119,16 @@ void sprite_Batch::end(ID3D11DeviceContext* immediate_context) {
 	// 入力レイアウトオブジェクトのバインド
 	immediate_context->IASetInputLayout(input_layout.Get());	// 入力レイアウトの設定
 
+	// ラスタライザステートの設定
+	immediate_context->RSSetState(rasterizer_states[0].Get());
+
 	// プリミティブの描画
 	immediate_context->Draw(static_cast<UINT>(vertex_count), 0);	// 頂点の数、描画開始時点で使う頂点バッファの最初のインデックス
 
 }
 
 void sprite_Batch::CreateVertexData(ID3D11DeviceContext* immediate_context, XMFLOAT2 pos, XMFLOAT2 size, float angle, XMFLOAT4 color
-	, XMFLOAT2 sPos, XMFLOAT2 sSize) {
+	, XMFLOAT2 TexPos, XMFLOAT2 TexSize) {
 
 	// スクリーン(ビューポート)のサイズを取得する
 	D3D11_VIEWPORT viewport{};
@@ -160,10 +163,10 @@ void sprite_Batch::CreateVertexData(ID3D11DeviceContext* immediate_context, XMFL
 	right_top    = ConvertToNDC(right_top   , viewport);
 	right_bottom = ConvertToNDC(right_bottom, viewport);
 
-	XMFLOAT2 TexLeft_top    { (sPos.x)           / texture2d_desc.Width , (sPos.y)			  / texture2d_desc.Height };
-	XMFLOAT2 TexRight_top   { (sPos.x + sSize.x) / texture2d_desc.Width , (sPos.y)			  / texture2d_desc.Height };
-	XMFLOAT2 TexLeft_bottom { (sPos.x)           / texture2d_desc.Width , (sPos.y + sSize.y) / texture2d_desc.Height };
-	XMFLOAT2 TexRight_bottom{ (sPos.x + sSize.x) / texture2d_desc.Width , (sPos.y + sSize.y) / texture2d_desc.Height };
+	XMFLOAT2 TexLeft_top    { (TexPos.x)           / texture2d_desc.Width , (TexPos.y)			  / texture2d_desc.Height };
+	XMFLOAT2 TexRight_top   { (TexPos.x + TexSize.x) / texture2d_desc.Width , (TexPos.y)			  / texture2d_desc.Height };
+	XMFLOAT2 TexLeft_bottom { (TexPos.x)           / texture2d_desc.Width , (TexPos.y + TexSize.y) / texture2d_desc.Height };
+	XMFLOAT2 TexRight_bottom{ (TexPos.x + TexSize.x) / texture2d_desc.Width , (TexPos.y + TexSize.y) / texture2d_desc.Height };
 
 
 	// 計算結果で頂点バッファオブジェクトを更新する
@@ -201,7 +204,7 @@ XMFLOAT3 sprite_Batch::ConvertToNDC(XMFLOAT3 pos, D3D11_VIEWPORT viewport) {
 	return pos;
 }
 
-XMFLOAT2 sprite_Batch::division(XMFLOAT2 val1, XMFLOAT2 val2) {
+XMFLOAT2 sprite_Batch::Division(XMFLOAT2 val1, XMFLOAT2 val2) {
 	XMFLOAT2 valOut;
 	valOut.x = val1.x / val2.x;
 	valOut.y = val1.y / val2.y;

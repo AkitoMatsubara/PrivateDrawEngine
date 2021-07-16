@@ -35,6 +35,7 @@ private:
 	ComPtr<ID3D11InputLayout>			input_layout;
 	ComPtr<ID3D11Buffer>				vertex_buffer;
 	ComPtr<ID3D11ShaderResourceView>	shader_resource_view;
+	ComPtr<ID3D11RasterizerState>		rasterizer_states[3];	// 0:片面塗りつぶし,1:片面ワイヤーフレーム,2:両面ワイヤーフレーム
 
 	D3D11_TEXTURE2D_DESC	texture2d_desc;
 
@@ -69,10 +70,10 @@ public:
 	void Text_Out(ID3D11DeviceContext* immediate_context, std::string s, XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 color);
 
 	// paramを編集するimguiウィンドウ
-	void imguiWindow();
+	void ImguiWindow();
 
 	// XMFLOAT2同士の割り算
-	XMFLOAT2 division(XMFLOAT2 val1, XMFLOAT2 val2);
+	XMFLOAT2 Division(XMFLOAT2 val1, XMFLOAT2 val2);
 
 
 	// セッター

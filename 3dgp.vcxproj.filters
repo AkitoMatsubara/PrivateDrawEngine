@@ -29,11 +29,17 @@
     <Filter Include="Headers\Sprite">
       <UniqueIdentifier>{de5c1a20-e0cf-4a16-a29f-3db1346cfcda}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shaders\Geometric primitive">
+    <Filter Include="Shaders\Geometric Primitive">
       <UniqueIdentifier>{9669e442-127f-4d58-aade-b6eb6e7c2123}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Sources\Geometric_primitive">
+    <Filter Include="Sources\Geometric Primitives">
       <UniqueIdentifier>{b3f9812c-1a28-4a7c-9e66-bfa6b1a9da00}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Headers\Geometric_Primitives">
+      <UniqueIdentifier>{64255cd9-0c65-4ba1-8f5e-f69d2d8b0f6f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Headers\RenderOption">
+      <UniqueIdentifier>{6a7d56e3-0d38-4bee-970b-e91abe8c45e0}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -43,19 +49,19 @@
     <FxCompile Include="Shaders\sprite_vs.hlsl">
       <Filter>Shaders\Sprite</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\geometric_primitive_ps.hlsl">
-      <Filter>Shaders\Geometric primitive</Filter>
+    <FxCompile Include="Shaders\Geometric Primitive_ps.hlsl">
+      <Filter>Shaders\Geometric Primitive</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\geometric_primitive_vs.hlsl">
-      <Filter>Shaders\Geometric primitive</Filter>
+    <FxCompile Include="Shaders\Geometric Primitive_vs.hlsl">
+      <Filter>Shaders\Geometric Primitive</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\sprite.hlsli">
       <Filter>Shaders\Sprite</Filter>
     </None>
-    <None Include="Shaders\geometric_primitive.hlsli">
-      <Filter>Shaders\Geometric primitive</Filter>
+    <None Include="Shaders\Geometric Primitive.hlsli">
+      <Filter>Shaders\Geometric Primitive</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -92,9 +98,6 @@
     <ClInclude Include="Headers\framework.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="Headers\Blender.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="Headers\texture.h">
       <Filter>Headers</Filter>
     </ClInclude>
@@ -107,8 +110,11 @@
     <ClInclude Include="Headers\sprite_Batch.h">
       <Filter>Headers\Sprite</Filter>
     </ClInclude>
-    <ClInclude Include="Headers\Geometric_primitive.h">
-      <Filter>Headers</Filter>
+    <ClInclude Include="Headers\Geometric_Primitive.h">
+      <Filter>Headers\Geometric_Primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\Blender.h">
+      <Filter>Headers\RenderOption</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -148,8 +154,20 @@
     <ClCompile Include="Sources\sprite_Batch.cpp">
       <Filter>Sources\Sprite</Filter>
     </ClCompile>
-    <ClCompile Include="Sources\Geometric_primitive.cpp">
-      <Filter>Sources\Geometric_primitive</Filter>
+    <ClCompile Include="Sources\Geometric Primitive.cpp">
+      <Filter>Sources\Geometric Primitives</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\Geometric_Cube.cpp">
+      <Filter>Sources\Geometric Primitives</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\Geometric_Cylinder.cpp">
+      <Filter>Sources\Geometric Primitives</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\Geometric_Sphere.cpp">
+      <Filter>Sources\Geometric Primitives</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\Geometric_Capsule.cpp">
+      <Filter>Sources\Geometric Primitives</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

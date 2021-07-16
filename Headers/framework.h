@@ -8,7 +8,7 @@
 #include "high_resolution_timer.h"
 #include "sprite.h"
 #include "sprite_Batch.h"
-#include "Geometric_primitive.h"
+#include "Geometric_Primitive.h"
 #include "Blender.h"
 #include <d3d11.h>
 #include <wrl.h>
@@ -44,6 +44,8 @@ public:
 	framework(framework&&) noexcept = delete;
 	framework& operator=(framework&&) noexcept = delete;
 
+	static framework* instance;
+
 	ComPtr<ID3D11Device> device;
 
 	ComPtr<ID3D11DeviceContext> immediate_context;	// 描画コマンドの追加や送信などの処理を扱っている。CPU側で追加された描画コマンドをGPU側に送信する。
@@ -56,8 +58,8 @@ public:
 	ComPtr<ID3D11DepthStencilState>		depth_stencil_state[4];
 	Blender blender;
 
-	// Sprite*型配列を要素数８で宣言
-	unique_ptr<Sprite> sprites[8];
+	// Sprite型 画像描画用
+	unique_ptr<Sprite> sprites;
 	unique_ptr<sprite_Batch> sprite_batches[8];
 	unique_ptr<Sprite> sprite_text;	// 文字表示的なやつ
 
@@ -69,12 +71,18 @@ public:
 	ComPtr<ID3D11Buffer> constant_buffer[8];
 
 	// Geometric_primitiveの変数やつ
-	unique_ptr< Geometric_primitive> geometric_primitive[8];
+	unique_ptr< Geometric_Cube> grid;	// グリッド線もどき
+	unique_ptr< Geometric_Capsule> obj_1;
+	unique_ptr< Geometric_Capsule> obj_2;
 
 
 	// 個人 ImGuiで数値を編集、格納して関数に渡す変数
 	float light_dir[3] { 0.0f,0.0f,1.0f };
 	XMFLOAT3 eyePos = XMFLOAT3(0.0f, 0.0f, -10.0f);
+
+	static framework* getInstance() {
+		return instance;
+	}
 
 	int run()
 	{
@@ -193,5 +201,5 @@ private:
 	}
 };
 
-
+#define FRAMEWORK framework::getInstance()
 
