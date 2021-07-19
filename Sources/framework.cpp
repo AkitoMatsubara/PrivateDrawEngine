@@ -156,7 +156,7 @@ bool framework::initialize()
 		sprites = make_unique<Sprite>(device.Get(), L".\\resources\\screenshot.jpg");	// シェーダーはコンストラクタ内で指定しているため、別を使うには改良が必要
 		sprites->setSize(1280, 720);
 
-		sprite_batches[0] = make_unique<sprite_Batch>(device.Get(), L".\\resources\\player-sprites.png", 2048);
+		//sprite_batches[0] = make_unique<sprite_Batch>(device.Get(), L".\\resources\\player-sprites.png", 2048);
 
 		sprite_text = make_unique<Sprite>(device.Get(), L".\\resources\\fonts\\font0.png");
 
@@ -168,6 +168,9 @@ bool framework::initialize()
 		}
 		obj_1= make_unique<Geometric_Capsule>(device.Get());
 		obj_2= make_unique<Geometric_Capsule>(device.Get());
+
+		// Static_Meshオブジェクトの生成
+		static_mesh = make_unique<Static_Mesh>(device.Get(), L".\\resources\\Bison\\Bison.obj");
 	}
 	return true;
 }
@@ -190,8 +193,9 @@ void framework::update(float elapsed_time/*Elapsed seconds from last frame*/)
 	}
 	// 3D用パラメータ
 	{
-		obj_1->imguiWindow("1");
-		obj_2->imguiWindow("2");
+		//obj_1->imguiWindow("1");
+		//obj_2->imguiWindow("2");
+		static_mesh->imguiWindow("mesh");
 	}
 
 	// ライト調整等グローバル設定
@@ -270,8 +274,9 @@ void framework::render(float elapsed_time/*Elapsed seconds from last frame*/)
 			//geometric_primitive[0]->Render(immediate_context.Get(), world, geometric_primitive[0]->getColor());
 			grid->wireframe = true;
 			grid->Render(immediate_context.Get());
-			obj_1->Render(immediate_context.Get());
-			obj_2->Render(immediate_context.Get());
+			//obj_1->Render(immediate_context.Get());
+			//obj_2->Render(immediate_context.Get());
+			static_mesh->Render(immediate_context.Get());
 		}
 
 	}

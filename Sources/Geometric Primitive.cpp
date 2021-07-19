@@ -140,7 +140,7 @@ void Geometric_Primitive::Render(ID3D11DeviceContext* immediate_context, const X
 
 void Geometric_Primitive::Render(ID3D11DeviceContext* immediate_context) {
 	XMMATRIX S{ XMMatrixScaling(param.Size.x,param.Size.y,param.Size.z) }	;				// ägèk
-	XMMATRIX R{ XMMatrixRotationRollPitchYaw(param.Angle.x,param.Angle.y,param.Angle.z) };	// âÒì]
+	XMMATRIX R{ XMMatrixRotationRollPitchYaw(XMConvertToRadians(param.Angle.x),XMConvertToRadians(param.Angle.y),XMConvertToRadians(param.Angle.z)) };	// âÒì]
 	XMMATRIX T{ XMMatrixTranslation(param.Pos.x,param.Pos.y,param.Pos.z) };					// ïΩçsà⁄ìÆ
 
 	XMFLOAT4X4 world;
@@ -189,8 +189,8 @@ void Geometric_Primitive::Render(ID3D11DeviceContext* immediate_context) {
 
 void Geometric_Primitive::imguiWindow(const char* beginname) {
 
-	float pos[3]{ param.Pos.x ,param.Pos.y ,param.Pos.z };
-	float size[3]{ param.Size.x ,param.Size.y ,param.Size.z };
+	float pos[3]  { param.Pos.x ,param.Pos.y ,param.Pos.z };
+	float size[3] { param.Size.x ,param.Size.y ,param.Size.z };
 	float angle[3]{ param.Angle.x,param.Angle.y,param.Angle.z };
 	float Color[4]{ param.Color.x ,param.Color.y,param.Color.z,param.Color.w };
 
@@ -205,6 +205,6 @@ void Geometric_Primitive::imguiWindow(const char* beginname) {
 	ImGui::End();
 	setPos(DirectX::XMFLOAT3(pos[0], pos[1], pos[2]));
 	setSize(DirectX::XMFLOAT3(size[0], size[1], size[2]));
-	setAngle(DirectX::XMFLOAT3(XMConvertToRadians(angle[0]), XMConvertToRadians(angle[1]), XMConvertToRadians(angle[2])));
+	setAngle(DirectX::XMFLOAT3(angle[0], angle[1], angle[2]));
 	setColor(DirectX::XMFLOAT4(Color[0], Color[1], Color[2], Color[3]));
 }

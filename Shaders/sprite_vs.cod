@@ -38,7 +38,7 @@ dcl_temps 3
 //   o1.x <- <main return value>.color.x; o1.y <- <main return value>.color.y; o1.z <- <main return value>.color.z; o1.w <- <main return value>.color.w; 
 //   o0.x <- <main return value>.positon.x; o0.y <- <main return value>.positon.y; o0.z <- <main return value>.positon.z; o0.w <- <main return value>.positon.w
 //
-#line 6 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateDrawEngine\Shaders\sprite_vs.hlsl"
+#line 6 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine\Shaders\sprite_vs.hlsl"
 mov r0.xyzw, v0.xyzw  // r0.x <- vout.positon.x; r0.y <- vout.positon.y; r0.z <- vout.positon.z; r0.w <- vout.positon.w
 
 #line 7

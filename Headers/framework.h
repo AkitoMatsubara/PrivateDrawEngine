@@ -9,6 +9,7 @@
 #include "sprite.h"
 #include "sprite_Batch.h"
 #include "Geometric_Primitive.h"
+#include "Static_Mesh.h"
 #include "Blender.h"
 #include <d3d11.h>
 #include <wrl.h>
@@ -74,6 +75,9 @@ public:
 	unique_ptr< Geometric_Cube> grid;	// グリッド線もどき
 	unique_ptr< Geometric_Capsule> obj_1;
 	unique_ptr< Geometric_Capsule> obj_2;
+
+	// Static_Mesh用
+	unique_ptr<Static_Mesh> static_mesh;
 
 
 	// 個人 ImGuiで数値を編集、格納して関数に渡す変数

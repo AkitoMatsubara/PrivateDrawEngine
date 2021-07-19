@@ -24,9 +24,9 @@ HRESULT load_texture_from_file(ID3D11Device* device, const wchar_t* filename, ID
 
 	// 画像ファイルのロードとSRVオブジェクトの生成
 	auto it = resources.find(filename);	// クラスのテンプレートパラメータkey_type型のキーを受け取って検索する。見つからなかったらend()を返す
-	if (it != resources.end()) {	// end()じゃない＝filenameが見つかったら
+	if (it != resources.end()) {		// end()じゃない＝filenameが見つかったら
 		*shader_resource_view = it->second.Get();	// secondはyオブジェクト、ここではSRV。ちなみにxオブジェクトはfirst
-		(*shader_resource_view)->AddRef();	// カプセル化されたインターフェイスポインタを呼び出す
+		(*shader_resource_view)->AddRef();			// カプセル化されたインターフェイスポインタを呼び出す
 		(*shader_resource_view)->GetResource(resource.GetAddressOf());
 	}
 	else {
