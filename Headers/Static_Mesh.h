@@ -14,6 +14,7 @@
 #include <xstring>
 
 
+using namespace std;
 using namespace DirectX;
 using namespace Microsoft::WRL;
 
@@ -23,6 +24,20 @@ public:
 		XMFLOAT3 position;
 		XMFLOAT3 normal;
 		XMFLOAT2 texcoord;
+	};
+	struct Subset {
+		wstring usemtl;
+		uint32_t index_start{ 0 };	// indexbufferのスタート位置
+		uint32_t index_count{ 0 };	// 頂点数
+	};
+	struct Material {
+		wstring name;
+		XMFLOAT4 Ka{ 0.2f,0.2f,0.2f,1.0f };
+		XMFLOAT4 Kd{ 0.8f,0.8f,0.8f,1.0f };
+		XMFLOAT4 Ks{ 1.0f,1.0f,1.0f,1.0f };
+		wstring textuer_filename;
+		ComPtr<ID3D11ShaderResourceView> shader_resource_view;
+		std::wstring texture_filename;
 	};
 	struct Constants {
 		XMFLOAT4X4 world;
@@ -40,10 +55,11 @@ private:
 	ComPtr<ID3D11InputLayout> input_layout;
 	ComPtr<ID3D11Buffer> constant_buffer;
 	ComPtr<ID3D11RasterizerState>	rasterizer_states[4];	// 0:片面塗りつぶし,1:片面ワイヤーフレーム,2:両面ワイヤーフレーム
-	ComPtr<ID3D11ShaderResourceView> shader_resource_view;
-	std::wstring texture_filename;
+	vector<Subset> subsets;
+	vector<Material> materials;
 
-	struct primitivParam {
+
+	struct PrimitivParam {
 		XMFLOAT3 Pos;		// 描画位置
 		XMFLOAT3 Size;		// 描画サイズ
 		XMFLOAT3 Angle;		// 回転角度

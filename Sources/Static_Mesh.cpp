@@ -3,7 +3,6 @@
 #include "texture.h"
 #include <fstream>
 #include <filesystem>
-using namespace std;
 
 Static_Mesh::Static_Mesh(ID3D11Device* device, const wchar_t* obj_filename, const char* vs_cso_name, const char* ps_cso_name) {
 	{
@@ -15,85 +14,107 @@ Static_Mesh::Static_Mesh(ID3D11Device* device, const wchar_t* obj_filename, cons
 		vector<XMFLOAT3>normals;
 		vector<XMFLOAT2>texcoords;
 		vector<wstring>mtl_filenames;
-
-		std::wifstream fin(obj_filename);	// 読み取り操作のできるファイルストリーム
-		_ASSERT_EXPR(fin, L"OBJ file not found.");
+		wifstream fin(obj_filename);	// 読み取り操作のできるファイルストリーム
 		wchar_t command[256];
-		while (fin)
+		// OBJファイルの読み込み
 		{
-			fin >> command;
-			if (0 == wcscmp(command, L"v"))
+			_ASSERT_EXPR(fin, L"OBJ file not found.");
+			while (fin)
 			{
-				float x, y, z;
-				fin >> x >> y >> z;
-				positions.push_back({ x, y, z });	// 書き取り 頂点情報を保存する
-				fin.ignore(1024, L'\n');	// 改行までスキップする
-			}
-			else if (0 == wcscmp(command, L"vn"))	// "v"をファイル内に見つけたら
-			{
-				FLOAT i, j, k;
-				fin >> i >> j >> k;
-				normals.push_back({ i, j, k });	// 書き取り 法線情報を保存する
-				fin.ignore(1024, L'\n');
-			}
-			else if (0 == wcscmp(command, L"vt"))
-			{
-				float u, v;
-				fin >> u >> v;
-				texcoords.push_back({ u, 1.0f - v });	// UV座標の保存
-				fin.ignore(1024, L'\n');
-			}
-			else if (0 == wcscmp(command, L"f"))
-			{
-				for (size_t i = 0; i < 3; i++)
+				fin >> command;
+				if (0 == wcscmp(command, L"v"))
 				{
-					Vertex vertex;
-					size_t v, vt, vn;
-					fin >> v;
-					vertex.position = positions.at(v - 1);
-					if (L'/' == fin.peek())
+					float x, y, z;
+					fin >> x >> y >> z;
+					positions.push_back({ x, y, z });	// 書き取り 頂点情報を保存する
+					fin.ignore(1024, L'\n');	// 改行までスキップする
+				}
+				else if (0 == wcscmp(command, L"vt"))
+				{
+					float u, v;
+					fin >> u >> v;
+					texcoords.push_back({ u, 1.0f - v });	// UV座標の保存
+					fin.ignore(1024, L'\n');
+				}
+				else if (0 == wcscmp(command, L"vn"))	// "v"をファイル内に見つけたら
+				{
+					FLOAT i, j, k;
+					fin >> i >> j >> k;
+					normals.push_back({ i, j, k });	// 書き取り 法線情報を保存する
+					fin.ignore(1024, L'\n');
+				}
+				else if (0 == wcscmp(command, L"f"))
+				{
+					for (size_t i = 0; i < 3; i++)
 					{
-						fin.ignore(1);
-						if (L'/' != fin.peek())
-						{
-							fin >> vt;
-							vertex.texcoord = texcoords.at(vt - 1);
-						}
+						Vertex vertex;
+						size_t v, vt, vn;
+						fin >> v;
+						vertex.position = positions.at(v - 1);
 						if (L'/' == fin.peek())
 						{
 							fin.ignore(1);
-							fin >> vn;
-							vertex.normal = normals.at(vn - 1);
+							if (L'/' != fin.peek())
+							{
+								fin >> vt;
+								vertex.texcoord = texcoords.at(vt - 1);
+							}
+							if (L'/' == fin.peek())
+							{
+								fin.ignore(1);
+								fin >> vn;
+								vertex.normal = normals.at(vn - 1);
+							}
 						}
+						vertices.push_back(vertex);
+						indices.push_back(current_index++);
 					}
-					vertices.push_back(vertex);
-					indices.push_back(current_index++);
+					fin.ignore(1024, L'\n');
 				}
-				fin.ignore(1024, L'\n');
+				else if (0 == wcscmp(command, L"mtllib"))
+				{
+					wchar_t mtllib[256];
+					fin >> mtllib;
+					mtl_filenames.push_back(mtllib);
+				}
+				else if (0 == wcscmp(command, L"usemtl")) {
+					wchar_t usemtl[MAX_PATH]{ 0 };
+					fin >> usemtl;
+					subsets.push_back({ usemtl,static_cast<uint32_t>(indices.size()),0 });
+				}
+				else
+				{
+					fin.ignore(1024, L'\n');
+				}
 			}
-			else if (0 == wcscmp(command, L"mtllib"))
-			{
-				wchar_t mtllib[256];
-				fin >> mtllib;
-				mtl_filenames.push_back(mtllib);
-			}
-			else
-			{
-				fin.ignore(1024, L'\n');
-			}
+			fin.close();
 		}
-		fin.close();
+		// サブセットのインデックス数を計算する
+		std::vector<Subset>::reverse_iterator iterator = subsets.rbegin();	// reverse_iterator：逆方向に進むイテレータ的な
+		iterator->index_count = indices.size() - iterator->index_start;
+		//iterator->index_count = static_cast<uint32_t>(indices.size()) - iterator->index_start;
+		for (iterator = subsets.rbegin() + 1; iterator != subsets.rend(); ++iterator)
+		{
+			iterator->index_count = (iterator - 1)->index_start - iterator->index_start;
+		}
+		Create_com_buffers(device, vertices.data(), vertices.size(), indices.data(), indices.size());
+
 		// マテリアルの読み込み
 		{
-			std::filesystem::path mtl_filename(obj_filename);	// ファイルのパスを扱うクラス
-			mtl_filename.replace_filename(std::filesystem::path(mtl_filenames[0]).filename());	// パスに含まれるファイル名を置き換える
+			filesystem::path mtl_filename(obj_filename);	// ファイルのパスを扱うクラス
+			mtl_filename.replace_filename(filesystem::path(mtl_filenames[0]).filename());	// パスに含まれるファイル名を置き換える
 			fin.open(mtl_filename);
 			_ASSERT_EXPR(fin, L"'MTL file not found.");
 
 			while (fin)
 			{
 				fin >> command;
-				if (0 == wcscmp(command, L"map_Kd"))
+				if (0 == wcscmp(command, L"#"))
+				{
+					// コメントスキップ
+					fin.ignore(1024, L'\n');
+				}
+				else if (0 == wcscmp(command, L"map_Kd"))
 				{
 					fin.ignore();
 					wchar_t map_Kd[256];
@@ -101,7 +122,37 @@ Static_Mesh::Static_Mesh(ID3D11Device* device, const wchar_t* obj_filename, cons
 
 					std::filesystem::path path(obj_filename);
 					path.replace_filename(std::filesystem::path(map_Kd).filename());
-					texture_filename = path;
+					materials.rbegin()->texture_filename = path;
+					fin.ignore(1024, L'\n');
+				}
+				else if (0 == wcscmp(command, L"newmtl"))
+				{
+					fin.ignore();
+					wchar_t newmtl[256];
+					Material material;
+					fin >> newmtl;
+					material.name = newmtl;
+					materials.push_back(material);
+				}
+				else if (0 == wcscmp(command, L"Ka"))
+				{
+					float r, g, b;
+					fin >> r >> g >> b;
+					materials.rbegin()->Ka = { r, g, b, 1 };
+					fin.ignore(1024, L'\n');
+				}
+				else if (0 == wcscmp(command, L"Kd"))
+				{
+					float r, g, b;
+					fin >> r >> g >> b;
+					materials.rbegin()->Kd = { r, g, b, 1 };
+					fin.ignore(1024, L'\n');
+				}
+				else if (0 == wcscmp(command, L"Ks"))
+				{
+					float r, g, b;
+					fin >> r >> g >> b;
+					materials.rbegin()->Ks = { r, g, b ,1 };
 					fin.ignore(1024, L'\n');
 				}
 				else
@@ -111,7 +162,6 @@ Static_Mesh::Static_Mesh(ID3D11Device* device, const wchar_t* obj_filename, cons
 			}
 			fin.close();
 		}
-		Create_com_buffers(device, vertices.data(), vertices.size(), indices.data(), indices.size());
 	}
 	HRESULT hr{ S_OK };
 
@@ -123,7 +173,12 @@ Static_Mesh::Static_Mesh(ID3D11Device* device, const wchar_t* obj_filename, cons
 
 	// テクスチャのロード
 	D3D11_TEXTURE2D_DESC texture2d_desc{};
-	load_texture_from_file(device, texture_filename.c_str(), shader_resource_view.GetAddressOf(), &texture2d_desc);
+	for (auto& material : materials)
+	{
+		load_texture_from_file(device, material.texture_filename.c_str(), &material.shader_resource_view, &texture2d_desc);
+	}
+
+	//load_texture_from_file(device, texture_filename.c_str(), shader_resource_view.GetAddressOf(), &texture2d_desc);
 
 	// シェーダ作成
 	create_vs_from_cso(device, vs_cso_name, vertex_shader.GetAddressOf(), input_layout.GetAddressOf(), input_element_desc, ARRAYSIZE(input_element_desc));
@@ -215,7 +270,8 @@ void Static_Mesh::Render(ID3D11DeviceContext* immediate_context, const XMFLOAT4X
 	immediate_context->IASetVertexBuffers(0, 1, vertex_buffer.GetAddressOf(), &stride, &offset);
 
 	// インデックスバッファのバインド
-	immediate_context->IASetIndexBuffer(index_buffer.Get(),		// インデックスを格納したオブジェクトのポインタ
+	immediate_context->IASetIndexBuffer(
+		index_buffer.Get(),			// インデックスを格納したオブジェクトのポインタ
 		DXGI_FORMAT_R32_UINT,		// インデックスバッファ内のデータのフォーマット(16bitか32bitのどちらか)
 		0);							// オフセット
 
@@ -229,22 +285,33 @@ void Static_Mesh::Render(ID3D11DeviceContext* immediate_context, const XMFLOAT4X
 	immediate_context->VSSetShader(vertex_shader.Get(), nullptr, 0);
 	immediate_context->PSSetShader(pixel_shader.Get(), nullptr, 0);
 
-	Constants data{ world,material_color };
-	// メモリからマップ不可能なメモリに作成されたサブリソースにデータをコピー
-	immediate_context->UpdateSubresource(constant_buffer.Get(),	// 宛先リソースへのポインタ
-		0,	// 宛先サブリソースを識別するインデックス
-		0, &data, 0, 0);
+	{
+		for (const Material& material : materials) {
+			// SRVバインド
+			immediate_context->PSSetShaderResources(0, 1, material.shader_resource_view.GetAddressOf());	// レジスタ番号、シェーダリソースの数、SRVのポインタ
 
-	// 定数バッファの設定
-	immediate_context->VSSetConstantBuffers(0, 1, constant_buffer.GetAddressOf());
+			Constants data{ world, material_color };
+			XMStoreFloat4(&data.material_color, XMLoadFloat4(&material_color) * XMLoadFloat4(&material.Kd));
+			// メモリからマップ不可能なメモリに作成されたサブリソースにデータをコピー
+			immediate_context->UpdateSubresource(constant_buffer.Get(),	// 宛先リソースへのポインタ
+				0,	// 宛先サブリソースを識別するインデックス
+				0, &data, 0, 0);
 
-	// ラスタライザステートの設定
-	wireframe = WireFrame;
-	immediate_context->RSSetState(rasterizer_states[wireframe].Get());
+			// 定数バッファの設定
+			immediate_context->VSSetConstantBuffers(0, 1, constant_buffer.GetAddressOf());
 
-	D3D11_BUFFER_DESC buffer_desc{};
-	index_buffer->GetDesc(&buffer_desc);
-	immediate_context->DrawIndexed(buffer_desc.ByteWidth / sizeof(uint32_t), 0, 0);	// 描画するインデックスの数,最初のインデックスの場所,頂点バッファから読み取る前に追加する値
+			// ラスタライザステートの設定
+			immediate_context->RSSetState(rasterizer_states[wireframe].Get());
+
+			for (const Subset& subset : subsets)
+			{
+				if (material.name == subset.usemtl)
+				{
+					immediate_context->DrawIndexed(subset.index_count, subset.index_start, 0);	// 描画するインデックスの数,最初のインデックスの場所,頂点バッファから読み取る前に追加する値
+				}
+			}
+		}
+	}
 }
 
 void Static_Mesh::Render(ID3D11DeviceContext* immediate_context) {
@@ -257,9 +324,6 @@ void Static_Mesh::Render(ID3D11DeviceContext* immediate_context) {
 
 	uint32_t stride{ sizeof(Vertex) };
 	uint32_t offset{ 0 };
-
-	// SRVバインド
-	immediate_context->PSSetShaderResources(0, 1, shader_resource_view.GetAddressOf());	// レジスタ番号、シェーダリソースの数、SRVのポインタ
 
 	// 頂点バッファのバインド
 	immediate_context->IASetVertexBuffers(0, 1, vertex_buffer.GetAddressOf(), &stride, &offset);
@@ -280,21 +344,53 @@ void Static_Mesh::Render(ID3D11DeviceContext* immediate_context) {
 	immediate_context->VSSetShader(vertex_shader.Get(), nullptr, 0);
 	immediate_context->PSSetShader(pixel_shader.Get(), nullptr, 0);
 
-	Constants data{ world,param.Color };
-	// メモリからマップ不可能なメモリに作成されたサブリソースにデータをコピー
-	immediate_context->UpdateSubresource(constant_buffer.Get(),	// 宛先リソースへのポインタ
-		0,	// 宛先サブリソースを識別するインデックス
-		0, &data, 0, 0);
+	{
+		for (const Material& material : materials) {
+			// SRVバインド
+			immediate_context->PSSetShaderResources(0, 1, material.shader_resource_view.GetAddressOf());	// レジスタ番号、シェーダリソースの数、SRVのポインタ
 
-	// 定数バッファの設定
-	immediate_context->VSSetConstantBuffers(0, 1, constant_buffer.GetAddressOf());
+			Constants data{ world, param.Color };
+			XMStoreFloat4(&data.material_color, XMLoadFloat4(&param.Color) * XMLoadFloat4(&material.Kd));
+			// メモリからマップ不可能なメモリに作成されたサブリソースにデータをコピー
+			immediate_context->UpdateSubresource(constant_buffer.Get(),	// 宛先リソースへのポインタ
+				0,	// 宛先サブリソースを識別するインデックス
+				0, &data, 0, 0);
 
-	// ラスタライザステートの設定
-	immediate_context->RSSetState(rasterizer_states[wireframe].Get());
+			// 定数バッファの設定
+			immediate_context->VSSetConstantBuffers(0, 1, constant_buffer.GetAddressOf());
 
-	D3D11_BUFFER_DESC buffer_desc{};
-	index_buffer->GetDesc(&buffer_desc);
-	immediate_context->DrawIndexed(buffer_desc.ByteWidth / sizeof(uint32_t), 0, 0);	// 描画するインデックスの数,最初のインデックスの場所,頂点バッファから読み取る前に追加する値
+			// ラスタライザステートの設定
+			immediate_context->RSSetState(rasterizer_states[wireframe].Get());
+
+			for (const Subset& subset : subsets)
+			{
+				if (material.name == subset.usemtl)
+				{
+					immediate_context->DrawIndexed(subset.index_count, subset.index_start, 0);	// 描画するインデックスの数,最初のインデックスの場所,頂点バッファから読み取る前に追加する値
+				}
+			}
+		}
+	}
+
+	//// SRVバインド
+	////immediate_context->PSSetShaderResources(0, 1, shader_resource_view.GetAddressOf());	// レジスタ番号、シェーダリソースの数、SRVのポインタ
+
+	//for (Material& material : materials)
+	//{
+	//	immediate_context->UpdateSubresource(constant_buffer.Get(), 0, 0, &data, 0, 0);
+	//	immediate_context->VSSetConstantBuffers(0, 1, constant_buffer.GetAddressOf());
+
+	//	immediate_context->PSSetShaderResources(0, 1, material.shader_resource_view.GetAddressOf());
+	//	for (Subset& subset : subsets)
+	//	{
+	//		immediate_context->DrawIndexed(subset.index_count, subset.index_start, 0);
+	//	}
+
+	//}
+
+	//D3D11_BUFFER_DESC buffer_desc{};
+	//index_buffer->GetDesc(&buffer_desc);
+	//immediate_context->DrawIndexed(buffer_desc.ByteWidth / sizeof(uint32_t), 0, 0);	// 描画するインデックスの数,最初のインデックスの場所,頂点バッファから読み取る前に追加する値
 }
 
 void Static_Mesh::imguiWindow(const char* beginname) {

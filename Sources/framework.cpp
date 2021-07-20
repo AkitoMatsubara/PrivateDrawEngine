@@ -170,7 +170,7 @@ bool framework::initialize()
 		obj_2= make_unique<Geometric_Capsule>(device.Get());
 
 		// Static_Meshオブジェクトの生成
-		static_mesh = make_unique<Static_Mesh>(device.Get(), L".\\resources\\Bison\\Bison.obj");
+		static_mesh = make_unique<Static_Mesh>(device.Get(), L".\\resources\\Mr.Incredible\\Mr.Incredible.obj");
 	}
 	return true;
 }
