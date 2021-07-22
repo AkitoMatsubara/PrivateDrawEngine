@@ -2,16 +2,17 @@
 #include <d3d11.h>
 #include <DirectXMath.h>
 #include <wrl.h>
-
-#include "shader.h"
-#include "misc.h"
+#include <vector>
+#include <xstring>
+#include <memory>
 
 #include "imgui.h"
 #include "imgui_impl_dx11.h"
 #include "imgui_impl_win32.h"
 
-#include <vector>
-#include <xstring>
+#include "shader.h"
+#include "misc.h"
+#include "Geometric_primitive.h"
 
 
 using namespace std;
@@ -32,19 +33,19 @@ public:
 	};
 	struct Material {
 		wstring name;
-		XMFLOAT4 Ka{ 0.2f,0.2f,0.2f,1.0f };
-		XMFLOAT4 Kd{ 0.8f,0.8f,0.8f,1.0f };
-		XMFLOAT4 Ks{ 1.0f,1.0f,1.0f,1.0f };
-		wstring textuer_filename;
-		ComPtr<ID3D11ShaderResourceView> shader_resource_view;
-		std::wstring texture_filename;
+		XMFLOAT4 Ka{ 0.2f,0.2f,0.2f,1.0f };	// アンビエント
+		XMFLOAT4 Kd{ 0.8f,0.8f,0.8f,1.0f };	// ディヒューズ
+		XMFLOAT4 Ks{ 1.0f,1.0f,1.0f,1.0f };	// スペキュラ
+		static const int TEXTURE_NUM = 2;
+		wstring texture_filenames[TEXTURE_NUM];								// [0]:色テクスチャ [1]法線マップとして使用
+		ComPtr<ID3D11ShaderResourceView> shader_resource_view[TEXTURE_NUM];	// [0]:色テクスチャ [1]法線マップとして使用
 	};
 	struct Constants {
 		XMFLOAT4X4 world;
 		XMFLOAT4 material_color;
 	};
 
-	bool wireframe;	// ワイヤーフレーム表示の有無
+
 
 private:
 	ComPtr<ID3D11Buffer> vertex_buffer;
@@ -54,10 +55,14 @@ private:
 	ComPtr<ID3D11PixelShader> pixel_shader;
 	ComPtr<ID3D11InputLayout> input_layout;
 	ComPtr<ID3D11Buffer> constant_buffer;
-	ComPtr<ID3D11RasterizerState>	rasterizer_states[4];	// 0:片面塗りつぶし,1:片面ワイヤーフレーム,2:両面ワイヤーフレーム
+	ComPtr<ID3D11RasterizerState>	rasterizer_states[4];	// 0:片面塗りつぶし,1:両面塗り潰し,2:片面ワイヤーフレーム,3:両面ワイヤーフレーム
 	vector<Subset> subsets;
 	vector<Material> materials;
 
+	unique_ptr<Geometric_Cube> Bounty_Box;
+
+	bool wireframe;	// ワイヤーフレーム表示の有無
+	bool dispBounty;	// バウンティボックスの表示
 
 	struct PrimitivParam {
 		XMFLOAT3 Pos;		// 描画位置

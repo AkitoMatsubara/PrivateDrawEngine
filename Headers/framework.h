@@ -68,6 +68,7 @@ public:
 	struct scene_constants {	// シーン定数バッファ
 		XMFLOAT4X4 view_projection;	// VP変換行列
 		XMFLOAT4 light_direction;	// ライトの向き
+		XMFLOAT4 camera_position;	// カメラの位置
 	};
 	ComPtr<ID3D11Buffer> constant_buffer[8];
 
@@ -81,8 +82,8 @@ public:
 
 
 	// 個人 ImGuiで数値を編集、格納して関数に渡す変数
-	float light_dir[3] { 0.0f,0.0f,1.0f };
-	XMFLOAT3 eyePos = XMFLOAT3(0.0f, 0.0f, -10.0f);
+	float light_dir[3] { 0.0f,0.0f,1.0f };	// ライトの向かう方向
+	XMFLOAT3 eyePos = XMFLOAT3(0.0f, 0.0f, -10.0f);	// カメラの位置
 
 	static framework* getInstance() {
 		return instance;

@@ -91,23 +91,26 @@ private:
 		RIGHT_FACE,
 		LEFT_FACE,
 	};
-	enum {
+	enum VERTEX_POSITION{
 		LEFT_TOP,
 		RIGHT_TOP,
 		LEFT_BOTTOM,
 		RIGHT_BOTTOM,
 	};
-	const float SIZE = 1.0f;
-	const float LEFT = -SIZE * 0.5f;
-	const float RIGHT = +SIZE * 0.5f;
+	const float SIZE   = 1.0f;
+	const float LEFT   = -SIZE * 0.5f;
+	const float RIGHT  = +SIZE * 0.5f;
 	const float BOTTOM = -SIZE * 0.5f;
-	const float TOP = +SIZE * 0.5f;
-	const float FRONT = -SIZE * 0.5f;
-	const float BACK = +SIZE * 0.5f;
+	const float TOP    = +SIZE * 0.5f;
+	const float FRONT  = -SIZE * 0.5f;
+	const float BACK   = +SIZE * 0.5f;
 
 public:
 	// 立方体の生成
 	Geometric_Cube(ID3D11Device* device, const char* vs_cso_name = "Shaders\\geometric_primitive_vs.cso", const char* ps_cso_name = "Shaders\\geometric_primitive_ps.cso");
+	// バウンティボックス用 頂点位置を外部から指定するように
+	Geometric_Cube(ID3D11Device* device, float left,float right,float bottom,float top,float front,float back,
+					const char* vs_cso_name = "Shaders\\geometric_primitive_vs.cso", const char* ps_cso_name = "Shaders\\geometric_primitive_ps.cso");
 };
 
 // 円柱

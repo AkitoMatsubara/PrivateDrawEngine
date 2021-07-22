@@ -3,9 +3,9 @@
 #include "texture.h"
 #include <fstream>
 #include <filesystem>
+#include <algorithm>	// max_elemets関数の使用のため
 
 Static_Mesh::Static_Mesh(ID3D11Device* device, const wchar_t* obj_filename, const char* vs_cso_name, const char* ps_cso_name) {
-	{
 		vector<Vertex> vertices;
 		vector<uint32_t> indices;
 		uint32_t current_index{ 0 };
@@ -90,9 +90,9 @@ Static_Mesh::Static_Mesh(ID3D11Device* device, const wchar_t* obj_filename, cons
 			fin.close();
 		}
 		// サブセットのインデックス数を計算する
+		// つまり使用マテリアル毎にメッシュを区切る
 		std::vector<Subset>::reverse_iterator iterator = subsets.rbegin();	// reverse_iterator：逆方向に進むイテレータ的な
-		iterator->index_count = indices.size() - iterator->index_start;
-		//iterator->index_count = static_cast<uint32_t>(indices.size()) - iterator->index_start;
+		iterator->index_count = static_cast<uint32_t>(indices.size()) - iterator->index_start;
 		for (iterator = subsets.rbegin() + 1; iterator != subsets.rend(); ++iterator)
 		{
 			iterator->index_count = (iterator - 1)->index_start - iterator->index_start;
@@ -104,15 +104,14 @@ Static_Mesh::Static_Mesh(ID3D11Device* device, const wchar_t* obj_filename, cons
 			filesystem::path mtl_filename(obj_filename);	// ファイルのパスを扱うクラス
 			mtl_filename.replace_filename(filesystem::path(mtl_filenames[0]).filename());	// パスに含まれるファイル名を置き換える
 			fin.open(mtl_filename);
-			_ASSERT_EXPR(fin, L"'MTL file not found.");
+			//_ASSERT_EXPR(fin, L"'MTL file not found.");	// mtl無しにも対応させるためアサーションチェックは無くす
 
 			while (fin)
 			{
 				fin >> command;
 				if (0 == wcscmp(command, L"#"))
 				{
-					// コメントスキップ
-					fin.ignore(1024, L'\n');
+					fin.ignore(1024, L'\n');	// コメントスキップ
 				}
 				else if (0 == wcscmp(command, L"map_Kd"))
 				{
@@ -122,7 +121,17 @@ Static_Mesh::Static_Mesh(ID3D11Device* device, const wchar_t* obj_filename, cons
 
 					std::filesystem::path path(obj_filename);
 					path.replace_filename(std::filesystem::path(map_Kd).filename());
-					materials.rbegin()->texture_filename = path;
+					materials.rbegin()->texture_filenames[0] = path;
+					fin.ignore(1024, L'\n');
+				}
+				else if (0 == wcscmp(command, L"map_bump") || 0 == wcscmp(command, L"bump"))
+				{
+					fin.ignore();
+					wchar_t map_bump[256];
+					fin >> map_bump;
+					std::filesystem::path path(obj_filename);
+					path.replace_filename(std::filesystem::path(map_bump).filename());
+					materials.rbegin()->texture_filenames[1] = path;
 					fin.ignore(1024, L'\n');
 				}
 				else if (0 == wcscmp(command, L"newmtl"))
@@ -161,8 +170,15 @@ Static_Mesh::Static_Mesh(ID3D11Device* device, const wchar_t* obj_filename, cons
 				}
 			}
 			fin.close();
-		}
-	}
+
+			// mtlファイルを持たないobjにはダミーマテリアルをセットする
+			if (materials.size() == 0) {
+				for (const Subset& subset : subsets) {
+					materials.push_back({ subset.usemtl });
+				}
+			}
+
+			}
 	HRESULT hr{ S_OK };
 
 	D3D11_INPUT_ELEMENT_DESC input_element_desc[]{
@@ -171,14 +187,21 @@ Static_Mesh::Static_Mesh(ID3D11Device* device, const wchar_t* obj_filename, cons
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 
-	// テクスチャのロード
+	// テクスチャのロード マテリアルの数分ループ
 	D3D11_TEXTURE2D_DESC texture2d_desc{};
 	for (auto& material : materials)
 	{
-		load_texture_from_file(device, material.texture_filename.c_str(), &material.shader_resource_view, &texture2d_desc);
+		for (int i = 0; i < material.TEXTURE_NUM; i++) {	// bmpmapに対応だいぶ無理やり作成 テクスチャ(SRV)枚数分回す もっといい方法ないんかな？
+			if (0 == wcscmp(material.texture_filenames[i].c_str(), L"")) {	// texture_filenamesとL""(テクスチャなし)を比較、同じ(return 0)であればダミーテクスチャを作成
+				make_dummy_texture(device, &material.shader_resource_view[i], 0xFFFFFFFF, 16);	// 0xFFFFFFFF:テクスチャ色指定 白
+				//make_dummy_texture(device, &material.shader_resource_view[1], 0xFFFF7F7F, 16);	// 0xFFFF7F7F:法線マップ用の色指定 青
+				break;
+			}
+			else {	// 通常通りテクスチャをロード
+				load_texture_from_file(device, material.texture_filenames[i].c_str(), &material.shader_resource_view[i], &texture2d_desc);
+			}
+		}
 	}
-
-	//load_texture_from_file(device, texture_filename.c_str(), shader_resource_view.GetAddressOf(), &texture2d_desc);
 
 	// シェーダ作成
 	create_vs_from_cso(device, vs_cso_name, vertex_shader.GetAddressOf(), input_layout.GetAddressOf(), input_element_desc, ARRAYSIZE(input_element_desc));
@@ -208,7 +231,7 @@ Static_Mesh::Static_Mesh(ID3D11Device* device, const wchar_t* obj_filename, cons
 	rasterizer_desc.AntialiasedLineEnable = FALSE;	// MSAAのRTVを使用している時、線分描画でMultisampleEnableがfalseの時にアンチエイリアスを有効にする
 	hr = device->CreateRasterizerState(&rasterizer_desc, rasterizer_states[0].GetAddressOf());
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-	/*-----塗り潰し 前面描画-----*/
+	/*-----塗り潰し 両面描画-----*/
 	rasterizer_desc.FillMode = D3D11_FILL_SOLID;
 	rasterizer_desc.CullMode = D3D11_CULL_NONE;
 	rasterizer_desc.AntialiasedLineEnable = TRUE;
@@ -226,6 +249,22 @@ Static_Mesh::Static_Mesh(ID3D11Device* device, const wchar_t* obj_filename, cons
 	rasterizer_desc.AntialiasedLineEnable = TRUE;
 	hr = device->CreateRasterizerState(&rasterizer_desc, rasterizer_states[3].GetAddressOf());
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+
+	// バウンティボックス作成
+	{
+		XMFLOAT3 minPos{ FLT_MAX,FLT_MAX,FLT_MAX };
+		XMFLOAT3 maxPos{ FLT_MIN,FLT_MIN,FLT_MIN };
+		for (auto& p : positions) {
+			if (minPos.x > p.x) { minPos.x = p.x; }
+			if (minPos.y > p.y) { minPos.y = p.y; }
+			if (minPos.z > p.z) { minPos.z = p.z; }
+			if (maxPos.x < p.x) { maxPos.x = p.x; }
+			if (maxPos.y < p.y) { maxPos.y = p.y; }
+			if (maxPos.z < p.z) { maxPos.z = p.z; }
+		}
+		Bounty_Box = make_unique<Geometric_Cube>(device, minPos.x, maxPos.x, minPos.y, maxPos.y, minPos.z, maxPos.z);
+		dispBounty = false;
+	}
 
 	// 各種パラメータの初期化
 	param.Pos = XMFLOAT3(0.0f, 0.0f, 0.0f);
@@ -288,10 +327,11 @@ void Static_Mesh::Render(ID3D11DeviceContext* immediate_context, const XMFLOAT4X
 	{
 		for (const Material& material : materials) {
 			// SRVバインド
-			immediate_context->PSSetShaderResources(0, 1, material.shader_resource_view.GetAddressOf());	// レジスタ番号、シェーダリソースの数、SRVのポインタ
+			immediate_context->PSSetShaderResources(0, 1, material.shader_resource_view[0].GetAddressOf());	// レジスタ番号、シェーダリソースの数、SRVのポインタ
+			immediate_context->PSSetShaderResources(1, 1, material.shader_resource_view[1].GetAddressOf());	// レジスタ番号、シェーダリソースの数、SRVのポインタ
 
-			Constants data{ world, material_color };
-			XMStoreFloat4(&data.material_color, XMLoadFloat4(&material_color) * XMLoadFloat4(&material.Kd));
+			Constants data{ world, param.Color };
+			XMStoreFloat4(&data.material_color, XMLoadFloat4(&param.Color) * XMLoadFloat4(&material.Kd));
 			// メモリからマップ不可能なメモリに作成されたサブリソースにデータをコピー
 			immediate_context->UpdateSubresource(constant_buffer.Get(),	// 宛先リソースへのポインタ
 				0,	// 宛先サブリソースを識別するインデックス
@@ -301,7 +341,7 @@ void Static_Mesh::Render(ID3D11DeviceContext* immediate_context, const XMFLOAT4X
 			immediate_context->VSSetConstantBuffers(0, 1, constant_buffer.GetAddressOf());
 
 			// ラスタライザステートの設定
-			immediate_context->RSSetState(rasterizer_states[wireframe].Get());
+			immediate_context->RSSetState(rasterizer_states[(wireframe) ? 2 : 0].Get());
 
 			for (const Subset& subset : subsets)
 			{
@@ -310,6 +350,9 @@ void Static_Mesh::Render(ID3D11DeviceContext* immediate_context, const XMFLOAT4X
 					immediate_context->DrawIndexed(subset.index_count, subset.index_start, 0);	// 描画するインデックスの数,最初のインデックスの場所,頂点バッファから読み取る前に追加する値
 				}
 			}
+		}
+		if (dispBounty) {
+			Bounty_Box->Render(immediate_context, world, XMFLOAT4{ 1.0f,1.0f,1.0f,1.0f }, true);	// バウンティボックス描画
 		}
 	}
 }
@@ -347,7 +390,8 @@ void Static_Mesh::Render(ID3D11DeviceContext* immediate_context) {
 	{
 		for (const Material& material : materials) {
 			// SRVバインド
-			immediate_context->PSSetShaderResources(0, 1, material.shader_resource_view.GetAddressOf());	// レジスタ番号、シェーダリソースの数、SRVのポインタ
+			immediate_context->PSSetShaderResources(0, 1, material.shader_resource_view[0].GetAddressOf());	// レジスタ番号、シェーダリソースの数、SRVのポインタ
+			immediate_context->PSSetShaderResources(1, 1, material.shader_resource_view[1].GetAddressOf());	// レジスタ番号、シェーダリソースの数、SRVのポインタ
 
 			Constants data{ world, param.Color };
 			XMStoreFloat4(&data.material_color, XMLoadFloat4(&param.Color) * XMLoadFloat4(&material.Kd));
@@ -360,7 +404,7 @@ void Static_Mesh::Render(ID3D11DeviceContext* immediate_context) {
 			immediate_context->VSSetConstantBuffers(0, 1, constant_buffer.GetAddressOf());
 
 			// ラスタライザステートの設定
-			immediate_context->RSSetState(rasterizer_states[wireframe].Get());
+			immediate_context->RSSetState(rasterizer_states[(wireframe) ? 2 : 0].Get());
 
 			for (const Subset& subset : subsets)
 			{
@@ -369,6 +413,9 @@ void Static_Mesh::Render(ID3D11DeviceContext* immediate_context) {
 					immediate_context->DrawIndexed(subset.index_count, subset.index_start, 0);	// 描画するインデックスの数,最初のインデックスの場所,頂点バッファから読み取る前に追加する値
 				}
 			}
+		}
+		if (dispBounty) {
+			Bounty_Box->Render(immediate_context, world, XMFLOAT4{ 1.0f,1.0f,1.0f,1.0f }, true);	// バウンティボックス描画
 		}
 	}
 
@@ -406,8 +453,10 @@ void Static_Mesh::imguiWindow(const char* beginname) {
 	ImGui::SliderFloat3(u8"angle", angle, -360, 360);
 	ImGui::ColorEdit4(u8"Color", (float*)&Color);
 	ImGui::Checkbox(u8"WireFrame", &wireframe);
+	ImGui::Checkbox(u8"BountyBox", &dispBounty);
 
-	ImGui::End();
+	ImGui::End();	// ウィンドウ終了
+	// パラメータ代入
 	setPos(DirectX::XMFLOAT3(pos[0], pos[1], pos[2]));
 	setSize(DirectX::XMFLOAT3(size[0], size[1], size[2]));
 	setAngle(DirectX::XMFLOAT3(angle[0], angle[1], angle[2]));

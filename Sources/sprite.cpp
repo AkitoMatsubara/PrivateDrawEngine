@@ -282,7 +282,7 @@ void Sprite::Render(ID3D11DeviceContext* immediate_context) {
 }
 
 void Sprite::Render(ID3D11DeviceContext* immediate_context, XMFLOAT2 Pos, XMFLOAT2 Size) {
-	CreateVertexData(immediate_context, Pos, Size, 0, param.Color, param.TexPos, param.TexSize);
+	CreateVertexData(immediate_context, Pos, Size, param.Angle, param.Color, param.TexPos, param.TexSize);
 }
 
 void Sprite::Text_Out(ID3D11DeviceContext* immediate_context, std::string s, XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 color) {

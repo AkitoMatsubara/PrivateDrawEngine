@@ -4,7 +4,7 @@
 //static bool spriteBatch = false;
 
 framework* framework::instance = nullptr;
-static bool mesh = false;
+
 framework::framework(HWND hwnd) : hwnd(hwnd)
 {
 	instance = this;
@@ -202,7 +202,6 @@ void framework::update(float elapsed_time/*Elapsed seconds from last frame*/)
 	{
 		ImGui::Begin("Light");
 		ImGui::SliderFloat3("Light_Direction", light_dir, -10.0f, 10.0f);
-		ImGui::Checkbox("Mesh Render", &mesh);
 		ImGui::End();
 
 		// カメラ操作
@@ -218,6 +217,7 @@ void framework::update(float elapsed_time/*Elapsed seconds from last frame*/)
 
 #endif
 }
+
 void framework::render(float elapsed_time/*Elapsed seconds from last frame*/)
 {
 	HRESULT hr{ S_OK };
@@ -228,12 +228,12 @@ void framework::render(float elapsed_time/*Elapsed seconds from last frame*/)
 	immediate_context->OMSetRenderTargets(1, render_target_view.GetAddressOf(), depth_stensil_view.Get());
 
 	// サンプラーステートをバインド
-	immediate_context->PSSetSamplers(0, 1, &sampler_states[0]);
-	immediate_context->PSSetSamplers(1, 1, &sampler_states[1]);
-	immediate_context->PSSetSamplers(2, 1, &sampler_states[2]);
+	immediate_context->PSSetSamplers(0, 1, sampler_states[0].GetAddressOf());
+	immediate_context->PSSetSamplers(1, 1, sampler_states[1].GetAddressOf());
+	immediate_context->PSSetSamplers(2, 1, sampler_states[2].GetAddressOf());
 
 	immediate_context->OMSetDepthStencilState(depth_stencil_state[0].Get(), 1);	// バインドする深度ステンシルステート、参照値？
-	immediate_context->OMSetBlendState(blender.states[Blender::BS_NONE].Get(), nullptr, 0xFFFFFFFF);	// ブレンドインターフェースのポインタ、ブレンドファクターの配列値、サンプルカバレッジ(今回はデフォルト指定)
+	immediate_context->OMSetBlendState(blender.states[Blender::BS_ALPHA].Get(), nullptr, 0xFFFFFFFF);	// ブレンドインターフェースのポインタ、ブレンドファクターの配列値、サンプルカバレッジ(今回はデフォルト指定)
 
 	// 2Dオブジェクトの描画設定
 	{
@@ -259,10 +259,13 @@ void framework::render(float elapsed_time/*Elapsed seconds from last frame*/)
 
 		scene_constants data{};
 		XMStoreFloat4x4(&data.view_projection, V * P);	// Matrixから4x4へ変換
-		data.light_direction = { light_dir[0],light_dir[1],light_dir[2],0 };				// ライトの向き
+		data.light_direction = { light_dir[0],light_dir[1],light_dir[2],0 };	// シェーダに渡すライトの向き
+		data.camera_position = { eyePos.x,eyePos.y,eyePos.z,0 };				// シェーダに渡すカメラの位置
 		immediate_context->UpdateSubresource(constant_buffer[0].Get(), 0, 0, &data, 0, 0);
 		immediate_context->VSSetConstantBuffers(1, 1, constant_buffer[0].GetAddressOf());	// cBufferはドローコールのたびに消去されるので都度設定する必要がある
-		immediate_context->OMSetDepthStencilState(depth_stencil_state[0].Get(), 1);	// 前後関係をしっかりするため再設定
+		immediate_context->PSSetConstantBuffers(1, 1, constant_buffer[0].GetAddressOf());
+
+		immediate_context->OMSetDepthStencilState(depth_stencil_state[0].Get(), 1);			// 2Dオブジェクトとの前後関係をしっかりするため再設定
 
 		{
 			// geometric_primitiveに移植 現状必要なし？
