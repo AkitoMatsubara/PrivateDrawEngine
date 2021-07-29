@@ -1,4 +1,4 @@
-﻿#include "Static_Mesh.h"
+﻿#include "static_mesh.h"
 #include "shader.h"
 #include "texture.h"
 #include <fstream>

@@ -171,6 +171,7 @@ bool framework::initialize()
 
 		// Static_Meshオブジェクトの生成
 		static_mesh = make_unique<Static_Mesh>(device.Get(), L".\\resources\\Mr.Incredible\\Mr.Incredible.obj");
+		skinned_mesh = make_unique<Skinned_Mesh>(device.Get(), ".\\resources\\cube.000.fbx");
 	}
 	return true;
 }

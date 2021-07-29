@@ -8,9 +8,11 @@
 #include "high_resolution_timer.h"
 #include "sprite.h"
 #include "sprite_Batch.h"
-#include "Geometric_Primitive.h"
-#include "Static_Mesh.h"
-#include "Blender.h"
+#include "geometric_primitive.h"
+#include "static_mesh.h"
+#include "skinned_mesh.h"
+
+#include "blender.h"
 #include <d3d11.h>
 #include <wrl.h>
 
@@ -79,6 +81,8 @@ public:
 
 	// Static_Mesh用
 	unique_ptr<Static_Mesh> static_mesh;
+	// Skkined_Mesh用
+	unique_ptr<Skinned_Mesh> skinned_mesh;
 
 
 	// 個人 ImGuiで数値を編集、格納して関数に渡す変数

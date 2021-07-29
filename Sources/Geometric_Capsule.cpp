@@ -1,11 +1,10 @@
-#include "Geometric_Primitive.h"
+#include "geometric_primitive.h"
 
 Geometric_Capsule::Geometric_Capsule(ID3D11Device* device, FLOAT radian, FLOAT height, u_int slices, u_int stacks, const char* vs_cso_name, const char* ps_cso_name) :Geometric_Primitive(device, vs_cso_name, ps_cso_name) {
 	// Šî–{‚Í‹…¶¬‚Ì‰—p
 	std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;
 
-	Vertex vertex;
 	u_int base_index = 0;
 	u_int vertex_offset = 2;	// ã‰º’¸“_•ª‚Ì‚¸‚ê
 

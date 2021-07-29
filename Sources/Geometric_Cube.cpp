@@ -1,5 +1,5 @@
 
-#include "Geometric_Primitive.h"
+#include "geometric_primitive.h"
 
 Geometric_Cube::Geometric_Cube(ID3D11Device* device, const char* vs_cso_name, const char* ps_cso_name ) :Geometric_Primitive(device, vs_cso_name, ps_cso_name) {
 	Vertex vertices[24]{};	// 頂点情報配列（vertices）にすべて頂点の位置・法線情報を格納する。

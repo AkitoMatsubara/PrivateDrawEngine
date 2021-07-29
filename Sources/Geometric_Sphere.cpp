@@ -1,4 +1,4 @@
-#include "Geometric_Primitive.h"
+#include "geometric_primitive.h"
 
 Geometric_Sphere::Geometric_Sphere(ID3D11Device* device, u_int slices, u_int stacks, const char* vs_cso_name, const char* ps_cso_name) :Geometric_Primitive(device, vs_cso_name, ps_cso_name) {
 	std::vector<Vertex> vertices;

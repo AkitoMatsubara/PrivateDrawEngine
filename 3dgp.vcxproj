@@ -97,7 +97,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;d3d11.lib;DirectXTK.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;d3d11.lib;DirectXTK.lib;%(AdditionalDependencies);zlib-md.lib;libxml2-md.lib;libfbxsdk-md.lib</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
       <IgnoreAllDefaultLibraries>
@@ -119,14 +119,14 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;USE_IMGUI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>.\Sources;.\External\DirectXTK-master\Inc;.\External\imgui;.\Headers;%(AdditionalIncludeDirectories);.\Headers</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\Sources;.\External\DirectXTK-master\Inc;.\External\imgui;.\Headers;C:\Program Files\Autodesk\FBX\FBX SDK\2020.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);.\External\DirectXTK-master\Bin\Desktop_2019\x64\Debug</AdditionalLibraryDirectories>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;d3d11.lib;DirectXTK.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);.\External\DirectXTK-master\Bin\Desktop_2019\x64\Debug;C:\Program Files\Autodesk\FBX\FBX SDK\2020.2\lib\vs2019\x64\debug</AdditionalLibraryDirectories>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;d3d11.lib;DirectXTK.lib;%(AdditionalDependencies);zlib-md.lib;libxml2-md.lib;libfbxsdk-md.lib</AdditionalDependencies>
     </Link>
     <FxCompile>
       <ShaderModel>5.0</ShaderModel>
@@ -154,7 +154,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>;.\External\DirectXTK-master\Bin\Desktop_2019\x64\Debug</AdditionalLibraryDirectories>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;d3d11.lib;DirectXTK.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;d3d11.lib;DirectXTK.lib;%(AdditionalDependencies);zlib-md.lib;libxml2-md.lib;libfbxsdk-md.lib</AdditionalDependencies>
     </Link>
     <FxCompile>
       <ShaderModel>5.0</ShaderModel>
@@ -180,8 +180,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);.\External\DirectXTK-master\Bin\Desktop_2019\x64\Debug</AdditionalLibraryDirectories>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;d3d11.lib;DirectXTK.lib;d3dcompiler.lib;d3dx11.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);.\External\DirectXTK-master\Bin\Desktop_2019\x64\Release;C:\Program Files\Autodesk\FBX\FBX SDK\2020.2\lib\vs2019\x64\release</AdditionalLibraryDirectories>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;d3d11.lib;DirectXTK.lib;d3dcompiler.lib;d3dx11.lib;%(AdditionalDependencies);zlib-md.lib;libxml2-md.lib;libfbxsdk-md.lib</AdditionalDependencies>
     </Link>
     <FxCompile>
       <ShaderModel>5.0</ShaderModel>
@@ -244,13 +244,14 @@
     <ClInclude Include="External\imgui\imstb_truetype.h" />
     <ClInclude Include="Headers\Blender.h" />
     <ClInclude Include="Headers\framework.h" />
-    <ClInclude Include="Headers\Geometric_Primitive.h" />
+    <ClInclude Include="Headers\geometric_primitive.h" />
     <ClInclude Include="Headers\high_resolution_timer.h" />
     <ClInclude Include="Headers\misc.h" />
     <ClInclude Include="Headers\shader.h" />
+    <ClInclude Include="Headers\skinned_mesh.h" />
     <ClInclude Include="Headers\sprite.h" />
     <ClInclude Include="Headers\sprite_Batch.h" />
-    <ClInclude Include="Headers\Static_Mesh.h" />
+    <ClInclude Include="Headers\static_mesh.h" />
     <ClInclude Include="Headers\texture.h" />
   </ItemGroup>
   <ItemGroup>
@@ -261,16 +262,17 @@
     <ClCompile Include="External\imgui\imgui_ja_gryph_ranges.cpp" />
     <ClCompile Include="External\imgui\imgui_widgets.cpp" />
     <ClCompile Include="Sources\framework.cpp" />
-    <ClCompile Include="Sources\Geometric Primitive.cpp" />
-    <ClCompile Include="Sources\Geometric_Capsule.cpp" />
-    <ClCompile Include="Sources\Geometric_Cube.cpp" />
-    <ClCompile Include="Sources\Geometric_Cylinder.cpp" />
-    <ClCompile Include="Sources\Geometric_Sphere.cpp" />
+    <ClCompile Include="Sources\geometric_capsule.cpp" />
+    <ClCompile Include="Sources\geometric_cube.cpp" />
+    <ClCompile Include="Sources\geometric_cylinder.cpp" />
+    <ClCompile Include="Sources\geometric_primitive.cpp" />
+    <ClCompile Include="Sources\geometric_sphere.cpp" />
     <ClCompile Include="Sources\main.cpp" />
     <ClCompile Include="Sources\shader.cpp" />
+    <ClCompile Include="Sources\skinned_mesh.cpp" />
     <ClCompile Include="Sources\sprite.cpp" />
     <ClCompile Include="Sources\sprite_Batch.cpp" />
-    <ClCompile Include="Sources\Static_Mesh.cpp" />
+    <ClCompile Include="Sources\static_mesh.cpp" />
     <ClCompile Include="Sources\texture.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
