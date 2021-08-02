@@ -148,7 +148,7 @@ bool framework::initialize()
 		_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 
 		// Blenderの設定
-		blender.setBlender(device.Get());
+		blender.setBlend(device.Get());
 	}
 	// 各種クラス設定
 	{
@@ -196,7 +196,8 @@ void framework::update(float elapsed_time/*Elapsed seconds from last frame*/)
 	{
 		//obj_1->imguiWindow("1");
 		//obj_2->imguiWindow("2");
-		static_mesh->imguiWindow("mesh");
+		//static_mesh->imguiWindow("obj");
+		skinned_mesh->imguiWindow("fbx");
 	}
 
 	// ライト調整等グローバル設定
@@ -280,7 +281,8 @@ void framework::render(float elapsed_time/*Elapsed seconds from last frame*/)
 			grid->Render(immediate_context.Get());
 			//obj_1->Render(immediate_context.Get());
 			//obj_2->Render(immediate_context.Get());
-			static_mesh->Render(immediate_context.Get());
+			//static_mesh->Render(immediate_context.Get());
+			skinned_mesh->Render(immediate_context.Get());
 		}
 
 	}

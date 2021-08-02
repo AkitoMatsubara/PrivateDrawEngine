@@ -3,7 +3,7 @@
 #include <DirectXMath.h>
 #include <wrl.h>
 #include <vector>
-#include <xstring>
+#include <string>
 #include <memory>
 
 #include "imgui.h"
@@ -13,6 +13,7 @@
 #include "shader.h"
 #include "misc.h"
 #include "Geometric_primitive.h"
+#include "Rasterizer.h"
 
 
 using namespace std;
@@ -55,10 +56,11 @@ private:
 	ComPtr<ID3D11PixelShader> pixel_shader;
 	ComPtr<ID3D11InputLayout> input_layout;
 	ComPtr<ID3D11Buffer> constant_buffer;
-	ComPtr<ID3D11RasterizerState>	rasterizer_states[4];	// 0:片面塗りつぶし,1:両面塗り潰し,2:片面ワイヤーフレーム,3:両面ワイヤーフレーム
+	//ComPtr<ID3D11RasterizerState>	rasterizer_states[4];	// 0:片面塗りつぶし,1:両面塗り潰し,2:片面ワイヤーフレーム,3:両面ワイヤーフレーム
 	vector<Subset> subsets;
 	vector<Material> materials;
 
+	Rasterizer rasterizer;
 	unique_ptr<Geometric_Cube> Bounty_Box;
 
 	bool wireframe;	// ワイヤーフレーム表示の有無

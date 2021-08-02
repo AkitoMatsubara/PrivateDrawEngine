@@ -36,8 +36,11 @@
 # 除外フォルダ
 /resources
 /others
+/Debug
 /.vs
 /x64
+*.pdb
+*.exe
 
 # 例外フォルダ
 !/Shaders/

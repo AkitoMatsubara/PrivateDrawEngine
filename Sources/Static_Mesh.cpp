@@ -6,179 +6,179 @@
 #include <algorithm>	// max_elemets関数の使用のため
 
 Static_Mesh::Static_Mesh(ID3D11Device* device, const wchar_t* obj_filename, const char* vs_cso_name, const char* ps_cso_name) {
-		vector<Vertex> vertices;
-		vector<uint32_t> indices;
-		uint32_t current_index{ 0 };
+	vector<Vertex> vertices;
+	vector<uint32_t> indices;
+	uint32_t current_index{ 0 };
 
-		vector<XMFLOAT3>positions;
-		vector<XMFLOAT3>normals;
-		vector<XMFLOAT2>texcoords;
-		vector<wstring>mtl_filenames;
-		wifstream fin(obj_filename);	// 読み取り操作のできるファイルストリーム
-		wchar_t command[256];
-		// OBJファイルの読み込み
+	vector<XMFLOAT3>positions;
+	vector<XMFLOAT3>normals;
+	vector<XMFLOAT2>texcoords;
+	vector<wstring>mtl_filenames;
+	wifstream fin(obj_filename);	// 読み取り操作のできるファイルストリーム
+	wchar_t command[256];
+	// OBJファイルの読み込み
+	{
+		_ASSERT_EXPR(fin, L"OBJ file not found.");
+		while (fin)
 		{
-			_ASSERT_EXPR(fin, L"OBJ file not found.");
-			while (fin)
+			fin >> command;
+			if (0 == wcscmp(command, L"v"))
 			{
-				fin >> command;
-				if (0 == wcscmp(command, L"v"))
+				float x, y, z;
+				fin >> x >> y >> z;
+				positions.push_back({ x, y, z });	// 書き取り 頂点情報を保存する
+				fin.ignore(1024, L'\n');	// 改行までスキップする
+			}
+			else if (0 == wcscmp(command, L"vt"))
+			{
+				float u, v;
+				fin >> u >> v;
+				texcoords.push_back({ u, 1.0f - v });	// UV座標の保存
+				fin.ignore(1024, L'\n');
+			}
+			else if (0 == wcscmp(command, L"vn"))	// "v"をファイル内に見つけたら
+			{
+				FLOAT i, j, k;
+				fin >> i >> j >> k;
+				normals.push_back({ i, j, k });	// 書き取り 法線情報を保存する
+				fin.ignore(1024, L'\n');
+			}
+			else if (0 == wcscmp(command, L"f"))
+			{
+				for (size_t i = 0; i < 3; i++)
 				{
-					float x, y, z;
-					fin >> x >> y >> z;
-					positions.push_back({ x, y, z });	// 書き取り 頂点情報を保存する
-					fin.ignore(1024, L'\n');	// 改行までスキップする
-				}
-				else if (0 == wcscmp(command, L"vt"))
-				{
-					float u, v;
-					fin >> u >> v;
-					texcoords.push_back({ u, 1.0f - v });	// UV座標の保存
-					fin.ignore(1024, L'\n');
-				}
-				else if (0 == wcscmp(command, L"vn"))	// "v"をファイル内に見つけたら
-				{
-					FLOAT i, j, k;
-					fin >> i >> j >> k;
-					normals.push_back({ i, j, k });	// 書き取り 法線情報を保存する
-					fin.ignore(1024, L'\n');
-				}
-				else if (0 == wcscmp(command, L"f"))
-				{
-					for (size_t i = 0; i < 3; i++)
+					Vertex vertex;
+					size_t v, vt, vn;
+					fin >> v;
+					vertex.position = positions.at(v - 1);
+					if (L'/' == fin.peek())
 					{
-						Vertex vertex;
-						size_t v, vt, vn;
-						fin >> v;
-						vertex.position = positions.at(v - 1);
+						fin.ignore(1);
+						if (L'/' != fin.peek())
+						{
+							fin >> vt;
+							vertex.texcoord = texcoords.at(vt - 1);
+						}
 						if (L'/' == fin.peek())
 						{
 							fin.ignore(1);
-							if (L'/' != fin.peek())
-							{
-								fin >> vt;
-								vertex.texcoord = texcoords.at(vt - 1);
-							}
-							if (L'/' == fin.peek())
-							{
-								fin.ignore(1);
-								fin >> vn;
-								vertex.normal = normals.at(vn - 1);
-							}
+							fin >> vn;
+							vertex.normal = normals.at(vn - 1);
 						}
-						vertices.push_back(vertex);
-						indices.push_back(current_index++);
 					}
-					fin.ignore(1024, L'\n');
+					vertices.push_back(vertex);
+					indices.push_back(current_index++);
 				}
-				else if (0 == wcscmp(command, L"mtllib"))
-				{
-					wchar_t mtllib[256];
-					fin >> mtllib;
-					mtl_filenames.push_back(mtllib);
-				}
-				else if (0 == wcscmp(command, L"usemtl")) {
-					wchar_t usemtl[MAX_PATH]{ 0 };
-					fin >> usemtl;
-					subsets.push_back({ usemtl,static_cast<uint32_t>(indices.size()),0 });
-				}
-				else
-				{
-					fin.ignore(1024, L'\n');
-				}
+				fin.ignore(1024, L'\n');
 			}
-			fin.close();
-		}
-		// サブセットのインデックス数を計算する
-		// つまり使用マテリアル毎にメッシュを区切る
-		std::vector<Subset>::reverse_iterator iterator = subsets.rbegin();	// reverse_iterator：逆方向に進むイテレータ的な
-		iterator->index_count = static_cast<uint32_t>(indices.size()) - iterator->index_start;
-		for (iterator = subsets.rbegin() + 1; iterator != subsets.rend(); ++iterator)
-		{
-			iterator->index_count = (iterator - 1)->index_start - iterator->index_start;
-		}
-		Create_com_buffers(device, vertices.data(), vertices.size(), indices.data(), indices.size());
-
-		// マテリアルの読み込み
-		{
-			filesystem::path mtl_filename(obj_filename);	// ファイルのパスを扱うクラス
-			mtl_filename.replace_filename(filesystem::path(mtl_filenames[0]).filename());	// パスに含まれるファイル名を置き換える
-			fin.open(mtl_filename);
-			//_ASSERT_EXPR(fin, L"'MTL file not found.");	// mtl無しにも対応させるためアサーションチェックは無くす
-
-			while (fin)
+			else if (0 == wcscmp(command, L"mtllib"))
 			{
-				fin >> command;
-				if (0 == wcscmp(command, L"#"))
-				{
-					fin.ignore(1024, L'\n');	// コメントスキップ
-				}
-				else if (0 == wcscmp(command, L"map_Kd"))
-				{
-					fin.ignore();
-					wchar_t map_Kd[256];
-					fin >> map_Kd;
-
-					std::filesystem::path path(obj_filename);
-					path.replace_filename(std::filesystem::path(map_Kd).filename());
-					materials.rbegin()->texture_filenames[0] = path;
-					fin.ignore(1024, L'\n');
-				}
-				else if (0 == wcscmp(command, L"map_bump") || 0 == wcscmp(command, L"bump"))
-				{
-					fin.ignore();
-					wchar_t map_bump[256];
-					fin >> map_bump;
-					std::filesystem::path path(obj_filename);
-					path.replace_filename(std::filesystem::path(map_bump).filename());
-					materials.rbegin()->texture_filenames[1] = path;
-					fin.ignore(1024, L'\n');
-				}
-				else if (0 == wcscmp(command, L"newmtl"))
-				{
-					fin.ignore();
-					wchar_t newmtl[256];
-					Material material;
-					fin >> newmtl;
-					material.name = newmtl;
-					materials.push_back(material);
-				}
-				else if (0 == wcscmp(command, L"Ka"))
-				{
-					float r, g, b;
-					fin >> r >> g >> b;
-					materials.rbegin()->Ka = { r, g, b, 1 };
-					fin.ignore(1024, L'\n');
-				}
-				else if (0 == wcscmp(command, L"Kd"))
-				{
-					float r, g, b;
-					fin >> r >> g >> b;
-					materials.rbegin()->Kd = { r, g, b, 1 };
-					fin.ignore(1024, L'\n');
-				}
-				else if (0 == wcscmp(command, L"Ks"))
-				{
-					float r, g, b;
-					fin >> r >> g >> b;
-					materials.rbegin()->Ks = { r, g, b ,1 };
-					fin.ignore(1024, L'\n');
-				}
-				else
-				{
-					fin.ignore(1024, L'\n');
-				}
+				wchar_t mtllib[256];
+				fin >> mtllib;
+				mtl_filenames.push_back(mtllib);
 			}
-			fin.close();
-
-			// mtlファイルを持たないobjにはダミーマテリアルをセットする
-			if (materials.size() == 0) {
-				for (const Subset& subset : subsets) {
-					materials.push_back({ subset.usemtl });
-				}
+			else if (0 == wcscmp(command, L"usemtl")) {
+				wchar_t usemtl[MAX_PATH]{ 0 };
+				fin >> usemtl;
+				subsets.push_back({ usemtl,static_cast<uint32_t>(indices.size()),0 });
 			}
-
+			else
+			{
+				fin.ignore(1024, L'\n');
 			}
+		}
+		fin.close();
+	}
+	// サブセットのインデックス数を計算する
+	// つまり使用マテリアル毎にメッシュを区切る
+	std::vector<Subset>::reverse_iterator iterator = subsets.rbegin();	// reverse_iterator：逆方向に進むイテレータ的な
+	iterator->index_count = static_cast<uint32_t>(indices.size()) - iterator->index_start;
+	for (iterator = subsets.rbegin() + 1; iterator != subsets.rend(); ++iterator)
+	{
+		iterator->index_count = (iterator - 1)->index_start - iterator->index_start;
+	}
+	Create_com_buffers(device, vertices.data(), vertices.size(), indices.data(), indices.size());
+
+	// マテリアルの読み込み
+	{
+		filesystem::path mtl_filename(obj_filename);	// ファイルのパスを扱うクラス
+		mtl_filename.replace_filename(filesystem::path(mtl_filenames[0]).filename());	// パスに含まれるファイル名を置き換える
+		fin.open(mtl_filename);
+		//_ASSERT_EXPR(fin, L"'MTL file not found.");	// mtl無しにも対応させるためアサーションチェックは無くす
+
+		while (fin)
+		{
+			fin >> command;
+			if (0 == wcscmp(command, L"#"))
+			{
+				fin.ignore(1024, L'\n');	// コメントスキップ
+			}
+			else if (0 == wcscmp(command, L"map_Kd"))
+			{
+				fin.ignore();
+				wchar_t map_Kd[256];
+				fin >> map_Kd;
+
+				std::filesystem::path path(obj_filename);
+				path.replace_filename(std::filesystem::path(map_Kd).filename());
+				materials.rbegin()->texture_filenames[0] = path;
+				fin.ignore(1024, L'\n');
+			}
+			else if (0 == wcscmp(command, L"map_bump") || 0 == wcscmp(command, L"bump"))
+			{
+				fin.ignore();
+				wchar_t map_bump[256];
+				fin >> map_bump;
+				std::filesystem::path path(obj_filename);
+				path.replace_filename(std::filesystem::path(map_bump).filename());
+				materials.rbegin()->texture_filenames[1] = path;
+				fin.ignore(1024, L'\n');
+			}
+			else if (0 == wcscmp(command, L"newmtl"))
+			{
+				fin.ignore();
+				wchar_t newmtl[256];
+				Material material;
+				fin >> newmtl;
+				material.name = newmtl;
+				materials.push_back(material);
+			}
+			else if (0 == wcscmp(command, L"Ka"))
+			{
+				float r, g, b;
+				fin >> r >> g >> b;
+				materials.rbegin()->Ka = { r, g, b, 1 };
+				fin.ignore(1024, L'\n');
+			}
+			else if (0 == wcscmp(command, L"Kd"))
+			{
+				float r, g, b;
+				fin >> r >> g >> b;
+				materials.rbegin()->Kd = { r, g, b, 1 };
+				fin.ignore(1024, L'\n');
+			}
+			else if (0 == wcscmp(command, L"Ks"))
+			{
+				float r, g, b;
+				fin >> r >> g >> b;
+				materials.rbegin()->Ks = { r, g, b ,1 };
+				fin.ignore(1024, L'\n');
+			}
+			else
+			{
+				fin.ignore(1024, L'\n');
+			}
+		}
+		fin.close();
+
+		// mtlファイルを持たないobjにはダミーマテリアルをセットする
+		if (materials.size() == 0) {
+			for (const Subset& subset : subsets) {
+				materials.push_back({ subset.usemtl });
+			}
+		}
+
+	}
 	HRESULT hr{ S_OK };
 
 	D3D11_INPUT_ELEMENT_DESC input_element_desc[]{
@@ -216,45 +216,46 @@ Static_Mesh::Static_Mesh(ID3D11Device* device, const wchar_t* obj_filename, cons
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 
 	// ラスタライザオブジェクトの生成
-	D3D11_RASTERIZER_DESC rasterizer_desc{};
-	/*-----塗りつぶし 前面描画-----*/
-	rasterizer_desc.FillMode = D3D11_FILL_SOLID;	// レンダリングに使う塗りつぶしモード D3D11_FILL_SOLID|D3D11_FILL_WIREFRAME
-	rasterizer_desc.CullMode = D3D11_CULL_BACK;	    // 描画する法線方向 D3D11_CULL_NONE(両面描画)|D3D11_CULL_FRONT(後面描画)|D3D11_CULL_BACK(前面描画)
-	rasterizer_desc.FrontCounterClockwise = FALSE;	// 三角形が前面か背面かを決定する TRUEの時、頂点が反対周りだと前向きとみなされる
-	rasterizer_desc.DepthBias = 0;					// 深度バイアス 同一深度上に表示するときに優先度を決めるのに使用したりする
-	rasterizer_desc.DepthBiasClamp = 0;			    // 上記同様     ピクセルの最大深度バイアス
-	rasterizer_desc.SlopeScaledDepthBias = 0;		// 上記同様     特定のピクセルの傾きのスカラー
-	rasterizer_desc.DepthClipEnable = TRUE;		    // 距離に基づいてクリッピングを有効にするか
-	rasterizer_desc.ScissorEnable = FALSE;			// シザー矩形カリングを使用するか シザー矩形：描画領域の指定によく使われる
-	rasterizer_desc.MultisampleEnable = FALSE;		// マルチサンプリングアンチエイリアス(MSAA)のRTVを使用している時、tureで四辺形ラインアンチエイリアス、falseでアルファラインアンチエイリアスを使用
-													// MSAAを使用するにはリソース生成時にDX11_SAMPLE_DESC::Countを1より上の値を設定する必要がある
-	rasterizer_desc.AntialiasedLineEnable = FALSE;	// MSAAのRTVを使用している時、線分描画でMultisampleEnableがfalseの時にアンチエイリアスを有効にする
-	hr = device->CreateRasterizerState(&rasterizer_desc, rasterizer_states[0].GetAddressOf());
-	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-	/*-----塗り潰し 両面描画-----*/
-	rasterizer_desc.FillMode = D3D11_FILL_SOLID;
-	rasterizer_desc.CullMode = D3D11_CULL_NONE;
-	rasterizer_desc.AntialiasedLineEnable = TRUE;
-	hr = device->CreateRasterizerState(&rasterizer_desc, rasterizer_states[1].GetAddressOf());
-	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-	/*-----ワイヤーフレーム 前面描画-----*/
-	rasterizer_desc.FillMode = D3D11_FILL_WIREFRAME;
-	rasterizer_desc.CullMode = D3D11_CULL_BACK;
-	rasterizer_desc.AntialiasedLineEnable = TRUE;
-	hr = device->CreateRasterizerState(&rasterizer_desc, rasterizer_states[2].GetAddressOf());
-	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-	/*-----ワイヤーフレーム 両面描画-----*/
-	rasterizer_desc.FillMode = D3D11_FILL_WIREFRAME;
-	rasterizer_desc.CullMode = D3D11_CULL_NONE;
-	rasterizer_desc.AntialiasedLineEnable = TRUE;
-	hr = device->CreateRasterizerState(&rasterizer_desc, rasterizer_states[3].GetAddressOf());
-	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+	//D3D11_RASTERIZER_DESC rasterizer_desc{};
+	///*-----塗りつぶし 前面描画-----*/
+	//rasterizer_desc.FillMode = D3D11_FILL_SOLID;	// レンダリングに使う塗りつぶしモード D3D11_FILL_SOLID|D3D11_FILL_WIREFRAME
+	//rasterizer_desc.CullMode = D3D11_CULL_BACK;	    // 描画する法線方向 D3D11_CULL_NONE(両面描画)|D3D11_CULL_FRONT(後面描画)|D3D11_CULL_BACK(前面描画)
+	//rasterizer_desc.FrontCounterClockwise = FALSE;	// 三角形が前面か背面かを決定する TRUEの時、頂点が反対周りだと前向きとみなされる
+	//rasterizer_desc.DepthBias = 0;					// 深度バイアス 同一深度上に表示するときに優先度を決めるのに使用したりする
+	//rasterizer_desc.DepthBiasClamp = 0;			    // 上記同様     ピクセルの最大深度バイアス
+	//rasterizer_desc.SlopeScaledDepthBias = 0;		// 上記同様     特定のピクセルの傾きのスカラー
+	//rasterizer_desc.DepthClipEnable = TRUE;		    // 距離に基づいてクリッピングを有効にするか
+	//rasterizer_desc.ScissorEnable = FALSE;			// シザー矩形カリングを使用するか シザー矩形：描画領域の指定によく使われる
+	//rasterizer_desc.MultisampleEnable = FALSE;		// マルチサンプリングアンチエイリアス(MSAA)のRTVを使用している時、tureで四辺形ラインアンチエイリアス、falseでアルファラインアンチエイリアスを使用
+	//												// MSAAを使用するにはリソース生成時にDX11_SAMPLE_DESC::Countを1より上の値を設定する必要がある
+	//rasterizer_desc.AntialiasedLineEnable = FALSE;	// MSAAのRTVを使用している時、線分描画でMultisampleEnableがfalseの時にアンチエイリアスを有効にする
+	//hr = device->CreateRasterizerState(&rasterizer_desc, rasterizer_states[0].GetAddressOf());
+	//_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+	///*-----塗り潰し 両面描画-----*/
+	//rasterizer_desc.FillMode = D3D11_FILL_SOLID;
+	//rasterizer_desc.CullMode = D3D11_CULL_NONE;
+	//rasterizer_desc.AntialiasedLineEnable = TRUE;
+	//hr = device->CreateRasterizerState(&rasterizer_desc, rasterizer_states[1].GetAddressOf());
+	//_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+	///*-----ワイヤーフレーム 前面描画-----*/
+	//rasterizer_desc.FillMode = D3D11_FILL_WIREFRAME;
+	//rasterizer_desc.CullMode = D3D11_CULL_BACK;
+	//rasterizer_desc.AntialiasedLineEnable = TRUE;
+	//hr = device->CreateRasterizerState(&rasterizer_desc, rasterizer_states[2].GetAddressOf());
+	//_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+	///*-----ワイヤーフレーム 両面描画-----*/
+	//rasterizer_desc.FillMode = D3D11_FILL_WIREFRAME;
+	//rasterizer_desc.CullMode = D3D11_CULL_NONE;
+	//rasterizer_desc.AntialiasedLineEnable = TRUE;
+	//hr = device->CreateRasterizerState(&rasterizer_desc, rasterizer_states[3].GetAddressOf());
+	//_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+	rasterizer.SetRasterizer(device);
 
 	// バウンティボックス作成
 	{
 		XMFLOAT3 minPos{ FLT_MAX,FLT_MAX,FLT_MAX };
 		XMFLOAT3 maxPos{ FLT_MIN,FLT_MIN,FLT_MIN };
-		for (auto& p : positions) {
+		for (auto& p : positions) {	// 全部の頂点見て最大最小値を取得 おそらく超重い
 			if (minPos.x > p.x) { minPos.x = p.x; }
 			if (minPos.y > p.y) { minPos.y = p.y; }
 			if (minPos.z > p.z) { minPos.z = p.z; }
@@ -262,7 +263,9 @@ Static_Mesh::Static_Mesh(ID3D11Device* device, const wchar_t* obj_filename, cons
 			if (maxPos.y < p.y) { maxPos.y = p.y; }
 			if (maxPos.z < p.z) { maxPos.z = p.z; }
 		}
+		// 四角形作成
 		Bounty_Box = make_unique<Geometric_Cube>(device, minPos.x, maxPos.x, minPos.y, maxPos.y, minPos.z, maxPos.z);
+		// バウンティボックスの描画フラグは初期値falseで設定
 		dispBounty = false;
 	}
 
@@ -341,7 +344,7 @@ void Static_Mesh::Render(ID3D11DeviceContext* immediate_context, const XMFLOAT4X
 			immediate_context->VSSetConstantBuffers(0, 1, constant_buffer.GetAddressOf());
 
 			// ラスタライザステートの設定
-			immediate_context->RSSetState(rasterizer_states[(wireframe) ? 2 : 0].Get());
+			immediate_context->RSSetState(rasterizer.states[wireframe].Get());
 
 			for (const Subset& subset : subsets)
 			{
@@ -404,7 +407,7 @@ void Static_Mesh::Render(ID3D11DeviceContext* immediate_context) {
 			immediate_context->VSSetConstantBuffers(0, 1, constant_buffer.GetAddressOf());
 
 			// ラスタライザステートの設定
-			immediate_context->RSSetState(rasterizer_states[(wireframe) ? 2 : 0].Get());
+			immediate_context->RSSetState(rasterizer.states[wireframe].Get());
 
 			for (const Subset& subset : subsets)
 			{

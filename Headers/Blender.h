@@ -20,23 +20,15 @@ public:
 	ComPtr<ID3D11BlendState> states[BS_END];
 
 	// 後に設定するために引数なしコンストラクタを設定
-	Blender() {};
+	Blender() {}
 
 	// 生成と同時に設定するためのコンストラクタ
 	// Render関数でのみ使用する場合とかに便利？
-	Blender(ID3D11Device* device) {
-		setBlend(device);
-	}
+	Blender(ID3D11Device* device) { setBlend(device); }
 
-	~Blender() {
-	}
-	// 好きなタイミングで設定するための関数
-	// 設定してないと怒られるしね 中身は上記コンストラクタと同じ
-	void setBlender(ID3D11Device* device) {
-		setBlend(device);
-	}
+	~Blender() {}
 
-	// 実際にブレンドステートをセットしている関数 複数回使用するので関数化
+	// ブレンドステートをセットしている関数 複数回使用するので関数化
 	void setBlend(ID3D11Device* device) {
 		HRESULT hr = { S_OK };
 

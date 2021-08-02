@@ -53,6 +53,9 @@
     <Filter Include="Headers\DataLoad\3D Object">
       <UniqueIdentifier>{91124076-eb98-4e85-a2bc-3a9fda72fefe}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders\Skinned_Mesh">
+      <UniqueIdentifier>{3e0d2e6a-aea2-41f8-94b4-0cd818408a8e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\sprite_ps.hlsl">
@@ -73,6 +76,12 @@
     <FxCompile Include="Shaders\static_mesh_vs.hlsl">
       <Filter>Shaders\Static_Mesh</Filter>
     </FxCompile>
+    <FxCompile Include="Shaders\skinned_mesh_ps.hlsl">
+      <Filter>Shaders\Skinned_Mesh</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\skinned_mesh_vs.hlsl">
+      <Filter>Shaders\Skinned_Mesh</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\sprite.hlsli">
@@ -83,6 +92,9 @@
     </None>
     <None Include="Shaders\static_mesh.hlsli">
       <Filter>Shaders\Static_Mesh</Filter>
+    </None>
+    <None Include="Shaders\skinned_mesh.hlsli">
+      <Filter>Shaders\Skinned_Mesh</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -142,6 +154,12 @@
     </ClInclude>
     <ClInclude Include="Headers\skinned_mesh.h">
       <Filter>Headers\DataLoad\3D Object</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\object3D.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\Rasterizer.h">
+      <Filter>Headers\RenderOption</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -6,7 +6,6 @@ SamplerState point_sampler_state : register(s0);
 SamplerState linear_sampler_state : register(s1);
 SamplerState anisotropic_sampler_state : register(s2);
 
-// ほうせんまっぴんぐのps pdf.3のないようなのでそこまで来たらこれコメントアウトしようね
 float4 main(VS_OUT pin) : SV_TARGET
 {
     float4 color = color_map.Sample(anisotropic_sampler_state, pin.texcoord); // テクスチャの取得
@@ -14,7 +13,7 @@ float4 main(VS_OUT pin) : SV_TARGET
     float3 Normal = normalize(pin.world_normal.xyz); // ワールド座標系の法線を正規化
 
     float3 T = float3(1.0001, 0, 0);
-    float3 B = normalize(cross(Normal, T));
+    float3 B = normalize(cross(Normal, T)); // 外積
     T = normalize(cross(B, Normal));
     float4 normal = normal_map.Sample(linear_sampler_state, pin.texcoord);
     normal = (normal * 2.0) - 1.0;
