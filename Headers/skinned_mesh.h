@@ -5,6 +5,8 @@
 #include <vector>
 #include <string>
 #include <fbxsdk.h>
+#include <unordered_map>
+//#include "fbxsdk\scene\geometry\fbxnode.h"
 
 #include "imgui.h"
 #include "imgui_impl_dx11.h"
@@ -50,6 +52,20 @@ public:
 		XMFLOAT4 material_color;
 	};
 
+	struct Material {
+		uint64_t unique_id{ 0 };
+		string name;
+		XMFLOAT4 Ka{ 0.2f,0.2f,0.2f,1.0f };
+		XMFLOAT4 Kd{ 0.8f,0.8f,0.8f,1.0f };
+		XMFLOAT4 Ks{ 1.0f,1.0f,1.0f,1.0f };
+
+		string texture_filenames[4];
+		ComPtr<ID3D11ShaderResourceView> srv[4];
+	};
+	// <キー型,値型>オブジェクト名
+	unordered_map<uint64_t, Material>materials;
+	ComPtr<ID3D11ShaderResourceView> dummyTexture;	// fbxにマテリアルが設定されていない場合に使用する
+
 	struct Mesh{
 		uint64_t unique_id{ 0 };
 		string name;
@@ -93,6 +109,8 @@ public:
 
 	// メッシュの取り出し
 	void Fetch_Meshes(FbxScene* fbx_scene, vector<Mesh>& meshes);
+	// マテリアルの取り出し
+	void Fetch_Materials(FbxScene* fbx_scene, unordered_map<uint64_t, Material>& materials);
 
 	void Render(ID3D11DeviceContext* immediate_context);
 

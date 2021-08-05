@@ -1,8 +1,12 @@
 #include <sstream>
 #include <functional>
+#include <filesystem>
+
 #include "misc.h"
-#include "skinned_mesh.h"
 #include "shader.h"
+#include "texture.h"
+#include "skinned_mesh.h"
+
 using namespace DirectX;
 
 Skinned_Mesh::Skinned_Mesh(ID3D11Device* device, const char* fbx_filename, const char* vs_cso_name, const char* ps_cso_name, bool triangulate) {
@@ -39,6 +43,8 @@ Skinned_Mesh::Skinned_Mesh(ID3D11Device* device, const char* fbx_filename, const
 	traverse(fbx_scene->GetRootNode());
 
 	Fetch_Meshes(fbx_scene, meshes);
+	Fetch_Materials(fbx_scene, materials);
+
 #if 1
 	for (const scene::node& node : scene_view.nodes) {
 		FbxNode* fbx_node{ fbx_scene->FindNodeByName(node.name.c_str()) };
@@ -81,10 +87,18 @@ void Skinned_Mesh::Render(ID3D11DeviceContext* immediate_context) {
 		immediate_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		immediate_context->IASetInputLayout(input_layout.Get());
 
+		Constants data{ world,param.Color };
+		if (materials.size() <= 0) {	// モデル内にマテリアル情報がない場合
+			immediate_context->PSSetShaderResources(0, 1, dummyTexture.GetAddressOf());
+		}
+		else {	// ある場合
+			immediate_context->PSSetShaderResources(0, 1, materials.cbegin()->second.srv[0].GetAddressOf());
+			XMStoreFloat4(&data.material_color, XMLoadFloat4(&param.Color) * XMLoadFloat4(&materials.cbegin()->second.Kd));	// マテリアルとカラーを合成
+		}
 		immediate_context->VSSetShader(vertex_shader.Get(), nullptr, 0);
 		immediate_context->PSSetShader(pixel_shader.Get(), nullptr, 0);
 
-		Constants data{ world,param.Color };
+
 		immediate_context->UpdateSubresource(constant_buffer.Get(), 0, 0, &data, 0, 0);
 		immediate_context->VSGetConstantBuffers(0, 1, constant_buffer.GetAddressOf());
 
@@ -97,6 +111,68 @@ void Skinned_Mesh::Render(ID3D11DeviceContext* immediate_context) {
 		immediate_context->DrawIndexed(buffer_desc.ByteWidth / sizeof(uint32_t), 0, 0);	// 描画するインデックスの数,最初のインデックスの場所,頂点バッファから読み取る前に追加する値
 
 	}
+}
+
+void Skinned_Mesh::Create_com_buffers(ID3D11Device* device, const char* fbx_filename, const char* vs_cso_name, const char* ps_cso_name) {
+	HRESULT hr{ S_OK };
+
+	for (Mesh& mesh : meshes) {
+		D3D11_BUFFER_DESC buffer_desc{};
+		buffer_desc.ByteWidth = static_cast<UINT>(sizeof(Vertex) * mesh.vertices.size());
+		buffer_desc.Usage = D3D11_USAGE_DEFAULT;
+		buffer_desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+		buffer_desc.CPUAccessFlags = 0;
+		buffer_desc.MiscFlags = 0;
+		buffer_desc.StructureByteStride = 0;
+
+		D3D11_SUBRESOURCE_DATA subresource_data;
+		subresource_data.pSysMem = mesh.vertices.data();	// どの情報で初期化するか
+		subresource_data.SysMemPitch = 0;
+		subresource_data.SysMemSlicePitch = 0;
+
+		hr = device->CreateBuffer(&buffer_desc, &subresource_data, mesh.vertex_buffer.ReleaseAndGetAddressOf());
+		_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+
+		buffer_desc.ByteWidth = static_cast<UINT>(sizeof(uint32_t) * mesh.indices.size());
+		buffer_desc.Usage = D3D11_USAGE_DEFAULT;
+		buffer_desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+		subresource_data.pSysMem = mesh.indices.data();		// どの情報で初期化するか
+
+		hr = device->CreateBuffer(&buffer_desc, &subresource_data, mesh.index_buffer.ReleaseAndGetAddressOf());
+		_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+#if 1
+		mesh.vertices.clear();
+		mesh.indices.clear();
+#endif
+	}
+
+	for (unordered_map<uint64_t, Material>::iterator iterator = materials.begin(); iterator != materials.end(); ++iterator) {
+		if (iterator->second.texture_filenames[0].size() > 0) {	// secondは値にアクセスするために使用する
+			filesystem::path path(fbx_filename);
+			path.replace_filename(iterator->second.texture_filenames[0]);
+			D3D11_TEXTURE2D_DESC texture2d_desc;
+			load_texture_from_file(device, path.c_str(), iterator->second.srv[0].GetAddressOf(), &texture2d_desc);
+		}
+	}
+	// ダミーテクスチャのセットで苦戦してます
+	if (materials.size() <= 0) {
+		make_dummy_texture(device, dummyTexture.GetAddressOf(), 0xFFFFFFFF, 16);
+	}
+
+	D3D11_INPUT_ELEMENT_DESC input_element_desc[]{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "NORMAL"	, 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	};
+	create_vs_from_cso(device, vs_cso_name, vertex_shader.ReleaseAndGetAddressOf(), input_layout.ReleaseAndGetAddressOf(), input_element_desc, ARRAYSIZE(input_element_desc));
+	create_ps_from_cso(device, ps_cso_name, pixel_shader.ReleaseAndGetAddressOf());
+
+	D3D11_BUFFER_DESC buffer_desc{};
+	buffer_desc.ByteWidth = sizeof(Constants);	// Constantsの型を使用
+	buffer_desc.Usage = D3D11_USAGE_DEFAULT;
+	buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;	// ConstantBufferとして使用することをきめる
+	hr = device->CreateBuffer(&buffer_desc, nullptr, constant_buffer.ReleaseAndGetAddressOf());
+	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 }
 
 void Skinned_Mesh::Fetch_Meshes(FbxScene* fbx_scene, vector<Mesh>& meshes) {
@@ -157,53 +233,60 @@ void Skinned_Mesh::Fetch_Meshes(FbxScene* fbx_scene, vector<Mesh>& meshes) {
 	}
 }
 
-void Skinned_Mesh::Create_com_buffers(ID3D11Device* device, const char* fbx_filename, const char* vs_cso_name, const char* ps_cso_name) {
-	HRESULT hr{ S_OK };
+void Skinned_Mesh::Fetch_Materials(FbxScene* fbx_scene, unordered_map<uint64_t, Material>& materials) {
+	const size_t node_count{ scene_view.nodes.size() };	// ノードのサイズ
+	for (size_t node_index = 0; node_index < node_count; ++node_index) {
+		const scene::node& node{ scene_view.nodes.at(node_index) };	// 指定番号のノード取得
+		const FbxNode* fbx_node{ fbx_scene->FindNodeByName(node.name.c_str()) };	// ノードを検索、情報取得
 
-	for (Mesh& mesh : meshes) {
-		D3D11_BUFFER_DESC buffer_desc{};
-		buffer_desc.ByteWidth = static_cast<UINT>(sizeof(Vertex) * mesh.vertices.size());
-		buffer_desc.Usage = D3D11_USAGE_DEFAULT;
-		buffer_desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-		buffer_desc.CPUAccessFlags = 0;
-		buffer_desc.MiscFlags = 0;
-		buffer_desc.StructureByteStride = 0;
+		const int material_count{ fbx_node->GetMaterialCount() };	// マテリアル数の取得
+		for (int material_index = 0; material_index < material_count; ++material_index) {
+			const FbxSurfaceMaterial* fbx_material{ fbx_node->GetMaterial(material_index) };	// FbxSurfaceMaterial の取得
 
-		D3D11_SUBRESOURCE_DATA subresource_data;
-		subresource_data.pSysMem = mesh.vertices.data();	// どの情報で初期化するか
-		subresource_data.SysMemPitch = 0;
-		subresource_data.SysMemSlicePitch = 0;
+			Material material;
+			material.name = fbx_material->GetName();
+			material.unique_id = fbx_material->GetUniqueID();
+			FbxProperty fbx_property;
+			// Kdの取得
+			{
+				fbx_property = fbx_material->FindProperty(FbxSurfaceMaterial::sDiffuse);	// Diffuseの取得
+				if (fbx_property.IsValid()) {	// 有効かどうかのチェック
+					const FbxDouble3 color{ fbx_property.Get<FbxDouble3>() };
+					material.Kd.x = static_cast<float>(color[0]);
+					material.Kd.y = static_cast<float>(color[1]);
+					material.Kd.z = static_cast<float>(color[2]);
+					material.Kd.w = 1.0f;
 
-		hr = device->CreateBuffer(&buffer_desc, &subresource_data, mesh.vertex_buffer.ReleaseAndGetAddressOf());
-		_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+					const FbxFileTexture* fbx_texture{ fbx_property.GetSrcObject<FbxFileTexture>() };	// テクスチャ情報の取得
+					material.texture_filenames[0] = fbx_texture ? fbx_texture->GetRelativeFileName() : "";	// テクスチャ名の取得
+				}
+			}
+			// Ksの取得
+			{
+				fbx_property = fbx_material->FindProperty(FbxSurfaceMaterial::sSpecular);	// Diffuseの取得
+				if (fbx_property.IsValid()) {	// 有効かどうかのチェック
+					const FbxDouble3 color{ fbx_property.Get<FbxDouble3>() };
+					material.Ks.x = static_cast<float>(color[0]);
+					material.Ks.y = static_cast<float>(color[1]);
+					material.Ks.z = static_cast<float>(color[2]);
+					material.Ks.w = 1.0f;
+				}
+			}
+			// Kaの取得
+			{
+				fbx_property = fbx_material->FindProperty(FbxSurfaceMaterial::sAmbient);	// Diffuseの取得
+				if (fbx_property.IsValid()) {	// 有効かどうかのチェック
+					const FbxDouble3 color{ fbx_property.Get<FbxDouble3>() };
+					material.Ka.x = static_cast<float>(color[0]);
+					material.Ka.y = static_cast<float>(color[1]);
+					material.Ka.z = static_cast<float>(color[2]);
+					material.Ka.w = 1.0f;
+				}
+			}
+			materials.emplace(material.unique_id, move(material));	// unique番目にmaterialを格納する
+		}
 
-		buffer_desc.ByteWidth = static_cast<UINT>(sizeof(uint32_t) * mesh.indices.size());
-		buffer_desc.Usage = D3D11_USAGE_DEFAULT;
-		buffer_desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-		subresource_data.pSysMem = mesh.indices.data();		// どの情報で初期化するか
-
-		hr = device->CreateBuffer(&buffer_desc, &subresource_data, mesh.index_buffer.ReleaseAndGetAddressOf());
-		_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-#if 1
-		mesh.vertices.clear();
-		mesh.indices.clear();
-#endif
 	}
-
-	D3D11_INPUT_ELEMENT_DESC input_element_desc[]{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "NORMAL"	, 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-	};
-	create_vs_from_cso(device, vs_cso_name, vertex_shader.ReleaseAndGetAddressOf(), input_layout.ReleaseAndGetAddressOf(), input_element_desc, ARRAYSIZE(input_element_desc));
-	create_ps_from_cso(device, ps_cso_name, pixel_shader.ReleaseAndGetAddressOf());
-
-	D3D11_BUFFER_DESC buffer_desc{};
-	buffer_desc.ByteWidth = sizeof(Constants);	// Constantsの型を使用
-	buffer_desc.Usage = D3D11_USAGE_DEFAULT;
-	buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;	// ConstantBufferとして使用することをきめる
-	hr = device->CreateBuffer(&buffer_desc, nullptr, constant_buffer.ReleaseAndGetAddressOf());
-	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 }
 
 void Skinned_Mesh::imguiWindow(const char* beginname) {
