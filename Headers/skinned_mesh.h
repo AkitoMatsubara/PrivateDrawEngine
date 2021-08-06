@@ -64,7 +64,7 @@ public:
 	};
 	// <キー型,値型>オブジェクト名
 	unordered_map<uint64_t, Material>materials;
-	ComPtr<ID3D11ShaderResourceView> dummyTexture;	// fbxにマテリアルが設定されていない場合に使用する
+	static ComPtr<ID3D11ShaderResourceView> dummyTexture;	// fbxにマテリアルが設定されていない場合に使用する
 
 	struct Mesh{
 		uint64_t unique_id{ 0 };
@@ -74,6 +74,16 @@ public:
 
 		vector<Vertex> vertices;
 		vector<uint32_t> indices;
+
+		struct Subset {
+			uint64_t material_unique_id{ 0 };
+			string material_name;
+
+			uint32_t start_index_location{ 0 };
+			uint32_t index_count{ 0 };
+		};
+		vector<Subset> subsets;
+
 
 	private:
 		ComPtr<ID3D11Buffer> vertex_buffer;
