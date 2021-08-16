@@ -84,6 +84,12 @@ public:
 		};
 		vector<Subset> subsets;
 
+		XMFLOAT4X4 default_global_transform{
+			1,0,0,0,	// _11,_12,_13,_14
+			0,1,0,0,	// _21,_22,_23,_24
+			0,0,1,0,	// _31,_32,_33,_34
+			0,0,0,1		// _41,_42,_43,_44
+		};
 
 	private:
 		ComPtr<ID3D11Buffer> vertex_buffer;
@@ -113,7 +119,7 @@ private:
 	}param;
 
 public:
-	Skinned_Mesh(ID3D11Device* device, const char* fbx_filename, const char* vs_cso_name = "Shaders\\skinned_mesh_vs.cso", const char* ps_cso_name = "Shaders\\skinned_mesh_ps.cso", bool triangulate = false);
+	Skinned_Mesh(ID3D11Device* device, const char* fbx_filename, bool triangulate = false, const char* vs_cso_name = "Shaders\\skinned_mesh_vs.cso", const char* ps_cso_name = "Shaders\\skinned_mesh_ps.cso");
 
 	virtual ~Skinned_Mesh() = default;
 
@@ -122,7 +128,7 @@ public:
 	// マテリアルの取り出し
 	void Fetch_Materials(FbxScene* fbx_scene, unordered_map<uint64_t, Material>& materials);
 
-	void Render(ID3D11DeviceContext* immediate_context);
+	void Render(ID3D11DeviceContext* immediate_context, int rasterize = 0, const int LRHS = 0);
 
 	// paramを編集するimguiウィンドウ
 	void imguiWindow(const char* beginname = "skinned_mesh");

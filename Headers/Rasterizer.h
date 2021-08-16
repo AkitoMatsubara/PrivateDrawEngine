@@ -12,6 +12,7 @@ public:
 		WIRE_NONE,
 		SOLID_BACK,
 		WIRE_BACK,
+		SOLID_BACK_CCW,
 		RS_NONE,	// ラスタライザ終了
 	};
 	ComPtr<ID3D11RasterizerState>	states[RS_NONE];	// 0:片面塗りつぶし,1:両面塗り潰し,2:片面ワイヤーフレーム,3:両面ワイヤーフレーム
@@ -56,6 +57,12 @@ public:
 		rasterizer_desc.CullMode = D3D11_CULL_BACK;
 		rasterizer_desc.AntialiasedLineEnable = TRUE;
 		hr = device->CreateRasterizerState(&rasterizer_desc, states[WIRE_BACK].GetAddressOf());
+		/*-----塗り潰し 前面描画 反時計回りの面-----*/
+		rasterizer_desc.FillMode = D3D11_FILL_SOLID;
+		rasterizer_desc.CullMode = D3D11_CULL_BACK;
+		rasterizer_desc.AntialiasedLineEnable = TRUE;
+		rasterizer_desc.FrontCounterClockwise = TRUE;
+		hr = device->CreateRasterizerState(&rasterizer_desc, states[SOLID_BACK_CCW].GetAddressOf());
 
 		if (SUCCEEDED(hr)) {
 			assert("Create RasterizerState Failde.");

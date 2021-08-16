@@ -11,7 +11,34 @@ using namespace DirectX;
 
 ComPtr<ID3D11ShaderResourceView> Skinned_Mesh::dummyTexture;
 
-Skinned_Mesh::Skinned_Mesh(ID3D11Device* device, const char* fbx_filename, const char* vs_cso_name, const char* ps_cso_name, bool triangulate) {
+inline XMFLOAT4X4 ConvertToXmfloat4x4(const FbxAMatrix& fbxamatrix) {
+	XMFLOAT4X4 value;
+	// 2重for文 4x4だからね
+	for (int row = 0; row < 4; row++) {
+		for (int column = 0; column < 4; column++) {
+			value.m[row][column] = static_cast<float>(fbxamatrix[row][column]);
+		}
+	}
+	return value;
+}
+
+inline XMFLOAT3 ConvertToXmfloat3(const FbxDouble3& fbxdouble3) {
+	XMFLOAT3 value;
+	value.x = static_cast<float>(fbxdouble3[0]);
+	value.y = static_cast<float>(fbxdouble3[1]);
+	value.z = static_cast<float>(fbxdouble3[2]);
+	return value;
+
+}inline XMFLOAT4 ConvertToXmfloat4(const FbxDouble4& fbxdouble3) {
+	XMFLOAT4 value;
+	value.x = static_cast<float>(fbxdouble3[0]);
+	value.y = static_cast<float>(fbxdouble3[1]);
+	value.z = static_cast<float>(fbxdouble3[2]);
+	value.w = static_cast<float>(fbxdouble3[3]);
+	return value;
+}
+
+Skinned_Mesh::Skinned_Mesh(ID3D11Device* device, const char* fbx_filename, bool triangulate, const char* vs_cso_name, const char* ps_cso_name) {
 	FbxManager* fbx_manager{ FbxManager::Create() };	// マネージャの生成
 	FbxScene* fbx_scene{ FbxScene::Create(fbx_manager,"") };	// sceneにfbx内ファイル内の情報を流し込む
 
@@ -76,14 +103,39 @@ Skinned_Mesh::Skinned_Mesh(ID3D11Device* device, const char* fbx_filename, const
 	param.Color = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
-void Skinned_Mesh::Render(ID3D11DeviceContext* immediate_context) {
+void Skinned_Mesh::Render(ID3D11DeviceContext* immediate_context, int rasterize, const int LRHS) {
+	rasterize = (rasterize == 0) ? wireframe : rasterize;	// ラスタライザの指定方法 デフォルト(両面描画)以外の指定ならワイヤーフレーム切り替えを無効にする
+
+	static const XMFLOAT4X4 coordinate_system_transforms[]{
+	{-1,0,0,0
+	 ,0,1,0,0
+	 ,0,0,1,0
+	 ,0,0,0,1},	// 0:右手座標系,Y-UP
+	{ 1,0,0,0
+	 ,0,1,0,0
+	 ,0,0,1,0
+	 ,0,0,0,1},	// 1:左手座標系,Y-UP
+	{-1,0,0,0
+	 ,0,0,-1,0
+	 ,0,1,0,0
+	 ,0,0,0,1},	// 2:右手座標系,Z-UP
+	{ 1,0,0,0
+	 ,0,0,1,0
+	 ,0,1,0,0
+	 ,0,0,0,1},	// 1:左手座標系,Z-UP
+	};
+
 	for (const Mesh& mesh : meshes) {
-		XMMATRIX S{ XMMatrixScaling(param.Size.x,param.Size.y,param.Size.z) };				// 拡縮
+		// 単位をセンチメートルからメートルに変更するため、scale_factorを0.01に設定する
+		const float scale_factor = 1.0f;
+		XMMATRIX C{ XMLoadFloat4x4(&coordinate_system_transforms[LRHS]) * XMMatrixScaling(scale_factor,scale_factor,scale_factor) };
+
+		XMMATRIX S{ XMMatrixScaling(param.Size.x,param.Size.y,param.Size.z) };	// 拡縮
 		XMMATRIX R{ XMMatrixRotationRollPitchYaw(XMConvertToRadians(param.Angle.x),XMConvertToRadians(param.Angle.y),XMConvertToRadians(param.Angle.z)) };	// 回転
-		XMMATRIX T{ XMMatrixTranslation(param.Pos.x,param.Pos.y,param.Pos.z) };					// 平行移動
+		XMMATRIX T{ XMMatrixTranslation(param.Pos.x,param.Pos.y,param.Pos.z) };	// 平行移動
 
 		XMFLOAT4X4 world;
-		XMStoreFloat4x4(&world, S * R * T);	// ワールド変換行列作成
+		XMStoreFloat4x4(&world, C * S * R * T);	// ワールド変換行列作成
 
 		uint32_t stride{ sizeof(Vertex) };	// stride:刻み幅
 		uint32_t offset{ 0 };
@@ -95,24 +147,28 @@ void Skinned_Mesh::Render(ID3D11DeviceContext* immediate_context) {
 		immediate_context->VSSetShader(vertex_shader.Get(), nullptr, 0);
 		immediate_context->PSSetShader(pixel_shader.Get(), nullptr, 0);
 		// ラスタライザステートの設定
-		immediate_context->RSSetState(rasterizer.states[wireframe].Get());
+		immediate_context->RSSetState(rasterizer.states[rasterize].Get());
 
 		Constants data{ world,param.Color };
+		XMStoreFloat4x4(&data.world, XMLoadFloat4x4(&mesh.default_global_transform) * XMLoadFloat4x4(&world));	// グローバルのTransformとworld行列を掛けてworld座標に変換している
+
 		for (const Mesh::Subset& subset : mesh.subsets) {	// マテリアル別メッシュの数回すよ
-			if (materials.size() <= 0) {	// そもそもモデル内にマテリアル情報がない場合
-				immediate_context->PSSetShaderResources(0, 1, dummyTexture.GetAddressOf());	// ダミーテクスチャをセットしていざ描画へ
-			}
-			else {	// マテリアル情報がある時
-				const Material& material{ materials.at(subset.material_unique_id) };
-				if (material.texture_filenames[0] != string("")) {	// テクスチャが指定されている場合
+			if (subset.material_unique_id != 0)	// unique_idの確認
+			{
+				const Material& material = materials.at(subset.material_unique_id);
+				if (materials.size() > 0)	// マテリアル情報があるか確認
+				{
 					immediate_context->PSSetShaderResources(0, 1, material.srv[0].GetAddressOf());
 					XMStoreFloat4(&data.material_color, XMLoadFloat4(&param.Color) * XMLoadFloat4(&material.Kd));	// マテリアルとカラーを合成
 				}
-				else {	// テクスチャが指定されていない場合
-					immediate_context->PSSetShaderResources(0, 1, dummyTexture.GetAddressOf());
-					XMStoreFloat4(&data.material_color, XMLoadFloat4(&param.Color) * XMLoadFloat4(&material.Kd));	// マテリアルとカラーを合成
-				}
 			}
+			else
+			{
+				immediate_context->PSSetShaderResources(0, 1, dummyTexture.GetAddressOf());	// ダミーテクスチャを使用する
+
+			}
+
+
 			immediate_context->VSSetConstantBuffers(0, 1, constant_buffer.GetAddressOf());
 			immediate_context->UpdateSubresource(constant_buffer.Get(), 0, 0, &data, 0, 0);
 			immediate_context->DrawIndexed(subset.index_count, subset.start_index_location, 0);	// 描画するインデックスの数,最初のインデックスの場所,頂点バッファから読み取る前に追加する値
@@ -161,6 +217,9 @@ void Skinned_Mesh::Create_com_buffers(ID3D11Device* device, const char* fbx_file
 			D3D11_TEXTURE2D_DESC texture2d_desc;
 			load_texture_from_file(device, path.c_str(), iterator->second.srv[0].GetAddressOf(), &texture2d_desc);
 		}
+		else {
+			make_dummy_texture(device, iterator->second.srv[0].GetAddressOf(), 0xFFFFFFFF, 16);
+		}
 	}
 	D3D11_INPUT_ELEMENT_DESC input_element_desc[]{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
@@ -191,8 +250,9 @@ void Skinned_Mesh::Fetch_Meshes(FbxScene* fbx_scene, vector<Mesh>& meshes) {
 		mesh.unique_id = fbx_mesh->GetNode()->GetUniqueID();
 		mesh.name = fbx_mesh->GetName();
 		mesh.node_index = scene_view.indexof(mesh.unique_id);
+		mesh.default_global_transform = ConvertToXmfloat4x4(fbx_mesh->GetNode()->EvaluateGlobalTransform());
 
-		vector < Mesh::Subset>& subsets{ mesh.subsets };
+		vector <Mesh::Subset>& subsets{ mesh.subsets };
 		const int material_count{ fbx_mesh->GetNode()->GetMaterialCount() };
 		subsets.resize(material_count > 0 ? material_count : 1);
 		for (int material_index = 0; material_index < material_count; ++material_index) {
@@ -290,7 +350,7 @@ void Skinned_Mesh::Fetch_Materials(FbxScene* fbx_scene, unordered_map<uint64_t, 
 			}
 			// Ksの取得
 			{
-				fbx_property = fbx_material->FindProperty(FbxSurfaceMaterial::sSpecular);	// Diffuseの取得
+				fbx_property = fbx_material->FindProperty(FbxSurfaceMaterial::sSpecular);	// Specularの取得
 				if (fbx_property.IsValid()) {	// 有効かどうかのチェック
 					const FbxDouble3 color{ fbx_property.Get<FbxDouble3>() };
 					material.Ks.x = static_cast<float>(color[0]);
@@ -301,7 +361,7 @@ void Skinned_Mesh::Fetch_Materials(FbxScene* fbx_scene, unordered_map<uint64_t, 
 			}
 			// Kaの取得
 			{
-				fbx_property = fbx_material->FindProperty(FbxSurfaceMaterial::sAmbient);	// Diffuseの取得
+				fbx_property = fbx_material->FindProperty(FbxSurfaceMaterial::sAmbient);	// Ambientの取得
 				if (fbx_property.IsValid()) {	// 有効かどうかのチェック
 					const FbxDouble3 color{ fbx_property.Get<FbxDouble3>() };
 					material.Ka.x = static_cast<float>(color[0]);

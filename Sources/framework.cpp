@@ -171,7 +171,13 @@ bool framework::initialize()
 
 		// Static_Meshオブジェクトの生成
 		static_mesh = make_unique<Static_Mesh>(device.Get(), L".\\resources\\Mr.Incredible\\Mr.Incredible.obj");
-		skinned_mesh = make_unique<Skinned_Mesh>(device.Get(), ".\\resources\\cube.002.1.fbx");
+		//skinned_mesh = make_unique<Skinned_Mesh>(device.Get(), ".\\resources\\cube.000.fbx");		// テクスチャ、マテリアル無し
+		//skinned_mesh = make_unique<Skinned_Mesh>(device.Get(), ".\\resources\\cube.001.0.fbx");	// テクスチャ使用
+		//skinned_mesh = make_unique<Skinned_Mesh>(device.Get(), ".\\resources\\cube.001.1.fbx");	// 埋め込みテクスチャ
+		//skinned_mesh = make_unique<Skinned_Mesh>(device.Get(), ".\\resources\\cube.002.0.fbx");	// 3種テクスチャ使用
+		//skinned_mesh = make_unique<Skinned_Mesh>(device.Get(), ".\\resources\\cube.002.1.fbx");	// テクスチャ有り無し、マテリアル有り無し混合
+		//skinned_mesh = make_unique<Skinned_Mesh>(device.Get(), ".\\resources\\cube.003.0.fbx");	// 複数メッシュ キューブと猿
+		skinned_mesh = make_unique<Skinned_Mesh>(device.Get(), ".\\resources\\cube.003.1.fbx",true);	// 3角形化されていない複数メッシュ キューブ
 	}
 	return true;
 }
@@ -254,7 +260,8 @@ void framework::render(float elapsed_time/*Elapsed seconds from last frame*/)
 		XMMATRIX P{ XMMatrixPerspectiveFovLH(XMConvertToRadians(30),aspect_ratio,0.1f,100.0f) };	// 視野角,縦横比,近くのZ,遠くのZ
 
 		XMVECTOR eye{ XMVectorSet(eyePos.x,eyePos.y,eyePos.z,1.0f) };
-		XMVECTOR focus{ XMVectorSet(0.0f,0.0f,0.0f,1.0f) };
+		XMVECTOR focus{ XMVectorSet(eyePos.x,eyePos.y,eyePos.z + 1,1.0f) };	// カメラ位置の前
+		//XMVECTOR focus{ XMVectorSet(0.0f,0.0f,0.0f,1.0f) };
 		XMVECTOR up{ XMVectorSet(0.0f,1.0f,0.0f,0.0f) };
 		// ViewMatrixの作成(LH = LeftHand(左手座標系))
 		XMMATRIX V{ XMMatrixLookAtLH(eye, focus, up) };	// カメラ座標、焦点、カメラの上方向
@@ -270,7 +277,7 @@ void framework::render(float elapsed_time/*Elapsed seconds from last frame*/)
 		immediate_context->OMSetDepthStencilState(depth_stencil_state[0].Get(), 1);			// 2Dオブジェクトとの前後関係をしっかりするため再設定
 
 		{
-			// geometric_primitiveに移植 現状必要なし？
+			// 3DオブジェクトRender内に移植 現状ここである必要なし？
 			//XMMATRIX S{ XMMatrixScaling(geometric_primitive[0]->getSize().x,geometric_primitive[0]->getSize().y,geometric_primitive[0]->getSize().z) };				// 拡縮
 			//XMMATRIX R{ XMMatrixRotationRollPitchYaw(geometric_primitive[0]->getAngle().x,geometric_primitive[0]->getAngle().y,geometric_primitive[0]->getAngle().z) };	// 回転
 			//XMMATRIX T{ XMMatrixTranslation(geometric_primitive[0]->getPos().x,geometric_primitive[0]->getPos().y,geometric_primitive[0]->getPos().z) };			// 平行移動
