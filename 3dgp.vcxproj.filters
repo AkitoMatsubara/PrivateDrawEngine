@@ -20,17 +20,8 @@
     <Filter Include="imGui">
       <UniqueIdentifier>{84d01fef-4c85-496c-8319-d6704909a54e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Sources\Sprite">
-      <UniqueIdentifier>{4932be0c-edef-48d0-b5ae-0e63bc444e71}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Shaders\Sprite">
       <UniqueIdentifier>{84eba98d-01c4-4874-a130-d1203f310183}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Sources\Geometric Primitives">
-      <UniqueIdentifier>{b3f9812c-1a28-4a7c-9e66-bfa6b1a9da00}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Headers\RenderOption">
-      <UniqueIdentifier>{6a7d56e3-0d38-4bee-970b-e91abe8c45e0}</UniqueIdentifier>
     </Filter>
     <Filter Include="Shaders\Static_Mesh">
       <UniqueIdentifier>{d9486408-3bb9-4b4a-8764-ca2e22d5e089}</UniqueIdentifier>
@@ -55,6 +46,39 @@
     </Filter>
     <Filter Include="Shaders\Skinned_Mesh">
       <UniqueIdentifier>{3e0d2e6a-aea2-41f8-94b4-0cd818408a8e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Headers\Scene">
+      <UniqueIdentifier>{30f9e48e-dd47-49f8-be11-0060d7ea4e84}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Sources\RenderOptions">
+      <UniqueIdentifier>{35d2e353-54f4-4ec8-a90a-e96e284bb189}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Headers\RenderOptions">
+      <UniqueIdentifier>{6a7d56e3-0d38-4bee-970b-e91abe8c45e0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Headers\GeometricPrimitives">
+      <UniqueIdentifier>{c9203c75-d77d-49fe-9e3d-9e9e45f65a96}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Sources\GeometricPrimitives">
+      <UniqueIdentifier>{b3f9812c-1a28-4a7c-9e66-bfa6b1a9da00}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Sources\DataLoad\Sprite">
+      <UniqueIdentifier>{4932be0c-edef-48d0-b5ae-0e63bc444e71}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Sources\DataLoad\3D Object">
+      <UniqueIdentifier>{898b18a4-2978-4c01-819c-205fb4e15ae9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Sources\Scenes">
+      <UniqueIdentifier>{d9aac7c2-af45-455a-9b65-eb299511699f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\ComputeShader">
+      <UniqueIdentifier>{7bae16dd-9493-4021-b8a8-7626d9bc2e3e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Headers\DataLoad\Shaders">
+      <UniqueIdentifier>{0c5e65f7-a7be-477a-8994-8a9174218f2a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Sources\DataLoad\Shaders">
+      <UniqueIdentifier>{628ce90f-9871-474a-8d76-fcce8ddc0340}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -81,6 +105,9 @@
     </FxCompile>
     <FxCompile Include="Shaders\skinned_mesh_vs.hlsl">
       <Filter>Shaders\Skinned_Mesh</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\ComputeShader_cs.hlsl">
+      <Filter>Shaders\ComputeShader</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
@@ -122,9 +149,6 @@
     <ClInclude Include="External\imgui\imstb_truetype.h">
       <Filter>imGui</Filter>
     </ClInclude>
-    <ClInclude Include="Headers\Blender.h">
-      <Filter>Headers\RenderOption</Filter>
-    </ClInclude>
     <ClInclude Include="Headers\static_mesh.h">
       <Filter>Headers\DataLoad\3D Object</Filter>
     </ClInclude>
@@ -143,15 +167,6 @@
     <ClInclude Include="Headers\sprite.h">
       <Filter>Headers\DataLoad\Sprite</Filter>
     </ClInclude>
-    <ClInclude Include="Headers\shader.h">
-      <Filter>Headers\DataLoad</Filter>
-    </ClInclude>
-    <ClInclude Include="Headers\texture.h">
-      <Filter>Headers\DataLoad</Filter>
-    </ClInclude>
-    <ClInclude Include="Headers\geometric_primitive.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="Headers\skinned_mesh.h">
       <Filter>Headers\DataLoad\3D Object</Filter>
     </ClInclude>
@@ -159,7 +174,25 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="Headers\Rasterizer.h">
-      <Filter>Headers\RenderOption</Filter>
+      <Filter>Headers\RenderOptions</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\SceneManager.h">
+      <Filter>Headers\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\Sampler.h">
+      <Filter>Headers\RenderOptions</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\geometric_primitive.h">
+      <Filter>Headers\GeometricPrimitives</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\texture.h">
+      <Filter>Headers\DataLoad</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\shader.h">
+      <Filter>Headers\DataLoad\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\shaderEx.h">
+      <Filter>Headers\DataLoad\Shaders</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -188,37 +221,58 @@
       <Filter>imGui</Filter>
     </ClCompile>
     <ClCompile Include="Sources\sprite.cpp">
-      <Filter>Sources\Sprite</Filter>
+      <Filter>Sources\DataLoad\Sprite</Filter>
     </ClCompile>
     <ClCompile Include="Sources\sprite_Batch.cpp">
-      <Filter>Sources\Sprite</Filter>
+      <Filter>Sources\DataLoad\Sprite</Filter>
     </ClCompile>
     <ClCompile Include="Sources\geometric_cube.cpp">
-      <Filter>Sources\Geometric Primitives</Filter>
+      <Filter>Sources\GeometricPrimitives</Filter>
     </ClCompile>
     <ClCompile Include="Sources\geometric_cylinder.cpp">
-      <Filter>Sources\Geometric Primitives</Filter>
+      <Filter>Sources\GeometricPrimitives</Filter>
     </ClCompile>
     <ClCompile Include="Sources\geometric_sphere.cpp">
-      <Filter>Sources\Geometric Primitives</Filter>
+      <Filter>Sources\GeometricPrimitives</Filter>
     </ClCompile>
     <ClCompile Include="Sources\geometric_capsule.cpp">
-      <Filter>Sources\Geometric Primitives</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\static_mesh.cpp">
-      <Filter>Sources\DataLoad</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\shader.cpp">
-      <Filter>Sources\DataLoad</Filter>
+      <Filter>Sources\GeometricPrimitives</Filter>
     </ClCompile>
     <ClCompile Include="Sources\texture.cpp">
       <Filter>Sources\DataLoad</Filter>
     </ClCompile>
-    <ClCompile Include="Sources\skinned_mesh.cpp">
-      <Filter>Sources\DataLoad</Filter>
-    </ClCompile>
     <ClCompile Include="Sources\geometric_primitive.cpp">
-      <Filter>Sources\Geometric Primitives</Filter>
+      <Filter>Sources\GeometricPrimitives</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\Sampler.cpp">
+      <Filter>Sources\RenderOptions</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\skinned_mesh.cpp">
+      <Filter>Sources\DataLoad\3D Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\static_mesh.cpp">
+      <Filter>Sources\DataLoad\3D Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\SceneManager.cpp">
+      <Filter>Sources\Scenes</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\SceneTest.cpp">
+      <Filter>Sources\Scenes</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\Rasterizer.cpp">
+      <Filter>Sources\RenderOptions</Filter>
+    </ClCompile>
+    <ClCompile Include="resources\SceneTest_2.cpp">
+      <Filter>Sources\Scenes</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\CSSample.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\shader.cpp">
+      <Filter>Sources\DataLoad\Shaders</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\shaderEx.cpp">
+      <Filter>Sources\DataLoad\Shaders</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -18,24 +18,26 @@ int WINAPI WinMain(_In_ HINSTANCE instance, _In_opt_  HINSTANCE prev_instance, _
 #endif
 
 	WNDCLASSEXW wcex{};
-	wcex.cbSize = sizeof(WNDCLASSEX);
-	wcex.style = CS_HREDRAW | CS_VREDRAW;
-	wcex.lpfnWndProc = window_procedure;
-	wcex.cbClsExtra = 0;
-	wcex.cbWndExtra = 0;
+	wcex.cbSize = sizeof(WNDCLASSEX);	// 構造体のバイト単位のサイズの指定
+	wcex.style = CS_HREDRAW | CS_VREDRAW;	// Horizontal&Vertical ReDraw 位置やサイズが変更されたときに再描画する
+	wcex.lpfnWndProc = window_procedure;	// このウィンドウに関連付けられたウィンドウプロシージャ(何らかのアクションを起こした際に発生するメッセージが送られる関数)のポインタを設定
+	wcex.cbClsExtra = 0;	// ウィンドウクラス構造体に続いて割り当てる追加のバイト数 不明
+	wcex.cbWndExtra = 0;	// ウィンドウインスタンスに続いて割り当てる追加のバイト数 不明
 	wcex.hInstance = instance;
 	wcex.hIcon = 0;
-	wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
-	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+	wcex.hCursor = LoadCursor(NULL, IDC_CROSS);	// マウスカーソルの設定？
+	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);	// 背景の設定？
 	wcex.lpszMenuName = NULL;
-	wcex.lpszClassName = APPLICATION_NAME;
-	wcex.hIconSm = 0;
+	wcex.lpszClassName = APPLICATION_NAME;	// ウィンドウに表示する名前を設定しているらしい？
+	wcex.hIconSm = 0;	// ウィンドウのアイコンを設定できるらしい
 	RegisterClassExW(&wcex);
 
 	RECT rc{ 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
-	AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
-	HWND hwnd = CreateWindowExW(0, APPLICATION_NAME, L"", WS_OVERLAPPEDWINDOW ^ WS_MAXIMIZEBOX ^ WS_THICKFRAME | WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, instance, NULL);
-	ShowWindow(hwnd, cmd_show);
+	AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);	// ウィンドウ長方形に必要なサイズを計算する
+	// ウィンドウ生成のマクロ
+	HWND hwnd = CreateWindowExW(0, APPLICATION_NAME, L"", WS_OVERLAPPEDWINDOW ^ WS_MAXIMIZEBOX ^ WS_THICKFRAME | WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT,
+		rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, instance, NULL);
+	ShowWindow(hwnd, cmd_show);	// ウィンドウの表示状態を設定する
 
 	framework framework(hwnd);
 	SetWindowLongPtrW(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(&framework));

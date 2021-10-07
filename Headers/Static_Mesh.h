@@ -12,7 +12,6 @@
 
 #include "shader.h"
 #include "misc.h"
-#include "Geometric_primitive.h"
 #include "Rasterizer.h"
 
 
@@ -52,19 +51,17 @@ private:
 	ComPtr<ID3D11Buffer> vertex_buffer;
 	ComPtr<ID3D11Buffer> index_buffer;
 
-	ComPtr<ID3D11VertexShader> vertex_shader;
-	ComPtr<ID3D11PixelShader> pixel_shader;
-	ComPtr<ID3D11InputLayout> input_layout;
+	//ComPtr<ID3D11VertexShader> vertex_shader;
+	//ComPtr<ID3D11PixelShader> pixel_shader;
+	//ComPtr<ID3D11InputLayout> input_layout;
 	ComPtr<ID3D11Buffer> constant_buffer;
 	//ComPtr<ID3D11RasterizerState>	rasterizer_states[4];	// 0:片面塗りつぶし,1:両面塗り潰し,2:片面ワイヤーフレーム,3:両面ワイヤーフレーム
 	vector<Subset> subsets;
 	vector<Material> materials;
 
 	Rasterizer rasterizer;
-	unique_ptr<Geometric_Cube> Bounty_Box;
 
 	bool wireframe;	// ワイヤーフレーム表示の有無
-	bool dispBounty;	// バウンティボックスの表示
 
 	struct PrimitivParam {
 		XMFLOAT3 Pos;		// 描画位置
@@ -74,11 +71,11 @@ private:
 	}param;
 
 public:
-	Static_Mesh(ID3D11Device* device, const wchar_t* obj_filename, const char* vs_cso_name = "Shaders\\static_mesh_vs.cso", const char* ps_cso_name = "Shaders\\static_mesh_ps.cso");
+	Static_Mesh(const wchar_t* obj_filename, const char* vs_cso_name = "Shaders\\static_mesh_vs.cso", const char* ps_cso_name = "Shaders\\static_mesh_ps.cso");
 	virtual ~Static_Mesh() = default;
 
-	void Render(ID3D11DeviceContext* immediate_context, const XMFLOAT4X4& world, const XMFLOAT4& material_color, bool WireFrame);	// 外部からワールド行列を取りたい時
-	void Render(ID3D11DeviceContext* immediate_context);							// 内部のワールド行列を使用=移動などを内部で完結させている
+	void Render(Shader* shader,const XMFLOAT4X4& world, const XMFLOAT4& material_color, bool WireFrame);	// 外部からワールド行列を取りたい時
+	void Render(Shader* shader);							// 内部のワールド行列を使用=移動などを内部で完結させている
 
 	// paramを編集するimguiウィンドウ
 	void imguiWindow(const char* beginname = "static_mesh");

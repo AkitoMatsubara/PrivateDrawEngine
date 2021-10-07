@@ -1,6 +1,5 @@
 
 #pragma once
-#include "texture.h"
 
 #include <WICTextureLoader.h>
 using namespace DirectX;
@@ -13,12 +12,17 @@ using namespace Microsoft::WRL;
 using namespace std;
 
 
-#include "misc.h"
 #include <memory>
+
+#include "framework.h"
+#include "texture.h"
+#include "misc.h"
 static map < wstring, ComPtr <ID3D11ShaderResourceView>> resources;
 
 
-HRESULT load_texture_from_file(ID3D11Device* device, const wchar_t* filename, ID3D11ShaderResourceView** shader_resource_view, D3D11_TEXTURE2D_DESC* texture2d_desc) {
+HRESULT load_texture_from_file(const wchar_t* filename, ID3D11ShaderResourceView** shader_resource_view, D3D11_TEXTURE2D_DESC* texture2d_desc) {
+	ID3D11Device* device = FRAMEWORK->GetDevice();
+
 	HRESULT hr{ S_OK };
 	ComPtr<ID3D11Resource> resource{};
 
@@ -45,7 +49,9 @@ HRESULT load_texture_from_file(ID3D11Device* device, const wchar_t* filename, ID
 }
 
 // ダミーテクスチャの作成
-HRESULT make_dummy_texture(ID3D11Device* device, ID3D11ShaderResourceView** shader_resource_view, DWORD value/*0xAABBGGRR*/, UINT dimension) {
+HRESULT make_dummy_texture(ID3D11ShaderResourceView** shader_resource_view, DWORD value/*0xAABBGGRR*/, UINT dimension) {
+	ID3D11Device* device = FRAMEWORK->GetDevice();
+
 	HRESULT hr{ S_OK };
 	ComPtr<ID3D11Resource> resource{};
 

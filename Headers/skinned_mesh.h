@@ -1,19 +1,18 @@
 #pragma once
-#include <d3d11.h>>
+
+#include "Rasterizer.h"
+
+#include "imgui.h"
+#include "imgui_impl_dx11.h"
+#include "imgui_impl_win32.h"
+
+#include <d3d11.h>
 #include <wrl.h>
 #include <DirectXMath.h>
 #include <vector>
 #include <string>
 #include <fbxsdk.h>
 #include <unordered_map>
-//#include "fbxsdk\scene\geometry\fbxnode.h"
-
-#include "imgui.h"
-#include "imgui_impl_dx11.h"
-#include "imgui_impl_win32.h"
-
-#include "geometric_primitive.h"
-#include "Rasterizer.h"
 
 using namespace std;
 using namespace DirectX;
@@ -98,18 +97,17 @@ public:
 	};
 	vector<Mesh>meshes;
 
+	enum { CST_RIGHT_Y, CST_LEFT_Y, CST_RIGHT_Z, CST_LEFT_Z, CST_END };	// coordinate_system_transforms変数用
 
 private:
-	ComPtr<ID3D11VertexShader> vertex_shader;
-	ComPtr<ID3D11PixelShader> pixel_shader;
-	ComPtr<ID3D11InputLayout> input_layout;
+	//ComPtr<ID3D11VertexShader> vertex_shader;
+	//ComPtr<ID3D11PixelShader> pixel_shader;
+	//ComPtr<ID3D11InputLayout> input_layout;
 	ComPtr<ID3D11Buffer> constant_buffer;
 
 	Rasterizer rasterizer;
-	unique_ptr<Geometric_Cube> Bounty_Box;
 
 	bool wireframe;	// ワイヤーフレーム表示の有無
-	bool dispBounty;	// バウンティボックスの表示
 
 	struct PrimitivParam {
 		XMFLOAT3 Pos;		// 描画位置
@@ -118,8 +116,28 @@ private:
 		XMFLOAT4 Color;		// 加算色
 	}param;
 
+	 XMFLOAT4X4 coordinate_system_transforms[CST_END]={
+		{-1, 0, 0, 0,
+		  0, 1, 0, 0,
+		  0, 0, 1, 0,
+		  0, 0, 0, 1},	// 0:右手座標系,Y-UP
+		{ 1, 0, 0, 0,
+		  0, 1, 0, 0,
+		  0, 0, 1, 0,
+		  0, 0, 0, 1},	// 1:左手座標系,Y-UP
+		{-1, 0, 0, 0,
+		  0, 0,-1, 0,
+		  0, 1, 0, 0,
+		  0, 0, 0, 1},	// 2:右手座標系,Z-UP
+		{ 1, 0, 0, 0,
+		  0, 0, 1, 0,
+		  0, 1, 0, 0,
+		  0, 0, 0, 1},	// 1:左手座標系,Z-UP
+	};
+	 int CstNo;
+
 public:
-	Skinned_Mesh(ID3D11Device* device, const char* fbx_filename, bool triangulate = false, const char* vs_cso_name = "Shaders\\skinned_mesh_vs.cso", const char* ps_cso_name = "Shaders\\skinned_mesh_ps.cso");
+	Skinned_Mesh(const char* fbx_filename, int cstNo = 0, const bool triangulate = false, const char* vs_cso_name = "Shaders\\skinned_mesh_vs.cso", const char* ps_cso_name = "Shaders\\skinned_mesh_ps.cso");
 
 	virtual ~Skinned_Mesh() = default;
 
@@ -128,7 +146,7 @@ public:
 	// マテリアルの取り出し
 	void Fetch_Materials(FbxScene* fbx_scene, unordered_map<uint64_t, Material>& materials);
 
-	void Render(ID3D11DeviceContext* immediate_context, int rasterize = 0, const int LRHS = 0);
+	void Render(Shader* shader, int rasterize = 0);
 
 	// paramを編集するimguiウィンドウ
 	void imguiWindow(const char* beginname = "skinned_mesh");
@@ -152,7 +170,7 @@ public:
 	XMFLOAT4 getColor() { return param.Color; }
 
 private:
-	void Create_com_buffers(ID3D11Device* device, const char* fbx_filename, const char* vs_cso_name, const char* ps_cso_name);
+	void Create_com_buffers(const char* fbx_filename, const char* vs_cso_name, const char* ps_cso_name);
 protected:
 	scene scene_view;
 };

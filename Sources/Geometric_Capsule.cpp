@@ -1,6 +1,8 @@
+#include "framework.h"
 #include "geometric_primitive.h"
 
-Geometric_Capsule::Geometric_Capsule(ID3D11Device* device, FLOAT radian, FLOAT height, u_int slices, u_int stacks, const char* vs_cso_name, const char* ps_cso_name) :Geometric_Primitive(device, vs_cso_name, ps_cso_name) {
+Geometric_Capsule::Geometric_Capsule(FLOAT radian, FLOAT height, u_int slices, u_int stacks, const char* vs_cso_name, const char* ps_cso_name) :Geometric_Primitive(vs_cso_name, ps_cso_name) {
+	ID3D11Device* device = FRAMEWORK->GetDevice();
 	// Šî–{‚Í‹…¶¬‚Ì‰—p
 	std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;
@@ -104,5 +106,5 @@ Geometric_Capsule::Geometric_Capsule(ID3D11Device* device, FLOAT radian, FLOAT h
 		}
 	}
 
-	Create_com_buffers(device, vertices.data(), vertices.size(), indices.data(), indices.size());
+	Create_com_buffers(vertices.data(), vertices.size(), indices.data(), indices.size());
 }

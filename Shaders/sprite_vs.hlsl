@@ -1,10 +1,10 @@
 #include "sprite.hlsli"
 
-VS_OUT main(float4 position : POSITION, float4 color : COLOR, float2 texcoord : TEXCOORD) // セマンティクスと一致させて値を受け取る
+PS_IN main(VS_IN vin) // セマンティクスと一致させて値を受け取る
 {
-    VS_OUT vout;
-    vout.positon  = position;    // 現状は処理を行わないため、そのままピクセルシェーダに流す
-    vout.color    = color;
-    vout.texcoord = texcoord;
+    PS_IN vout;
+    vout.position = float4(vin.position, 1); // 現状は処理を行わないため、そのままピクセルシェーダに流す
+    vout.color    = vin.color;
+    vout.texcoord = vin.texcoord;
     return vout;
 }

@@ -1,21 +1,24 @@
 
-#include "Sprite_Batch.h"
-#include "misc.h"
 #include <sstream>
 #include <WICTextureLoader.h>
 
-#include "texture.h"
+#include "framework.h"
 #include "shader.h"
+#include "Sprite_Batch.h"
+#include "texture.h"
+#include "misc.h"
+
 
 // 頂点バッファオブジェクトの生成
-sprite_Batch::sprite_Batch(ID3D11Device* device, const wchar_t* filename, size_t max_sprites, const char* vs_cso_name, const char* ps_cso_name) :max_vertices(max_sprites * 6)
+sprite_Batch::sprite_Batch(const wchar_t* filename, size_t max_sprites, const char* vs_cso_name, const char* ps_cso_name) :max_vertices(max_sprites * 6)
 {
+	ID3D11Device* device = FRAMEWORK->GetDevice();
 	HRESULT hr{ S_OK };
 
 	std::unique_ptr<Vertex[]> vertices{ std::make_unique<Vertex[]>(max_vertices) };
 
 	// テクスチャのロード
-	load_texture_from_file(device, filename, shader_resource_view.GetAddressOf(), &texture2d_desc);
+	load_texture_from_file(filename, shader_resource_view.GetAddressOf(), &texture2d_desc);
 
 	// ByteWidth,BindFlags,StructuerByteStrideは可変情報、その他情報はあまり変化することはない
 	D3D11_BUFFER_DESC buffer_desc{};			                // バッファの使われ方を設定する構造体
@@ -34,28 +37,28 @@ sprite_Batch::sprite_Batch(ID3D11Device* device, const wchar_t* filename, size_t
 	hr = device->CreateBuffer(&buffer_desc, &subresource_data, vertex_buffer.GetAddressOf());		// 作成するバッファ情報、作成するバッファの初期化情報、作成したバッファを保存するポインタ
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));	// _ASSERT_EXPR：第一引数条件が満たされなければ第二引数のメッセージを表示する
 
-		// 入力レイアウトオブジェクトの生成
-	D3D11_INPUT_ELEMENT_DESC input_element_desc[]
-	{
-		{
-		"POSITION",						// セマンティクス名	HLSL側のシグネチャ(型や変数名の組み合わせの事？)の名前と一致させることで送信した頂点情報を受信することができる
-		0,								// セマンティクス番号 同名でも識別できるように番号を割り当てる。番号を変更することでHLSLで別の情報だと認識できる
-		DXGI_FORMAT_R32G32B32_FLOAT,	// フォーマット	R23G23B23は実質float3
-		0,								// 入力スロット番号	入寮レイアウトをどの入力スロットに対して反映されるかを指定する
-		D3D11_APPEND_ALIGNED_ELEMENT,	// 要素から先頭までのオフセット値	各データの配列先頭が何バイト離れているか。
-										// D3D11_APPEND_ALIGNED_ELEMENTを指定でオフセット値を自動計算 手計算ならフォーマットサイズを加算していく
-		D3D11_INPUT_PER_VERTEX_DATA,	// 入力データの種類	頂点データとインスタンスデータの２種類
-		0								// 繰り返し回数(頂点データの時は０)	上記でインスタンスデータを設定した場合に意味を持つ
-		},
-		{"COLOR"   ,0,DXGI_FORMAT_R32G32B32A32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0},
-		{"TEXCOORD",0,DXGI_FORMAT_R32G32_FLOAT		,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0},
-	};
+	//	// 入力レイアウトオブジェクトの生成
+	//D3D11_INPUT_ELEMENT_DESC input_element_desc[]
+	//{
+	//	{
+	//	"POSITION",						// セマンティクス名	HLSL側のシグネチャ(型や変数名の組み合わせの事？)の名前と一致させることで送信した頂点情報を受信することができる
+	//	0,								// セマンティクス番号 同名でも識別できるように番号を割り当てる。番号を変更することでHLSLで別の情報だと認識できる
+	//	DXGI_FORMAT_R32G32B32_FLOAT,	// フォーマット	R23G23B23は実質float3
+	//	0,								// 入力スロット番号	入寮レイアウトをどの入力スロットに対して反映されるかを指定する
+	//	D3D11_APPEND_ALIGNED_ELEMENT,	// 要素から先頭までのオフセット値	各データの配列先頭が何バイト離れているか。
+	//									// D3D11_APPEND_ALIGNED_ELEMENTを指定でオフセット値を自動計算 手計算ならフォーマットサイズを加算していく
+	//	D3D11_INPUT_PER_VERTEX_DATA,	// 入力データの種類	頂点データとインスタンスデータの２種類
+	//	0								// 繰り返し回数(頂点データの時は０)	上記でインスタンスデータを設定した場合に意味を持つ
+	//	},
+	//	{"COLOR"   ,0,DXGI_FORMAT_R32G32B32A32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0},
+	//	{"TEXCOORD",0,DXGI_FORMAT_R32G32_FLOAT		,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0},
+	//};
 
-	// 頂点シェーダーオブジェクトの生成
-	create_vs_from_cso(device, vs_cso_name, vertex_shader.GetAddressOf(), input_layout.GetAddressOf(), input_element_desc, _countof(input_element_desc));
+	//// 頂点シェーダーオブジェクトの生成
+	//create_vs_from_cso(vs_cso_name, vertex_shader.GetAddressOf(), input_layout.GetAddressOf(), input_element_desc, _countof(input_element_desc));
 
-	// ピクセルシェーダオブジェクトの生成
-	create_ps_from_cso(device, ps_cso_name, pixel_shader.GetAddressOf());
+	//// ピクセルシェーダオブジェクトの生成
+	//create_ps_from_cso(ps_cso_name, pixel_shader.GetAddressOf());
 
 	param.Pos     = XMFLOAT2(0.0f, 0.0f);
 	param.Size    = XMFLOAT2(texture2d_desc.Width, texture2d_desc.Height);
@@ -172,17 +175,17 @@ void sprite_Batch::CreateVertexData(ID3D11DeviceContext* immediate_context, XMFL
 	// 計算結果で頂点バッファオブジェクトを更新する
 	//				三角形を2つ作る				//
 	/*				0	*----*1	 *4				*/
-	/*					|   /   /|				*/
-	/*					|  /   / |				*/
-	/*					| /   /  |				*/
+	/*					||||/   /|				*/
+	/*					|||/   /||				*/
+	/*					||/   /|||				*/
 	/*				2	*	3*---*5				*/
 
-	vertices.push_back({ { left_top.x    ,left_top.y,	 0 }, { color.x,color.y,color.z,color.w }, { TexLeft_top.x,		TexLeft_top.y	 } });	// 左上
-	vertices.push_back({ { right_top.x   ,right_top.y,	 0 }, { color.x,color.y,color.z,color.w }, { TexRight_top.x,	TexRight_top.y	 } });	// 右上
-	vertices.push_back({ { left_bottom.x ,left_bottom.y, 0 }, { color.x,color.y,color.z,color.w }, { TexLeft_top.x,		TexLeft_bottom.y } });	// 左下
-	vertices.push_back({ { left_bottom.x ,left_bottom.y, 0 }, { color.x,color.y,color.z,color.w }, { TexLeft_top.x,		TexLeft_bottom.y } });	// 左下
-	vertices.push_back({ { right_top.x   ,right_top.y,	 0 }, { color.x,color.y,color.z,color.w }, { TexRight_top.x,	TexRight_top.y	 } });	// 右上
-	vertices.push_back({ { right_bottom.x,right_bottom.y,0 }, { color.x,color.y,color.z,color.w }, { TexRight_bottom.x,	TexRight_bottom.y} });	// 右下
+	vertices.push_back({ { left_top.x    ,left_top.y,	 0 }, {0,0,1}, { TexLeft_top.x,		TexLeft_top.y	 }, { color.x,color.y,color.z,color.w } });	// 左上
+	vertices.push_back({ { right_top.x   ,right_top.y,	 0 }, {0,0,1}, { TexRight_top.x,	TexRight_top.y	 }, { color.x,color.y,color.z,color.w } });	// 右上
+	vertices.push_back({ { left_bottom.x ,left_bottom.y, 0 }, {0,0,1}, { TexLeft_top.x,		TexLeft_bottom.y }, { color.x,color.y,color.z,color.w } });	// 左下
+	vertices.push_back({ { left_bottom.x ,left_bottom.y, 0 }, {0,0,1}, { TexLeft_top.x,		TexLeft_bottom.y }, { color.x,color.y,color.z,color.w } });	// 左下
+	vertices.push_back({ { right_top.x   ,right_top.y,	 0 }, {0,0,1}, { TexRight_top.x,	TexRight_top.y	 }, { color.x,color.y,color.z,color.w } });	// 右上
+	vertices.push_back({ { right_bottom.x,right_bottom.y,0 }, {0,0,1}, { TexRight_bottom.x,	TexRight_bottom.y}, { color.x,color.y,color.z,color.w } });	// 右下
 }
 
 void sprite_Batch::Render(ID3D11DeviceContext* immediate_context, XMFLOAT2 pos, XMFLOAT2 size, float angle, XMFLOAT4 color, XMFLOAT2 sPos, XMFLOAT2 sSize) {

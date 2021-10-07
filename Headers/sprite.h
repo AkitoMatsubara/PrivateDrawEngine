@@ -1,21 +1,24 @@
 #pragma once
+#include "shader.h"
 #include <d3d11.h>
 #include <DirectXMath.h>
 #include <iostream>
 
 #include <wrl.h>
+
 using namespace Microsoft::WRL;
 using namespace DirectX;
 using namespace std;
 
 
 
-// 頂点フォーマット
-struct Vertex {
-	XMFLOAT3 position;
-	XMFLOAT4 color;
-	XMFLOAT2 texcoord;	// TextuerCoordinateの略、UV座標の取得などによく使われる様子
-};
+//// 頂点フォーマット
+//struct Vertex {
+//	XMFLOAT3 position;
+//	XMFLOAT3 normal;
+//	XMFLOAT2 texcoord;	// TextuerCoordinateの略、UV座標の取得などによく使われる様子
+//	XMFLOAT4 color;
+//};
 
 // 矩形用のステータス
 struct SpriteParam {
@@ -47,27 +50,27 @@ private:
 
 public:
 	// コンストラクタ、デストラクタ
-	Sprite(ID3D11Device* device, const wchar_t* filename, const char* vs_cso_name = "Shaders\\sprite_vs.cso", const char* ps_cso_name = "Shaders\\sprite_ps.cso");
+	Sprite(const wchar_t* filename, const char* vs_cso_name = "Shaders\\sprite_vs.cso", const char* ps_cso_name = "Shaders\\sprite_ps.cso");
 	~Sprite();	// すべてのCOMオブジェクトを解放する
 
 	// メンバ関数
 
 	// 頂点情報の生成、更新
-	void CreateVertexData(ID3D11DeviceContext* immediate_context, XMFLOAT2 pos, XMFLOAT2 size, float angle, XMFLOAT4 color
+	void CreateVertexData(ID3D11DeviceContext* immediate_context, Shader* shader, XMFLOAT2 pos, XMFLOAT2 size, float angle, XMFLOAT4 color
 		, XMFLOAT2 TexPos, XMFLOAT2 TexSize);
 
 	// メンバ変数でできるならいらない？と思い削除←やっぱいるわ課題的に
-	void Render(ID3D11DeviceContext* immediate_context, XMFLOAT2 pos, XMFLOAT2 size, float andle, XMFLOAT4 color
+	void Render(Shader* shader, ID3D11DeviceContext* immediate_context, XMFLOAT2 pos, XMFLOAT2 size, float andle, XMFLOAT4 color
 		, XMFLOAT2 TexPos, XMFLOAT2 TexSize);	// immediate(対象となるデータそのものをコード中に記したものを即値という)
 
 	// メンバ変数のパラメータで描画
-	void Render(ID3D11DeviceContext* immediate_context);	// immediate(対象となるデータそのものをコード中に記したものを即値という)
+	void Render(Shader* shader, ID3D11DeviceContext* immediate_context);	// immediate(対象となるデータそのものをコード中に記したものを即値という)
 
 	// 位置だけ指定するRender アニメーション不可
-	void Render(ID3D11DeviceContext* immediate_context, XMFLOAT2 Pos, XMFLOAT2 Size);
+	void Render(Shader* shader, ID3D11DeviceContext* immediate_context, XMFLOAT2 Pos, XMFLOAT2 Size);
 
-	// テキスト画像からテキストを切り抜いて描画(画像なのでフォーマット固定)
-	void Text_Out(ID3D11DeviceContext* immediate_context, std::string s, XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 color);
+	//// テキスト画像からテキストを切り抜いて描画(画像なのでフォーマット固定)
+	//void Text_Out(ID3D11DeviceContext* immediate_context, std::string s, XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 color);
 
 	// paramを編集するimguiウィンドウ
 	void ImguiWindow();

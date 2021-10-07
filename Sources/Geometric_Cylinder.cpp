@@ -1,7 +1,9 @@
 
+#include "framework.h"
 #include "geometric_primitive.h"
 
-Geometric_Cylinder::Geometric_Cylinder(ID3D11Device* device, u_int slices, const char* vs_cso_name, const char* ps_cso_name) :Geometric_Primitive(device, vs_cso_name, ps_cso_name) {
+Geometric_Cylinder::Geometric_Cylinder(u_int slices, const char* vs_cso_name, const char* ps_cso_name) :Geometric_Primitive(vs_cso_name, ps_cso_name) {
+	ID3D11Device* device = FRAMEWORK->GetDevice();
 	std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;
 
@@ -120,6 +122,6 @@ Geometric_Cylinder::Geometric_Cylinder(ID3D11Device* device, u_int slices, const
 		indices.push_back(base_index + (0) * 2 + 1);			// 3
 	}
 
-	Create_com_buffers(device, vertices.data(), vertices.size(), indices.data(), indices.size());
+	Create_com_buffers(vertices.data(), vertices.size(), indices.data(), indices.size());
 
 }

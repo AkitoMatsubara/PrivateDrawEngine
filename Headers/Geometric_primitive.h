@@ -3,8 +3,8 @@
 #include <DirectXMath.h>
 #include <wrl.h>
 
-#include "shader.h"
 #include "misc.h"
+#include "shader.h"
 
 #include "imgui.h"
 #include "imgui_impl_dx11.h"
@@ -33,9 +33,9 @@ private:
 	ComPtr<ID3D11Buffer> vertex_buffer;
 	ComPtr<ID3D11Buffer> index_buffer;
 
-	ComPtr<ID3D11VertexShader> vertex_shader;
-	ComPtr<ID3D11PixelShader> pixel_shader;
-	ComPtr<ID3D11InputLayout> input_layout;
+	//ComPtr<ID3D11VertexShader> vertex_shader;
+	//ComPtr<ID3D11PixelShader> pixel_shader;
+	//ComPtr<ID3D11InputLayout> input_layout;
 	ComPtr<ID3D11Buffer> constant_buffer;
 	ComPtr<ID3D11RasterizerState>	rasterizer_states[3];	// 0:片面塗りつぶし,1:片面ワイヤーフレーム,2:両面ワイヤーフレーム
 
@@ -48,11 +48,11 @@ private:
 	}param;
 
 public:
-	Geometric_Primitive(ID3D11Device* device, const char* vs_cso_name = "Shaders\\geometric_primitive_vs.cso", const char* ps_cso_name = "Shaders\\geometric_primitive_ps.cso");
+	Geometric_Primitive(const char* vs_cso_name = "Shaders\\geometric_primitive_vs.cso", const char* ps_cso_name = "Shaders\\geometric_primitive_ps.cso");
 	virtual ~Geometric_Primitive() = default;
 
-	void Render(ID3D11DeviceContext* immediate_context, const XMFLOAT4X4& world, const XMFLOAT4& material_color, bool WireFrame);	// 外部からワールド行列を取りたい時
-	void Render(ID3D11DeviceContext* immediate_context);							// 内部のワールド行列を使用=移動などを内部で完結させている
+	void Render(Shader* shader, const XMFLOAT4X4& world, const XMFLOAT4& material_color, bool WireFrame);	// 外部からワールド行列を取りたい時
+	void Render(Shader* shader);							// 内部のワールド行列を使用=移動などを内部で完結させている
 
 	// paramを編集するimguiウィンドウ
 	void imguiWindow(const char* beginname = "geometric_primitive");
@@ -75,7 +75,7 @@ public:
 	XMFLOAT4 getColor() { return param.Color; }
 
 protected:
-	void Create_com_buffers(ID3D11Device* device, Vertex* vertices, size_t vertex_count, uint32_t* indices, size_t index_count);
+	void Create_com_buffers(Vertex* vertices, size_t vertex_count, uint32_t* indices, size_t index_count);
 
 };
 
@@ -107,9 +107,9 @@ private:
 
 public:
 	// 立方体の生成
-	Geometric_Cube(ID3D11Device* device, const char* vs_cso_name = "Shaders\\geometric_primitive_vs.cso", const char* ps_cso_name = "Shaders\\geometric_primitive_ps.cso");
+	Geometric_Cube(const char* vs_cso_name = "Shaders\\geometric_primitive_vs.cso", const char* ps_cso_name = "Shaders\\geometric_primitive_ps.cso");
 	// バウンティボックス用 頂点位置を外部から指定するように
-	Geometric_Cube(ID3D11Device* device, float left,float right,float bottom,float top,float front,float back,
+	Geometric_Cube(float left,float right,float bottom,float top,float front,float back,
 					const char* vs_cso_name = "Shaders\\geometric_primitive_vs.cso", const char* ps_cso_name = "Shaders\\geometric_primitive_ps.cso");
 };
 
@@ -118,7 +118,7 @@ class Geometric_Cylinder :public Geometric_Primitive {
 public:
 	//円柱の生成
 	// slices : 何角形か
-	Geometric_Cylinder(ID3D11Device* device, u_int slices = 20, const char* vs_cso_name = "Shaders\\geometric_primitive_vs.cso", const char* ps_cso_name = "Shaders\\geometric_primitive_ps.cso");
+	Geometric_Cylinder(u_int slices = 20, const char* vs_cso_name = "Shaders\\geometric_primitive_vs.cso", const char* ps_cso_name = "Shaders\\geometric_primitive_ps.cso");
 };
 
 // 球
@@ -127,7 +127,7 @@ public:
 	//  球の生成
 	//  slices : 何角形か
 	//  stacks : 球の滑らかさ
-	Geometric_Sphere(ID3D11Device* device, u_int slices = 20, u_int stacks = 20, const char* vs_cso_name = "Shaders\\geometric_primitive_vs.cso", const char* ps_cso_name = "Shaders\\geometric_primitive_ps.cso");
+	Geometric_Sphere(u_int slices = 20, u_int stacks = 20, const char* vs_cso_name = "Shaders\\geometric_primitive_vs.cso", const char* ps_cso_name = "Shaders\\geometric_primitive_ps.cso");
 };
 // カプセル
 class Geometric_Capsule :public Geometric_Primitive {
@@ -137,5 +137,5 @@ public:
 	//  height : 高さ
 	//  slices : 何角形か
 	//  stacks : 球の滑らかさ
-	Geometric_Capsule(ID3D11Device* device, FLOAT radian = 0.5f, FLOAT height = 1.0f, u_int slices = 20, u_int stacks = 20, const char* vs_cso_name = "Shaders\\geometric_primitive_vs.cso", const char* ps_cso_name = "Shaders\\geometric_primitive_ps.cso");
+	Geometric_Capsule(FLOAT radian = 0.5f, FLOAT height = 1.0f, u_int slices = 20, u_int stacks = 20, const char* vs_cso_name = "Shaders\\geometric_primitive_vs.cso", const char* ps_cso_name = "Shaders\\geometric_primitive_ps.cso");
 };

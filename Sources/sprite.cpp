@@ -1,3 +1,5 @@
+#include "framework.h"
+#include "texture.h"
 #include "sprite.h"
 #include "misc.h"
 #include <sstream>
@@ -7,22 +9,21 @@
 #include "imgui_impl_dx11.h"
 #include "imgui_impl_win32.h"
 
-#include "texture.h"
-#include "shader.h"
 
 // 頂点情報のセット
 Vertex vertices[]
 {
-	{{-1.0,+1.0,0},{1,1,1,1},{0,0}},	// 左上,RGB色,UV座標
-	{{+1.0,+1.0,0},{1,1,1,1},{1,0}},	// 右上,RGB色,UV座標
-	{{-1.0,-1.0,0},{1,1,1,1},{0,1}},	// 左下,RGB色,UV座標
-	{{+1.0,-1.0,0},{1,1,1,1},{1,1}},	// 右下,RGB色,UV座標
+	{{-1.0,+1.0,0},{0,0,1},{0,0},{1,1,1,1}},	// 左上,法線,RGB色,UV座標
+	{{+1.0,+1.0,0},{0,0,1},{1,0},{1,1,1,1}},	// 右上,法線,RGB色,UV座標
+	{{-1.0,-1.0,0},{0,0,1},{0,1},{1,1,1,1}},	// 左下,法線,RGB色,UV座標
+	{{+1.0,-1.0,0},{0,0,1},{1,1},{1,1,1,1}},	// 右下,法線,RGB色,UV座標
 };
 
 
 // 頂点バッファオブジェクトの生成
-Sprite::Sprite(ID3D11Device* device, const wchar_t* filename, const char* vs_cso_name ,const char* ps_cso_name )
+Sprite::Sprite(const wchar_t* filename, const char* vs_cso_name ,const char* ps_cso_name )
 {
+	ID3D11Device* device = FRAMEWORK->GetDevice();
 	HRESULT hr{ S_OK };
 
 	//// 画像ファイルのロードとSRVオブジェクトの生成
@@ -38,7 +39,7 @@ Sprite::Sprite(ID3D11Device* device, const wchar_t* filename, const char* vs_cso
 	//texture2d->Release();
 
 	// テクスチャのロード(上記処理をモジュール化)
-	load_texture_from_file(device, filename, shader_resource_view.GetAddressOf(), &texture2d_desc);
+	load_texture_from_file(filename, shader_resource_view.GetAddressOf(), &texture2d_desc);
 
 	// ByteWidth,BindFlags,StructuerByteStrideは可変情報、その他情報はあまり変化することはない
 	D3D11_BUFFER_DESC buffer_desc{};			// バッファの使われ方を設定する構造体
@@ -52,28 +53,28 @@ Sprite::Sprite(ID3D11Device* device, const wchar_t* filename, const char* vs_cso
 	D3D11_SUBRESOURCE_DATA subresource_data{};			// 作成するバッファの初期化データを保存する構造体
 	subresource_data.pSysMem = vertices;				// バッファを初期化するデータを指定 どの情報で初期化するか
 	subresource_data.SysMemPitch = 0;					// メモリのピッチ 2D or 3Dテクスチャの場合に使用する
-	subresource_data.SysMemSlicePitch = 0;				// 深度レベル	 同上
+	subresource_data.SysMemSlicePitch = 0;				// 深度レベル	同上
 
 	hr = device->CreateBuffer(&buffer_desc, &subresource_data, vertex_buffer.GetAddressOf());		// 作成するバッファ情報、作成するバッファの初期化情報、作成したバッファを保存するポインタ
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));	// _ASSERT_EXPR：第一引数条件が満たされなければ第二引数のメッセージを表示する
 
 
-	// 入力レイアウトオブジェクトの生成
-	D3D11_INPUT_ELEMENT_DESC input_element_desc[]
-	{
-		{
-		"POSITION",						// セマンティクス名	HLSL側のシグネチャ(型や変数名の組み合わせの事？)の名前と一致させることで送信した頂点情報を受信することができる
-		0,								// セマンティクス番号 同名でも識別できるように番号を割り当てる。番号を変更することでHLSLで別の情報だと認識できる
-		DXGI_FORMAT_R32G32B32_FLOAT,	// フォーマット	R23G23B23は実質float3
-		0,								// 入力スロット番号	入寮レイアウトをどの入力スロットに対して反映されるかを指定する
-		D3D11_APPEND_ALIGNED_ELEMENT,	// 要素から先頭までのオフセット値	各データの配列先頭が何バイト離れているか。
-										// D3D11_APPEND_ALIGNED_ELEMENTを指定でオフセット値を自動計算 手計算ならフォーマットサイズを加算していく
-		D3D11_INPUT_PER_VERTEX_DATA,	// 入力データの種類	頂点データとインスタンスデータの２種類
-		0								// 繰り返し回数(頂点データの時は０)	上記でインスタンスデータを設定した場合に意味を持つ
-		},
-		{"COLOR"   ,0,DXGI_FORMAT_R32G32B32A32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0},
-		{"TEXCOORD",0,DXGI_FORMAT_R32G32_FLOAT		,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0},
-	};
+	//// 入力レイアウトオブジェクトの生成
+	//D3D11_INPUT_ELEMENT_DESC input_element_desc[]
+	//{
+	//	{
+	//	"POSITION",						// セマンティクス名	HLSL側のシグネチャ(型や変数名の組み合わせの事？)の名前と一致させることで送信した頂点情報を受信することができる
+	//	0,								// セマンティクス番号 同名でも識別できるように番号を割り当てる。番号を変更することでHLSLで別の情報だと認識できる
+	//	DXGI_FORMAT_R32G32B32_FLOAT,	// フォーマット	R23G23B23は実質float3
+	//	0,								// 入力スロット番号	入寮レイアウトをどの入力スロットに対して反映されるかを指定する
+	//	D3D11_APPEND_ALIGNED_ELEMENT,	// 要素から先頭までのオフセット値	各データの配列先頭が何バイト離れているか。
+	//									// D3D11_APPEND_ALIGNED_ELEMENTを指定でオフセット値を自動計算 手計算ならフォーマットサイズを加算していく
+	//	D3D11_INPUT_PER_VERTEX_DATA,	// 入力データの種類	頂点データとインスタンスデータの２種類
+	//	0								// 繰り返し回数(頂点データの時は０)	上記でインスタンスデータを設定した場合に意味を持つ
+	//	},
+	//	{"COLOR"   ,0,DXGI_FORMAT_R32G32B32A32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0},
+	//	{"TEXCOORD",0,DXGI_FORMAT_R32G32_FLOAT		,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0},
+	//};
 
 	// 頂点シェーダーオブジェクトの生成
 	//FILE* fp{};
@@ -92,8 +93,8 @@ Sprite::Sprite(ID3D11Device* device, const wchar_t* filename, const char* vs_cso
 	//_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 
 
-	// 頂点シェーダーオブジェクトの生成
-	create_vs_from_cso(device, vs_cso_name, &vertex_shader, &input_layout, input_element_desc, _countof(input_element_desc));
+	//// 頂点シェーダーオブジェクトの生成
+	//create_vs_from_cso(vs_cso_name, &vertex_shader, &input_layout, input_element_desc, _countof(input_element_desc));
 
 	// ピクセルシェーダオブジェクトの生成
 	//fopen_s(&fp, ps_cso_name, "rb");	// ファイルポインタ、ファイル名、rb：読み取り専用のバイナリモード
@@ -107,8 +108,8 @@ Sprite::Sprite(ID3D11Device* device, const wchar_t* filename, const char* vs_cso
 	//hr = device->CreatePixelShader(ps_cso_data.get(), ps_cso_sz, nullptr, &pixel_shader);	// シェーダのポインター、シェーダーサイズ、dynamic linkageで使うポインタ、作成したバッファを保存するポインタ
 	//_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 
-	// ピクセルシェーダオブジェクトの生成
-	create_ps_from_cso(device, ps_cso_name, &pixel_shader);
+	//// ピクセルシェーダオブジェクトの生成
+	//create_ps_from_cso(ps_cso_name, &pixel_shader);
 
 	// ラスタライザオブジェクトの生成
 	D3D11_RASTERIZER_DESC rasterizer_desc{};
@@ -159,7 +160,7 @@ Sprite::~Sprite() {
 }
 
 
-void Sprite::CreateVertexData(ID3D11DeviceContext* immediate_context, XMFLOAT2 pos, XMFLOAT2 size, float angle, XMFLOAT4 color
+void Sprite::CreateVertexData(ID3D11DeviceContext* immediate_context, Shader* shader,XMFLOAT2 pos, XMFLOAT2 size, float angle, XMFLOAT4 color
 	, XMFLOAT2 TexPos, XMFLOAT2 TexSize) {
 	// スクリーン(ビューポート)のサイズを取得する
 	D3D11_VIEWPORT viewport{};
@@ -240,6 +241,12 @@ void Sprite::CreateVertexData(ID3D11DeviceContext* immediate_context, XMFLOAT2 p
 		vertices[2].texcoord = TexLeft_bottom;
 		vertices[3].texcoord = TexRight_bottom;
 
+		// 法線情報を設定
+		vertices[0].normal = XMFLOAT3(0, 0, 1);
+		vertices[1].normal = XMFLOAT3(0, 0, 1);
+		vertices[2].normal = XMFLOAT3(0, 0, 1);
+		vertices[3].normal = XMFLOAT3(0, 0, 1);
+
 	}
 	immediate_context->Unmap(vertex_buffer.Get(), 0);	// マッピング解除 頂点バッファを上書きしたら必ず実行。Map&Unmapはセットで使用する
 
@@ -259,41 +266,46 @@ void Sprite::CreateVertexData(ID3D11DeviceContext* immediate_context, XMFLOAT2 p
 	//プリミティブタイプ及びデータの順序に関する情報のバインド
 	immediate_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);	// プリミティブの形状を指定できる？ 今回は連続三角形に変更
 
-	// 入力レイアウトオブジェクトのバインド
-	immediate_context->IASetInputLayout(input_layout.Get());	// 入力レイアウトの設定
+	// シェーダの有効化
+	shader->Activate();
+	//// 入力レイアウトオブジェクトのバインド
+	//immediate_context->IASetInputLayout(input_layout.Get());	// 入力レイアウトの設定
 
-	// シェーダのバインド
-	immediate_context->VSSetShader(vertex_shader.Get(), nullptr, 0);
-	immediate_context->PSSetShader(pixel_shader.Get(), nullptr, 0);
+	//// シェーダのバインド
+	//immediate_context->VSSetShader(vertex_shader.Get(), nullptr, 0);
+	//immediate_context->PSSetShader(pixel_shader.Get(), nullptr, 0);
 
 	// ラスタライザステートの設定
 	immediate_context->RSSetState(rasterizer_states[0].Get());
 	// プリミティブの描画
 	immediate_context->Draw(4, 0);	// 頂点の数、描画開始時点で使う頂点バッファの最初のインデックス
+	// シェーダの無効化
+	shader->Inactivate();
+
 
 }
 
-void Sprite::Render(ID3D11DeviceContext* immediate_context, XMFLOAT2 pos, XMFLOAT2 size, float angle, XMFLOAT4 color, XMFLOAT2 TexPos, XMFLOAT2 TexSize) {
-	CreateVertexData(immediate_context, pos, size, angle, color, TexPos, TexSize);
+void Sprite::Render(Shader* shader,ID3D11DeviceContext* immediate_context, XMFLOAT2 pos, XMFLOAT2 size, float angle, XMFLOAT4 color, XMFLOAT2 TexPos, XMFLOAT2 TexSize) {
+	CreateVertexData(immediate_context, shader, pos, size, angle, color, TexPos, TexSize);
 }
 
-void Sprite::Render(ID3D11DeviceContext* immediate_context) {
-	CreateVertexData(immediate_context, param.Pos, param.Size, param.Angle, param.Color, param.TexPos, param.TexSize);
+void Sprite::Render(Shader* shader, ID3D11DeviceContext* immediate_context) {
+	CreateVertexData(immediate_context, shader, param.Pos, param.Size, param.Angle, param.Color, param.TexPos, param.TexSize);
 }
 
-void Sprite::Render(ID3D11DeviceContext* immediate_context, XMFLOAT2 Pos, XMFLOAT2 Size) {
-	CreateVertexData(immediate_context, Pos, Size, param.Angle, param.Color, param.TexPos, param.TexSize);
+void Sprite::Render(Shader* shader, ID3D11DeviceContext* immediate_context, XMFLOAT2 Pos, XMFLOAT2 Size) {
+	CreateVertexData(immediate_context, shader, Pos, Size, param.Angle, param.Color, param.TexPos, param.TexSize);
 }
 
-void Sprite::Text_Out(ID3D11DeviceContext* immediate_context, std::string s, XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 color) {
-	XMFLOAT2 TexPos(static_cast<float>(texture2d_desc.Width / 16), static_cast<float>(texture2d_desc.Height / 16));
-	float carriage = 0;
-	for (const char c : s) {
-		Render(immediate_context, XMFLOAT2(pos.x + carriage, pos.y), size, 0, color,
-			XMFLOAT2(TexPos.x * (c & 0x0F), TexPos.y * (c >> 4)), TexPos);
-		carriage += size.x;
-	}
-}
+//void Sprite::Text_Out(ID3D11DeviceContext* immediate_context, std::string s, XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 color) {
+//	XMFLOAT2 TexPos(static_cast<float>(texture2d_desc.Width / 16), static_cast<float>(texture2d_desc.Height / 16));
+//	float carriage = 0;
+//	for (const char c : s) {
+//		Render(immediate_context, XMFLOAT2(pos.x + carriage, pos.y), size, 0, color,
+//			XMFLOAT2(TexPos.x * (c & 0x0F), TexPos.y * (c >> 4)), TexPos);
+//		carriage += size.x;
+//	}
+//}
 
 XMFLOAT3 Sprite::ConvertToNDC(XMFLOAT3 pos, D3D11_VIEWPORT viewport) {
 	pos.x = (pos.x * 2 / viewport.Width) - 1.0f;	// x値を２倍、その後スクリーンサイズで割って１を引くと正規化される
@@ -320,6 +332,7 @@ void Sprite::ImguiWindow() {
 	ImGui::ColorEdit4(u8"Color", (float*)&Color);
 
 	ImGui::End();
+
 	setPos(DirectX::XMFLOAT2(pos[0], pos[1]));
 	setSize(DirectX::XMFLOAT2(size[0], size[1]));
 	setAngle(angle);

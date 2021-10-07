@@ -1,3 +1,4 @@
+#include "framework.h"
 #include "geometric_primitive.h"
 #include "shader.h"
 #include "misc.h"
@@ -9,18 +10,19 @@
 #include <vector>
 
 
-Geometric_Primitive::Geometric_Primitive(ID3D11Device* device, const char* vs_cso_name, const char* ps_cso_name) {
+Geometric_Primitive::Geometric_Primitive(const char* vs_cso_name, const char* ps_cso_name) {
+	ID3D11Device* device = FRAMEWORK->GetDevice();
 
 	HRESULT hr{ S_OK };
 
-	D3D11_INPUT_ELEMENT_DESC input_element_desc[]{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "NORMAL"	, 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-	};
+	//D3D11_INPUT_ELEMENT_DESC input_element_desc[]{
+	//	{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	//	{ "NORMAL"	, 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	//};
 
-	// シェーダ作成
-	create_vs_from_cso(device, vs_cso_name, vertex_shader.GetAddressOf(), input_layout.GetAddressOf(), input_element_desc, ARRAYSIZE(input_element_desc));
-	create_ps_from_cso(device, ps_cso_name, pixel_shader.GetAddressOf());
+	//// シェーダ作成
+	//create_vs_from_cso(vs_cso_name, vertex_shader.GetAddressOf(), input_layout.GetAddressOf(), input_element_desc, ARRAYSIZE(input_element_desc));
+	//create_ps_from_cso(ps_cso_name, pixel_shader.GetAddressOf());
 
 	// コンスタントバッファ作成
 	D3D11_BUFFER_DESC buffer_desc{};
@@ -60,6 +62,7 @@ Geometric_Primitive::Geometric_Primitive(ID3D11Device* device, const char* vs_cs
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 
 	// 各種パラメータの初期化
+	wireframe = false;
 	param.Pos   = XMFLOAT3(0.0f, 0.0f,0.0f);
 	param.Size  = XMFLOAT3(1.0f,1.0f,1.0f);
 	param.Angle = XMFLOAT3(0.0f, 0.0f, 0.0f);
@@ -67,7 +70,8 @@ Geometric_Primitive::Geometric_Primitive(ID3D11Device* device, const char* vs_cs
 
 }
 
-void Geometric_Primitive::Create_com_buffers(ID3D11Device* device, Vertex* vertices, size_t vertex_count, uint32_t* indices, size_t index_count){
+void Geometric_Primitive::Create_com_buffers(Vertex* vertices, size_t vertex_count, uint32_t* indices, size_t index_count){
+	ID3D11Device* device = FRAMEWORK->GetDevice();
 	HRESULT hr{ S_OK };
 
 	D3D11_BUFFER_DESC buffer_desc{};
@@ -98,7 +102,8 @@ void Geometric_Primitive::Create_com_buffers(ID3D11Device* device, Vertex* verti
 
 }
 
-void Geometric_Primitive::Render(ID3D11DeviceContext* immediate_context, const XMFLOAT4X4& world, const XMFLOAT4& material_color, bool WireFrame) {
+void Geometric_Primitive::Render(Shader* shader, const XMFLOAT4X4& world, const XMFLOAT4& material_color, bool WireFrame) {
+	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();
 	uint32_t stride{ sizeof(Vertex) };
 	uint32_t offset{ 0 };
 
@@ -114,11 +119,14 @@ void Geometric_Primitive::Render(ID3D11DeviceContext* immediate_context, const X
 	immediate_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// 入力レイアウトオブジェクトのバインド
-	immediate_context->IASetInputLayout(input_layout.Get());
+	//immediate_context->IASetInputLayout(input_layout.Get());
 
-	// シェーダのバインド
-	immediate_context->VSSetShader(vertex_shader.Get(), nullptr, 0);
-	immediate_context->PSSetShader(pixel_shader.Get(), nullptr, 0);
+	//// シェーダのバインド
+	//immediate_context->VSSetShader(vertex_shader.Get(), nullptr, 0);
+	//immediate_context->PSSetShader(pixel_shader.Get(), nullptr, 0);
+
+	// シェーダの有効化
+	shader->Activate();
 
 	Constants data{ world,material_color };
 	// メモリからマップ不可能なメモリに作成されたサブリソースにデータをコピー
@@ -138,7 +146,9 @@ void Geometric_Primitive::Render(ID3D11DeviceContext* immediate_context, const X
 	immediate_context->DrawIndexed(buffer_desc.ByteWidth / sizeof(uint32_t), 0, 0);	// 描画するインデックスの数,最初のインデックスの場所,頂点バッファから読み取る前に追加する値
 }
 
-void Geometric_Primitive::Render(ID3D11DeviceContext* immediate_context) {
+void Geometric_Primitive::Render(Shader* shader) {
+	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();
+
 	XMMATRIX S{ XMMatrixScaling(param.Size.x,param.Size.y,param.Size.z) }	;				// 拡縮
 	XMMATRIX R{ XMMatrixRotationRollPitchYaw(XMConvertToRadians(param.Angle.x),XMConvertToRadians(param.Angle.y),XMConvertToRadians(param.Angle.z)) };	// 回転
 	XMMATRIX T{ XMMatrixTranslation(param.Pos.x,param.Pos.y,param.Pos.z) };					// 平行移動
@@ -161,12 +171,15 @@ void Geometric_Primitive::Render(ID3D11DeviceContext* immediate_context) {
 	//プリミティブタイプ及びデータの順序に関する情報のバインド
 	immediate_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	// 入力レイアウトオブジェクトのバインド
-	immediate_context->IASetInputLayout(input_layout.Get());
+	//// 入力レイアウトオブジェクトのバインド
+	//immediate_context->IASetInputLayout(input_layout.Get());
 
-	// シェーダのバインド
-	immediate_context->VSSetShader(vertex_shader.Get(), nullptr, 0);
-	immediate_context->PSSetShader(pixel_shader.Get(), nullptr, 0);
+	//// シェーダのバインド
+	//immediate_context->VSSetShader(vertex_shader.Get(), nullptr, 0);
+	//immediate_context->PSSetShader(pixel_shader.Get(), nullptr, 0);
+
+	// シェーダの有効化
+	shader->Activate();
 
 	Constants data{ world,param.Color };
 	// メモリからマップ不可能なメモリに作成されたサブリソースにデータをコピー
@@ -184,7 +197,8 @@ void Geometric_Primitive::Render(ID3D11DeviceContext* immediate_context) {
 	index_buffer->GetDesc(&buffer_desc);
 	immediate_context->DrawIndexed(buffer_desc.ByteWidth / sizeof(uint32_t), 0, 0);	// 描画するインデックスの数,最初のインデックスの場所,頂点バッファから読み取る前に追加する値
 
-
+	// シェーダの無効化
+	shader->Inactivate();
 }
 
 void Geometric_Primitive::imguiWindow(const char* beginname) {

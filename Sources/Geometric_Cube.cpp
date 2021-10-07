@@ -1,7 +1,10 @@
 
+#include "framework.h"
 #include "geometric_primitive.h"
 
-Geometric_Cube::Geometric_Cube(ID3D11Device* device, const char* vs_cso_name, const char* ps_cso_name ) :Geometric_Primitive(device, vs_cso_name, ps_cso_name) {
+Geometric_Cube::Geometric_Cube(const char* vs_cso_name, const char* ps_cso_name ) :Geometric_Primitive(vs_cso_name, ps_cso_name) {
+	ID3D11Device* device = FRAMEWORK->GetDevice();
+
 	Vertex vertices[24]{};	// 頂点情報配列（vertices）にすべて頂点の位置・法線情報を格納する。
 							// サイズが1.0の正立方体データを作成する（重心を原点にする）。正立方体のコントロールポイント数は 8 個、
 							// 1つのコントロールポイントの位置には法線の向き(x,y,z)が違う頂点が3個あるので頂点情報の総数は 8頂点x3軸=24個
@@ -128,10 +131,12 @@ Geometric_Cube::Geometric_Cube(ID3D11Device* device, const char* vs_cso_name, co
 	indeces[face * 6 + 4] = face * 4 + LEFT_BOTTOM;
 	indeces[face * 6 + 5] = face * 4 + RIGHT_BOTTOM;
 
-	Create_com_buffers(device, vertices, 24, indeces, 36);
+	Create_com_buffers(vertices, 24, indeces, 36);
 }
 
-Geometric_Cube::Geometric_Cube(ID3D11Device* device, float left, float right, float bottom, float top,float front,float back, const char* vs_cso_name, const char* ps_cso_name) :Geometric_Primitive(device, vs_cso_name, ps_cso_name) {
+Geometric_Cube::Geometric_Cube(float left, float right, float bottom, float top,float front,float back, const char* vs_cso_name, const char* ps_cso_name) :Geometric_Primitive(vs_cso_name, ps_cso_name) {
+	ID3D11Device* device = FRAMEWORK->GetDevice();
+
 	Vertex vertices[24]{};	// 頂点情報配列（vertices）にすべて頂点の位置・法線情報を格納する。
 							// サイズが1.0の正立方体データを作成する（重心を原点にする）。正立方体のコントロールポイント数は 8 個、
 							// 1つのコントロールポイントの位置には法線の向き(x,y,z)が違う頂点が3個あるので頂点情報の総数は 8頂点x3軸=24個
@@ -258,5 +263,5 @@ Geometric_Cube::Geometric_Cube(ID3D11Device* device, float left, float right, fl
 	indeces[face * 6 + 4] = face * 4 + LEFT_BOTTOM;
 	indeces[face * 6 + 5] = face * 4 + RIGHT_BOTTOM;
 
-	Create_com_buffers(device, vertices, 24, indeces, 36);
+	Create_com_buffers(vertices, 24, indeces, 36);
 }

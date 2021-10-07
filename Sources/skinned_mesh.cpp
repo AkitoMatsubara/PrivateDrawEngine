@@ -2,6 +2,8 @@
 #include <functional>
 #include <filesystem>
 
+#include "framework.h"
+
 #include "misc.h"
 #include "shader.h"
 #include "texture.h"
@@ -29,7 +31,9 @@ inline XMFLOAT3 ConvertToXmfloat3(const FbxDouble3& fbxdouble3) {
 	value.z = static_cast<float>(fbxdouble3[2]);
 	return value;
 
-}inline XMFLOAT4 ConvertToXmfloat4(const FbxDouble4& fbxdouble3) {
+}
+
+inline XMFLOAT4 ConvertToXmfloat4(const FbxDouble4& fbxdouble3) {
 	XMFLOAT4 value;
 	value.x = static_cast<float>(fbxdouble3[0]);
 	value.y = static_cast<float>(fbxdouble3[1]);
@@ -38,7 +42,9 @@ inline XMFLOAT3 ConvertToXmfloat3(const FbxDouble3& fbxdouble3) {
 	return value;
 }
 
-Skinned_Mesh::Skinned_Mesh(ID3D11Device* device, const char* fbx_filename, bool triangulate, const char* vs_cso_name, const char* ps_cso_name) {
+Skinned_Mesh::Skinned_Mesh(const char* fbx_filename, int cstNo, bool triangulate, const char* vs_cso_name, const char* ps_cso_name) {
+	ID3D11Device* device = FRAMEWORK->GetDevice();
+
 	FbxManager* fbx_manager{ FbxManager::Create() };	// マネージャの生成
 	FbxScene* fbx_scene{ FbxScene::Create(fbx_manager,"") };	// sceneにfbx内ファイル内の情報を流し込む
 
@@ -91,11 +97,12 @@ Skinned_Mesh::Skinned_Mesh(ID3D11Device* device, const char* fbx_filename, bool 
 	fbx_manager->Destroy();
 
 	// マテリアル情報がない場合に備え予めダミーテクスチャをセット
-	make_dummy_texture(device, dummyTexture.GetAddressOf(), 0xFFFFFFFF, 16);
+	make_dummy_texture(dummyTexture.GetAddressOf(), 0xFFFFFFFF, 16);
 
-	Create_com_buffers(device, fbx_filename, vs_cso_name, ps_cso_name);
+	Create_com_buffers(fbx_filename, vs_cso_name, ps_cso_name);
 
 	rasterizer.SetRasterizer(device);
+	CstNo = cstNo;
 	// 各種パラメータの初期化
 	param.Pos = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	param.Size = XMFLOAT3(1.0f, 1.0f, 1.0f);
@@ -103,32 +110,15 @@ Skinned_Mesh::Skinned_Mesh(ID3D11Device* device, const char* fbx_filename, bool 
 	param.Color = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
-void Skinned_Mesh::Render(ID3D11DeviceContext* immediate_context, int rasterize, const int LRHS) {
-	rasterize = (rasterize == 0) ? wireframe : rasterize;	// ラスタライザの指定方法 デフォルト(両面描画)以外の指定ならワイヤーフレーム切り替えを無効にする
+void Skinned_Mesh::Render(Shader* shader, int rasterize) {
+	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();
 
-	static const XMFLOAT4X4 coordinate_system_transforms[]{
-	{-1,0,0,0
-	 ,0,1,0,0
-	 ,0,0,1,0
-	 ,0,0,0,1},	// 0:右手座標系,Y-UP
-	{ 1,0,0,0
-	 ,0,1,0,0
-	 ,0,0,1,0
-	 ,0,0,0,1},	// 1:左手座標系,Y-UP
-	{-1,0,0,0
-	 ,0,0,-1,0
-	 ,0,1,0,0
-	 ,0,0,0,1},	// 2:右手座標系,Z-UP
-	{ 1,0,0,0
-	 ,0,0,1,0
-	 ,0,1,0,0
-	 ,0,0,0,1},	// 1:左手座標系,Z-UP
-	};
+	rasterize = (rasterize == Rasterizer::RASTERIZER_STATE::SOLID_NONE) ? wireframe : rasterize;	// ラスタライザの指定方法 デフォルト(両面描画)以外の指定ならワイヤーフレーム切り替えを無効にする
 
 	for (const Mesh& mesh : meshes) {
 		// 単位をセンチメートルからメートルに変更するため、scale_factorを0.01に設定する
 		const float scale_factor = 1.0f;
-		XMMATRIX C{ XMLoadFloat4x4(&coordinate_system_transforms[LRHS]) * XMMatrixScaling(scale_factor,scale_factor,scale_factor) };
+		XMMATRIX C{ XMLoadFloat4x4(&coordinate_system_transforms[CstNo]) * XMMatrixScaling(scale_factor,scale_factor,scale_factor) };
 
 		XMMATRIX S{ XMMatrixScaling(param.Size.x,param.Size.y,param.Size.z) };	// 拡縮
 		XMMATRIX R{ XMMatrixRotationRollPitchYaw(XMConvertToRadians(param.Angle.x),XMConvertToRadians(param.Angle.y),XMConvertToRadians(param.Angle.z)) };	// 回転
@@ -142,10 +132,13 @@ void Skinned_Mesh::Render(ID3D11DeviceContext* immediate_context, int rasterize,
 		immediate_context->IASetVertexBuffers(0, 1, mesh.vertex_buffer.GetAddressOf(), &stride, &offset);
 		immediate_context->IASetIndexBuffer(mesh.index_buffer.Get(), DXGI_FORMAT_R32_UINT, 0);
 		immediate_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		immediate_context->IASetInputLayout(input_layout.Get());
+		//immediate_context->IASetInputLayout(input_layout.Get());
 
-		immediate_context->VSSetShader(vertex_shader.Get(), nullptr, 0);
-		immediate_context->PSSetShader(pixel_shader.Get(), nullptr, 0);
+		//immediate_context->VSSetShader(vertex_shader.Get(), nullptr, 0);
+		//immediate_context->PSSetShader(pixel_shader.Get(), nullptr, 0);
+
+		// シェーダの設定
+		shader->Activate();
 		// ラスタライザステートの設定
 		immediate_context->RSSetState(rasterizer.states[rasterize].Get());
 
@@ -174,9 +167,13 @@ void Skinned_Mesh::Render(ID3D11DeviceContext* immediate_context, int rasterize,
 			immediate_context->DrawIndexed(subset.index_count, subset.start_index_location, 0);	// 描画するインデックスの数,最初のインデックスの場所,頂点バッファから読み取る前に追加する値
 		}
 	}
+	// シェーダの無効化
+	shader->Inactivate();
 }
 
-void Skinned_Mesh::Create_com_buffers(ID3D11Device* device, const char* fbx_filename, const char* vs_cso_name, const char* ps_cso_name) {
+void Skinned_Mesh::Create_com_buffers(const char* fbx_filename, const char* vs_cso_name, const char* ps_cso_name) {
+	ID3D11Device* device = FRAMEWORK->GetDevice();
+
 	HRESULT hr{ S_OK };
 
 	for (Mesh& mesh : meshes) {
@@ -215,21 +212,24 @@ void Skinned_Mesh::Create_com_buffers(ID3D11Device* device, const char* fbx_file
 			filesystem::path path(fbx_filename);
 			path.replace_filename(iterator->second.texture_filenames[0]);
 			D3D11_TEXTURE2D_DESC texture2d_desc;
-			load_texture_from_file(device, path.c_str(), iterator->second.srv[0].GetAddressOf(), &texture2d_desc);
+			load_texture_from_file(path.c_str(), iterator->second.srv[0].GetAddressOf(), &texture2d_desc);
 		}
 		else {
-			make_dummy_texture(device, iterator->second.srv[0].GetAddressOf(), 0xFFFFFFFF, 16);
+			make_dummy_texture(iterator->second.srv[0].GetAddressOf(), 0xFFFFFFFF, 16);
 		}
 	}
-	D3D11_INPUT_ELEMENT_DESC input_element_desc[]{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "NORMAL"	, 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-	};
-	create_vs_from_cso(device, vs_cso_name, vertex_shader.ReleaseAndGetAddressOf(), input_layout.ReleaseAndGetAddressOf(), input_element_desc, ARRAYSIZE(input_element_desc));
-	create_ps_from_cso(device, ps_cso_name, pixel_shader.ReleaseAndGetAddressOf());
+	//D3D11_INPUT_ELEMENT_DESC input_element_desc[]{
+	//	{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	//	{ "NORMAL"	, 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	//	{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	//};
+
+	//// シェーダ作成
+	//create_vs_from_cso(vs_cso_name, vertex_shader.ReleaseAndGetAddressOf(), input_layout.ReleaseAndGetAddressOf(), input_element_desc, ARRAYSIZE(input_element_desc));
+	//create_ps_from_cso(ps_cso_name, pixel_shader.ReleaseAndGetAddressOf());
 
 	D3D11_BUFFER_DESC buffer_desc{};
+	ZeroMemory(&buffer_desc, sizeof(D3D11_BUFFER_DESC));
 	buffer_desc.ByteWidth = sizeof(Constants);	// Constantsの型を使用
 	buffer_desc.Usage = D3D11_USAGE_DEFAULT;
 	buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;	// ConstantBufferとして使用することをきめる
@@ -389,7 +389,6 @@ void Skinned_Mesh::imguiWindow(const char* beginname) {
 	ImGui::SliderFloat3(u8"angle", angle, -360, 360);
 	ImGui::ColorEdit4(u8"Color", (float*)&Color);
 	ImGui::Checkbox(u8"WireFrame", &wireframe);
-	ImGui::Checkbox(u8"BountyBox", &dispBounty);
 
 	ImGui::End();	// ウィンドウ終了
 	// パラメータ代入
