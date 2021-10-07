@@ -80,6 +80,9 @@
     <Filter Include="Sources\DataLoad\Shaders">
       <UniqueIdentifier>{628ce90f-9871-474a-8d76-fcce8ddc0340}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Sources\System">
+      <UniqueIdentifier>{14724a93-b7c3-40f3-a0df-2c39419428cf}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\sprite_ps.hlsl">
@@ -196,12 +199,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Sources\main.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\framework.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
     <ClCompile Include="External\imgui\imgui.cpp">
       <Filter>imGui</Filter>
     </ClCompile>
@@ -262,17 +259,23 @@
     <ClCompile Include="Sources\Rasterizer.cpp">
       <Filter>Sources\RenderOptions</Filter>
     </ClCompile>
-    <ClCompile Include="resources\SceneTest_2.cpp">
-      <Filter>Sources\Scenes</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\CSSample.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
     <ClCompile Include="Sources\shader.cpp">
       <Filter>Sources\DataLoad\Shaders</Filter>
     </ClCompile>
     <ClCompile Include="Sources\shaderEx.cpp">
       <Filter>Sources\DataLoad\Shaders</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\framework.cpp">
+      <Filter>Sources\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\main.cpp">
+      <Filter>Sources\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\CSSample.cpp">
+      <Filter>Sources\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\SceneTest_2.cpp">
+      <Filter>Sources\Scenes</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

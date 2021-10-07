@@ -291,7 +291,6 @@
     <ClCompile Include="External\imgui\imgui_impl_win32.cpp" />
     <ClCompile Include="External\imgui\imgui_ja_gryph_ranges.cpp" />
     <ClCompile Include="External\imgui\imgui_widgets.cpp" />
-    <ClCompile Include="resources\SceneTest_2.cpp" />
     <ClCompile Include="Sources\CSSample.cpp" />
     <ClCompile Include="Sources\framework.cpp" />
     <ClCompile Include="Sources\geometric_capsule.cpp" />
@@ -308,6 +307,7 @@
     <ClCompile Include="Sources\SceneTest.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="Sources\SceneTest_2.cpp" />
     <ClCompile Include="Sources\shader.cpp" />
     <ClCompile Include="Sources\shaderEx.cpp" />
     <ClCompile Include="Sources\skinned_mesh.cpp" />
