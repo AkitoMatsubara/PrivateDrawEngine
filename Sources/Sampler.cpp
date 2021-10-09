@@ -43,14 +43,14 @@ Sampler::Sampler(D3D11_FILTER filter, D3D11_TEXTURE_ADDRESS_MODE Address_mode, F
 	assert(SUCCEEDED(hr));
 
 	//----------------------------------------------------------------
-	D3D11_SAMPLER_DESC sampler_desc;
-	sampler_desc.MipLODBias = 0;							// 計算されたミップマップ レベルからのバイアス
-	sampler_desc.MaxAnisotropy = 16;						// サンプリングに異方性補間を使用している場合の限界値。有効な値は 1 ～ 16
-	sampler_desc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;	// 比較オプション
-	sampler_desc.BorderColor[0] = 0;
-	sampler_desc.BorderColor[1] = 0;
-	sampler_desc.BorderColor[2] = 0;
-	sampler_desc.BorderColor[3] = 0;
+	//D3D11_SAMPLER_DESC sampler_desc;
+	//sampler_desc.MipLODBias = 0;							// 計算されたミップマップ レベルからのバイアス
+	//sampler_desc.MaxAnisotropy = 16;						// サンプリングに異方性補間を使用している場合の限界値。有効な値は 1 ～ 16
+	//sampler_desc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;	// 比較オプション
+	//sampler_desc.BorderColor[0] = 0;
+	//sampler_desc.BorderColor[1] = 0;
+	//sampler_desc.BorderColor[2] = 0;
+	//sampler_desc.BorderColor[3] = 0;
 	//----------------------------------------------------------------
 }
 

@@ -1,5 +1,6 @@
 ﻿#include "framework.h"
 #include "SceneManager.h"
+#include "SceneTitle.h"	// 初回起動シーン指定用
 
 //#define COMPARISON	// SpriteとSprite_Batchの描画速度比較
 //static bool spriteBatch = false;
@@ -201,544 +202,545 @@ bool framework::initialize()
 	//	//skinned_mesh = make_unique<Skinned_Mesh>(device.Get(), ".\\resources\\cube.003.0.fbx");	// 複数メッシュ キューブと猿
 		//skinned_mesh = make_unique<Skinned_Mesh>(device.Get(), ".\\resources\\cube.003.1.fbx",true);	// 3角形化されていない複数メッシュ キューブ
 	}
-		return true;
-	}
+	return true;
+}
 
-	framework::~framework()
-	{
-	}
+framework::~framework()
+{
+}
 
-	void framework::update(float elapsed_time/*Elapsed seconds from last frame*/)
-	{
-		//#ifdef USE_IMGUI
-		//	ImGui_ImplDX11_NewFrame();
-		//	ImGui_ImplWin32_NewFrame();
-		//	ImGui::NewFrame();
-		//#endif
+void framework::update(float elapsed_time/*Elapsed seconds from last frame*/)
+{
+	//#ifdef USE_IMGUI
+	//	ImGui_ImplDX11_NewFrame();
+	//	ImGui_ImplWin32_NewFrame();
+	//	ImGui::NewFrame();
+	//#endif
 
+	//#ifdef USE_IMGUI
+	//	// imgui用変数
 
-		//#ifdef USE_IMGUI
-		//	// imgui用変数
+	//	// 2D用 内部関数で完結させてる？
+	//	{
+	//		sprites->ImguiWindow();
+	//	}
+	//	// 3D用パラメータ
+	//	{
+	//		//obj_1->imguiWindow("1");
+	//		//obj_2->imguiWindow("2");
+	//		//static_mesh->imguiWindow("obj");
+	//		skinned_mesh->imguiWindow("fbx");
+	//	}
 
-		//	// 2D用 内部関数で完結させてる？
-		//	{
-		//		sprites->ImguiWindow();
-		//	}
-		//	// 3D用パラメータ
-		//	{
-		//		//obj_1->imguiWindow("1");
-		//		//obj_2->imguiWindow("2");
-		//		//static_mesh->imguiWindow("obj");
-		//		skinned_mesh->imguiWindow("fbx");
-		//	}
+	//	// ライト調整等グローバル設定
+	//	{
+	//		ImGui::Begin("Light");
+	//		ImGui::SliderFloat3("Light_Direction", light_dir, -10.0f, 10.0f);
+	//		ImGui::Checkbox("focus Zero", &focus_zero);
+	//		ImGui::End();
 
-		//	// ライト調整等グローバル設定
-		//	{
-		//		ImGui::Begin("Light");
-		//		ImGui::SliderFloat3("Light_Direction", light_dir, -10.0f, 10.0f);
-		//		ImGui::Checkbox("focus Zero", &focus_zero);
-		//		ImGui::End();
+	//		// カメラ操作
+	//		static float speed = 7.0f;
+	//		if (GetKeyState('D') < 0)  eyePos.x += speed * elapsed_time;	// 右に
+	//		if (GetKeyState('A') < 0)  eyePos.x -= speed * elapsed_time;	// 左に
+	//		if (GetKeyState('W') < 0)  eyePos.z += speed * elapsed_time;	// 前に
+	//		if (GetKeyState('S') < 0)  eyePos.z -= speed * elapsed_time;	// 後ろに
+	//		if (GetKeyState(VK_SPACE) < 0)  eyePos.y += speed * elapsed_time;	// 上に
+	//		if (GetKeyState(VK_SHIFT) < 0)  eyePos.y -= speed * elapsed_time;	// 下に
 
-		//		// カメラ操作
-		//		static float speed = 7.0f;
-		//		if (GetKeyState('D') < 0)  eyePos.x += speed * elapsed_time;	// 右に
-		//		if (GetKeyState('A') < 0)  eyePos.x -= speed * elapsed_time;	// 左に
-		//		if (GetKeyState('W') < 0)  eyePos.z += speed * elapsed_time;	// 前に
-		//		if (GetKeyState('S') < 0)  eyePos.z -= speed * elapsed_time;	// 後ろに
-		//		if (GetKeyState(VK_SPACE) < 0)  eyePos.y += speed * elapsed_time;	// 上に
-		//		if (GetKeyState(VK_SHIFT) < 0)  eyePos.y -= speed * elapsed_time;	// 下に
+	//	}
 
-		//	}
+	//#endif
+}
 
-		//#endif
-	}
+void framework::render(float elapsed_time/*Elapsed seconds from last frame*/)
+{
+	//	HRESULT hr{ S_OK };
 
-	void framework::render(float elapsed_time/*Elapsed seconds from last frame*/)
-	{
-		//	HRESULT hr{ S_OK };
-
-		//	FLOAT color[]{ 0.2f,0.2f,0.2f,1.0f };	// 背景色
-		//	immediate_context->ClearRenderTargetView(render_target_view.Get(), color);	// クリア対象のView、クリアする色
-		//	immediate_context->ClearDepthStencilView(depth_stensil_view.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-		//	//immediate_context->OMSetRenderTargets(1, render_target_view.GetAddressOf(), depth_stensil_view.Get());
-
-		//	// サンプラーステートをバインド
-		//	immediate_context->PSSetSamplers(0, 1, sampler_states[0].GetAddressOf());
-		//	immediate_context->PSSetSamplers(1, 1, sampler_states[1].GetAddressOf());
-		//	immediate_context->PSSetSamplers(2, 1, sampler_states[2].GetAddressOf());
-
-		//	immediate_context->OMSetDepthStencilState(depth_stencil_state[DS_TRUE_WRITE].Get(), 1);	// バインドする深度ステンシルステート、参照値？
-		//	//immediate_context->OMSetBlendState(blender.states[Blender::BS_ALPHA].Get(), nullptr, 0xFFFFFFFF);	// ブレンドインターフェースのポインタ、ブレンドファクターの配列値、サンプルカバレッジ(今回はデフォルト指定)
-
-		//	// 2Dオブジェクトの描画設定
-		//	{
-		//		//sample->Set(0);
-		//		immediate_context->OMSetDepthStencilState(depth_stencil_state[DS_TRUE].Get(), 1);	// 3Dオブジェクtの後ろに出すため一旦
-		//		sprites->Render(immediate_context.Get());
-
-		//	}
-		//	// 3Dオブジェクトの描画設定
-		//	{
-		//		D3D11_VIEWPORT viewport;
-		//		UINT num_viewports{ 1 };
-		//		immediate_context->RSGetViewports(&num_viewports, &viewport);	// ラスタライザステージにバインドされたviewportの配列を取得
-
-		//		float aspect_ratio{ viewport.Width / viewport.Height };	// アスペクト比
-		//		// 透視投影行列の作成
-		//		XMMATRIX P{ XMMatrixPerspectiveFovLH(XMConvertToRadians(30),aspect_ratio,0.1f,100.0f) };	// 視野角,縦横比,近くのZ,遠くのZ
-
-		//		XMVECTOR eye{ XMVectorSet(eyePos.x,eyePos.y,eyePos.z,1.0f) };
-		//		XMVECTOR focus;
-		//		if (!focus_zero) {
-		//			focus = { XMVectorSet(eyePos.x,eyePos.y,eyePos.z + 1,1.0f) };	// カメラ位置の前
-		//		}
-		//		else {
-		//			focus = { XMVectorSet(0.0f,0.0f,0.0f,1.0f) };
-		//		}
-		//		XMVECTOR up{ XMVectorSet(0.0f,1.0f,0.0f,0.0f) };
-		//		// ViewMatrixの作成(LH = LeftHand(左手座標系))
-		//		XMMATRIX V{ XMMatrixLookAtLH(eye, focus, up) };	// カメラ座標、焦点、カメラの上方向
-
-		//		scene_constants data{};
-		//		XMStoreFloat4x4(&data.view_projection, V * P);	// Matrixから4x4へ変換
-		//		data.light_direction = { light_dir[0],light_dir[1],light_dir[2],0 };	// シェーダに渡すライトの向き
-		//		data.camera_position = { eyePos.x,eyePos.y,eyePos.z,0 };				// シェーダに渡すカメラの位置
-		//		immediate_context->UpdateSubresource(constant_buffer[0].Get(), 0, 0, &data, 0, 0);
-		//		immediate_context->VSSetConstantBuffers(1, 1, constant_buffer[0].GetAddressOf());	// cBufferはドローコールのたびに消去されるので都度設定する必要がある
-		//		immediate_context->PSSetConstantBuffers(1, 1, constant_buffer[0].GetAddressOf());
-
-		//		immediate_context->OMSetDepthStencilState(depth_stencil_state[DS_TRUE_WRITE].Get(), 1);			// 2Dオブジェクトとの前後関係をしっかりするため再設定
-
-		//		{
-		//			// 3DオブジェクトRender内に移植 現状ここである必要なし？
-		//			//XMMATRIX S{ XMMatrixScaling(geometric_primitive[0]->getSize().x,geometric_primitive[0]->getSize().y,geometric_primitive[0]->getSize().z) };				// 拡縮
-		//			//XMMATRIX R{ XMMatrixRotationRollPitchYaw(geometric_primitive[0]->getAngle().x,geometric_primitive[0]->getAngle().y,geometric_primitive[0]->getAngle().z) };	// 回転
-		//			//XMMATRIX T{ XMMatrixTranslation(geometric_primitive[0]->getPos().x,geometric_primitive[0]->getPos().y,geometric_primitive[0]->getPos().z) };			// 平行移動
-		//			//XMFLOAT4X4 world;
-		//			//XMStoreFloat4x4(&world, S * R * T);	// ワールド変換行列作成
-		//			//geometric_primitive[0]->Render(immediate_context.Get(), world, geometric_primitive[0]->getColor());
-		//			grid->wireframe = true;
-		//			grid->Render(immediate_context.Get());
-		//			//obj_1->Render(immediate_context.Get());
-		//			//obj_2->Render(immediate_context.Get());
-		//			//static_mesh->Render(immediate_context.Get());
-		//			skinned_mesh->Render(immediate_context.Get());
-		//		}
-
-		//	}
-
-
-		//#ifdef USE_IMGUI
-		//	ImGui::Render();
-		//	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-		//#endif
-
-
-		//	UINT sync_interval{ 0 };				// sync_interval に 1 をセットすると 60FPS の固定フレームレートで動作する。０で可変フレームレートでの動作を前提に行う
-		//	swap_chain->Present(sync_interval, 0);	// バックバッファをフロントバッファに送信する
-	}
-
-	bool framework::uninitialize()
-	{
-		/*ComPtrに切り替えたのでRelease処理は必要なくなった*/
-		//device->Release();
-		//immediate_context->Release();
-		//swap_chain->Release();
-		//render_target_view->Release();
-		//depth_stensil_view->Release();
-
-		//for (auto& b : blender.states) {
-		//	b->Release();
-		//}
-
-		//for (auto& dss : depth_stencil_state) {
-		//	dss->Release();
-		//}
-
-		//for (Sprite* p : sprites) {
-		//	delete p;
-		//}
-
-		return true;
-	}
-
-	// デバイス,スワップチェーンの作成
-	bool framework::CreateDeviceAndSwapCain() {
-		D3D_FEATURE_LEVEL feature_levels{ D3D_FEATURE_LEVEL_11_0 };	// 動作環境。これはDirectX11の基準を完全に満たしたGPUで動作するレベル
-
-		DXGI_SWAP_CHAIN_DESC swap_chain_desc{};
-		swap_chain_desc.BufferCount = 1;	// SwapChainのバッファ数
-		swap_chain_desc.BufferDesc.Width = SCREEN_WIDTH;	// バッファの横幅
-		swap_chain_desc.BufferDesc.Height = SCREEN_HEIGHT;	// バッファの縦幅
-		swap_chain_desc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;	// バッファのフォーマット指定 UNORMはUnsigned Normalizedの略、符号なし正規化整数らしい→ https://docs.microsoft.com/ja-jp/windows/uwp/graphics-concepts/data-type-conversion
-		swap_chain_desc.BufferDesc.RefreshRate.Numerator = 60;	        // リフレッシュレートの設定 分母
-		swap_chain_desc.BufferDesc.RefreshRate.Denominator = 1;	        // リフレッシュレートの設定 分子	つまり1/60
-		swap_chain_desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;	// バッファの使用方法の指定 シェーダの出力に使えるようにするらしい→ http://marupeke296.com/DX10_No1_Init.html
-		swap_chain_desc.OutputWindow = hwnd;	// 出力ウィンドウハンドル
-		swap_chain_desc.SampleDesc.Count = 1;	// 1ピクセルの色を決めるサンプリング数	未使用は1
-		swap_chain_desc.SampleDesc.Quality = 0;	// サンプリングの品質(精度)				未使用は0
-		swap_chain_desc.Windowed = !FULLSCREEN;	// ウィンドウモード
-		HRESULT hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, D3D11_CREATE_DEVICE_DEBUG,
-			&feature_levels, 1, D3D11_SDK_VERSION, &swap_chain_desc, &swap_chain, &device, NULL, &immediate_context);	// DeviceとSwapChainの設定を同時に行う 参考→ https://yttm-work.jp/directx/directx_0012.html
-		_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));	// _ASSERT_EXPRはおそらくメッセージ表示が可能なassert。SUCCEEDEDで成功判定、hr_traceはおそらくエラーメッセージの表示？
-
-		return true;
-	}
-
-	// レンダーターゲットビューの設定
-	bool framework::CreateRenderTargetView() {
-		ID3D11Texture2D* back_buffer{};
-		HRESULT hr = swap_chain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<LPVOID*>(&back_buffer));	// swap_chainのもつバッファで作成したいのでGetする
-		_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-
-		hr = device->CreateRenderTargetView(back_buffer, NULL, render_target_view.GetAddressOf());
-		_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-
-		back_buffer->Release();	// Targetの取得が終わったのでバッファを解放。参照カウンタが１加算されているため解放しないとメモリリークの原因となる
-
-		return true;
-	}
-
-	// 深度ステンシルビューの作成
-	bool framework::CreateDepthStencileView() {
-		ComPtr<ID3D11Texture2D> depth_stencil_buffer{};
-		D3D11_TEXTURE2D_DESC textuer2d_desc{};	// 深度ステンシル用テクスチャ
-		textuer2d_desc.Width = SCREEN_WIDTH;	// バッファの横幅
-		textuer2d_desc.Height = SCREEN_HEIGHT;	// バッファの縦幅
-		textuer2d_desc.MipLevels = 1;	// ミニマップのレベル指定
-		textuer2d_desc.ArraySize = 1;	// テクスチャ配列のサイズ指定
-		textuer2d_desc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;	// テクスチャのフォーマット。DXGI_FORMAT_D24_UNORM_S8_UINTを使うとDepth24bit、Stencil8bitとなる
-		textuer2d_desc.SampleDesc.Count = 1;
-		textuer2d_desc.SampleDesc.Quality = 0;
-		textuer2d_desc.Usage = D3D11_USAGE_DEFAULT;				// テクスチャの使用方法
-		textuer2d_desc.BindFlags = D3D11_BIND_DEPTH_STENCIL;	// バインド設定 深度ステンシルターゲットとして設定
-		textuer2d_desc.CPUAccessFlags = 0;	// リソースへのCPUのアクセス権限設定 基本０でいいらしい
-		textuer2d_desc.MiscFlags = 0;		// リソースオプションのフラグ 不必要なので０
-		HRESULT hr = device->CreateTexture2D(&textuer2d_desc, NULL, &depth_stencil_buffer);
-		_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-
-		D3D11_DEPTH_STENCIL_VIEW_DESC depth_stencil_view_desc{};
-		depth_stencil_view_desc.Format = textuer2d_desc.Format;
-		depth_stencil_view_desc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-		depth_stencil_view_desc.Texture2D.MipSlice = 0;	// 最初に使用するミップマップのレベルを指定
-		hr = device->CreateDepthStencilView(depth_stencil_buffer.Get(), &depth_stencil_view_desc, &depth_stensil_view);
-		_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-
-		return true;
-	}
-
-	// 深度ステンシルステートの生成
-	bool framework::CreateDepthStencileState() {
-		D3D11_DEPTH_STENCIL_DESC depth_stencil_desc{};
-		/*-----------------------深度テスト:OFF 深度ライト:OFF-----------------------*/
-		depth_stencil_desc.DepthEnable = FALSE;	                         // 深度テストの有効/無効 ここでは無効
-		depth_stencil_desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO; // 深度ステンシルバッファへの書き込みのOn/Off D3D11_DEPTH_WRITE_MASK_ALL|D3D11_DEPTH_WRITE_MASK_ZERO ここでは無効
-		HRESULT hr = device->CreateDepthStencilState(&depth_stencil_desc, &depth_stencil_state[DS_FALSE]);
-		_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-
-		depth_stencil_desc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;	    // COMPARISON:比較	深度データの比較 今回は新規データが既存データ以下の場合に成功
-
-		/*-----------------------深度テスト:ON 深度ライト:OFF-----------------------*/
-		depth_stencil_desc.DepthEnable = TRUE;							 // 深度テストの有効
-		depth_stencil_desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO; // 深度ステンシルバッファへの書き込みの無効
-		hr = device->CreateDepthStencilState(&depth_stencil_desc, &depth_stencil_state[DS_TRUE]);
-		_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-		/*-----------------------深度テスト:OFF 深度ライト:ON-----------------------*/
-		depth_stencil_desc.DepthEnable = FALSE;	                        // 深度テストの無効
-		depth_stencil_desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;	// 深度ステンシルバッファへの書き込みの有効
-		hr = device->CreateDepthStencilState(&depth_stencil_desc, &depth_stencil_state[DS_FALSE_WRITE]);
-		_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-		/*-----------------------深度テスト:ON 深度ライト:ON-----------------------*/
-		depth_stencil_desc.DepthEnable = TRUE;	                        // 深度テストの有効
-		depth_stencil_desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;	// 深度ステンシルバッファへの書き込みの有効
-		hr = device->CreateDepthStencilState(&depth_stencil_desc, &depth_stencil_state[DS_TRUE_WRITE]);
-		_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-
-		return true;
-	}
-
-	// ブレンドステートの作成
-	bool framework::CreateBlendState() {
-		HRESULT hr = { S_OK };
-
-		D3D11_BLEND_DESC blend_desc{};
-
-		/*----------[BS_NONE] なし----------*/
-		blend_desc.AlphaToCoverageEnable = FALSE;	                                        // マスキングによりくりぬき処理を行ったポリゴンを不透明部分に対してのみ陰面処理に対応しつつレンダリングする手法？を有効にするか
-		blend_desc.IndependentBlendEnable = FALSE;	                                        // 複数のRenderTarget[1～]を使用する場合はTrueに
-		blend_desc.RenderTarget[0].BlendEnable = FALSE;	                                    // ブレンディングを有効にするかどうか
-		blend_desc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;	                            // 最初のRGBデータソースの指定
-		blend_desc.RenderTarget[0].DestBlend = D3D11_BLEND_ZERO;	                        // 2番目のRGBデータソースの指定
-		blend_desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;	                        // RGBの組み合わせ方法を定義	今回はSrcBlendとDestBlendを加算
-		blend_desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;	                        // 最初のアルファデータソースを指定 ONEは(1,1,1,1)の白
-		blend_desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;	                    // 2番目のアルファデータソースを指定 ZEROは(0,0,0,0)の黒
-		blend_desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;	                    // アルファデータソースの組み合わせ方法を指定 加算
-		blend_desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;	// 書き込みマスク 今回はすべてのコンポーネントにデータを保存できるように
-		hr = device->CreateBlendState(&blend_desc, bd_states[BS_NONE].GetAddressOf());
-		_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-		if (FAILED(hr))assert("NONE_BLEND ERROR");
-
-		/*----------[BS_ALPHA] 透過----------*/
-		blend_desc.AlphaToCoverageEnable = FALSE;
-		blend_desc.IndependentBlendEnable = FALSE;
-		blend_desc.RenderTarget[0].BlendEnable = TRUE;
-		blend_desc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;					// 今回はピクセルシェーダのアルファデータを指定、ブレンディング前の処理は無し
-		blend_desc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;				// 今回はアルファデータ、ブレンディング前の処理によってデータが反転、１－Aが生成される
-		blend_desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;						// 今回はSrcBlendとDestBlendを加算
-		blend_desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;						// ONEは(1,1,1,1)の白
-		blend_desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;					// ZEROは(0,0,0,0)の黒
-		blend_desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;					// 加算
-		blend_desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-		hr = device->CreateBlendState(&blend_desc, bd_states[BS_ALPHA].GetAddressOf());
-		_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-		if (FAILED(hr))assert("NONE_BLEND ERROR");
-
-		/*----------[BS_ADD] 加算----------*/
-		blend_desc.AlphaToCoverageEnable = FALSE;
-		blend_desc.IndependentBlendEnable = FALSE;
-		blend_desc.RenderTarget[0].BlendEnable = TRUE;
-		blend_desc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-		blend_desc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
-		blend_desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-		blend_desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ZERO;
-		blend_desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
-		blend_desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-		blend_desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-		hr = device->CreateBlendState(&blend_desc, bd_states[BS_ADD].GetAddressOf());
-		_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-		if (FAILED(hr))assert("NONE_BLEND ERROR");
-
-		/*----------[BS_SUBTRACT] 減算----------*/
-		blend_desc.AlphaToCoverageEnable = FALSE;
-		blend_desc.IndependentBlendEnable = FALSE;
-		blend_desc.RenderTarget[0].BlendEnable = TRUE;
-		blend_desc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-		blend_desc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
-		blend_desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_REV_SUBTRACT;
-		blend_desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ZERO;
-		blend_desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
-		blend_desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-		blend_desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-		hr = device->CreateBlendState(&blend_desc, bd_states[BS_SUBTRACT].GetAddressOf());
-		if (FAILED(hr))assert("NONE_BLEND ERROR");
-
-		/*----------[BS_REPLACE]----------*/
-		blend_desc.AlphaToCoverageEnable = FALSE;
-		blend_desc.IndependentBlendEnable = FALSE;
-		blend_desc.RenderTarget[0].BlendEnable = TRUE;
-		blend_desc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-		blend_desc.RenderTarget[0].DestBlend = D3D11_BLEND_ZERO;
-		blend_desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-		blend_desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_SRC_ALPHA;
-		blend_desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
-		blend_desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-		blend_desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-		hr = device->CreateBlendState(&blend_desc, bd_states[BS_REPLACE].GetAddressOf());
-		if (FAILED(hr))assert("NONE_BLEND ERROR");
-
-		/*----------[BS_MULTIPLY]----------*/
-		ZeroMemory(&blend_desc, sizeof(blend_desc));
-		blend_desc.IndependentBlendEnable = false;
-		blend_desc.AlphaToCoverageEnable = false;
-		blend_desc.RenderTarget[0].BlendEnable = true;
-		blend_desc.RenderTarget[0].SrcBlend = D3D11_BLEND_DEST_COLOR;
-		blend_desc.RenderTarget[0].DestBlend = D3D11_BLEND_ZERO;
-		blend_desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-		blend_desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_DEST_ALPHA;
-		blend_desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
-		blend_desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-		blend_desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-		hr = device->CreateBlendState(&blend_desc, bd_states[BS_MULTIPLY].GetAddressOf());
-		if (FAILED(hr))assert("NONE_BLEND ERROR");
-
-		/*----------[BS_LIGHTEN]----------*/
-		blend_desc.AlphaToCoverageEnable = FALSE;
-		blend_desc.IndependentBlendEnable = FALSE;
-		blend_desc.RenderTarget[0].BlendEnable = TRUE;
-		blend_desc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
-		blend_desc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
-		blend_desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_MAX;
-		blend_desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-		blend_desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
-		blend_desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_MAX;
-		blend_desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-		hr = device->CreateBlendState(&blend_desc, bd_states[BS_LIGHTEN].GetAddressOf());
-		if (FAILED(hr))assert("NONE_BLEND ERROR");
-
-		/*----------[BS_DARKEN]----------*/
-		blend_desc.AlphaToCoverageEnable = FALSE;
-		blend_desc.IndependentBlendEnable = FALSE;
-		blend_desc.RenderTarget[0].BlendEnable = TRUE;
-		blend_desc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
-		blend_desc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
-		blend_desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_MIN;
-		blend_desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-		blend_desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
-		blend_desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_MIN;
-		blend_desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-		hr = device->CreateBlendState(&blend_desc, &bd_states[BS_DARKEN]);
-		if (FAILED(hr))assert("NONE_BLEND ERROR");
-
-		/*----------[BS_SCREEN]----------*/
-		blend_desc.AlphaToCoverageEnable = FALSE;
-		blend_desc.IndependentBlendEnable = FALSE;
-		blend_desc.RenderTarget[0].BlendEnable = TRUE;
-		blend_desc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-		blend_desc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_COLOR;
-		blend_desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-		blend_desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-		blend_desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
-		blend_desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-		blend_desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-		hr = device->CreateBlendState(&blend_desc, bd_states[BS_SCREEN].GetAddressOf());
-		if (FAILED(hr))assert("NONE_BLEND ERROR");
-
-		// (ちなみに「Src」はSource(元)の略称らしい)
-		// (SrcとDestで元と先を表す変数に使われたり？2要素って感じみたい)
-		return true;
-	}
-
-	// ビューポートの作成
-	bool framework::CreateViewPort() {
-		D3D11_VIEWPORT viewport{};
-		viewport.TopLeftX = 0;
-		viewport.TopLeftY = 0;
-		viewport.Width = static_cast<float>(SCREEN_WIDTH);
-		viewport.Height = static_cast<float>(SCREEN_HEIGHT);
-		viewport.MinDepth = 0.0f;
-		viewport.MaxDepth = 1.0f;
-		immediate_context->RSSetViewports(1, &viewport);
-
-		return true;
-	}
-
-	// レンダーターゲットの初期化
-	void framework::Clear(FLOAT c[4]) {
-		immediate_context->OMSetRenderTargets(1, render_target_view.GetAddressOf(), depth_stensil_view.Get());
-
-		immediate_context->ClearRenderTargetView(render_target_view.Get(), c);	// クリア対象のView、クリアする色
-		immediate_context->ClearDepthStencilView(depth_stensil_view.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-		immediate_context->OMSetDepthStencilState(depth_stencil_state[DS_TRUE].Get(), 1);	// バインドする深度ステンシルステート、参照値？
-	}
-	//void framework::Clear(XMFLOAT4 color) {
-	//	FLOAT c[4] = { color.x,color.y,color.z,color.w };
-	//	immediate_context->OMSetRenderTargets(1, render_target_view.GetAddressOf(), depth_stensil_view.Get());
-
-	//	immediate_context->ClearRenderTargetView(render_target_view.Get(), c);	// クリア対象のView、クリアする色
+	//	FLOAT color[]{ 0.2f,0.2f,0.2f,1.0f };	// 背景色
+	//	immediate_context->ClearRenderTargetView(render_target_view.Get(), color);	// クリア対象のView、クリアする色
 	//	immediate_context->ClearDepthStencilView(depth_stensil_view.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-	//	immediate_context->OMSetDepthStencilState(depth_stencil_state[DS_TRUE].Get(), 1);	// バインドする深度ステンシルステート、参照値？
+	//	//immediate_context->OMSetRenderTargets(1, render_target_view.GetAddressOf(), depth_stensil_view.Get());
+
+	//	// サンプラーステートをバインド
+	//	immediate_context->PSSetSamplers(0, 1, sampler_states[0].GetAddressOf());
+	//	immediate_context->PSSetSamplers(1, 1, sampler_states[1].GetAddressOf());
+	//	immediate_context->PSSetSamplers(2, 1, sampler_states[2].GetAddressOf());
+
+	//	immediate_context->OMSetDepthStencilState(depth_stencil_state[DS_TRUE_WRITE].Get(), 1);	// バインドする深度ステンシルステート、参照値？
+	//	//immediate_context->OMSetBlendState(blender.states[Blender::BS_ALPHA].Get(), nullptr, 0xFFFFFFFF);	// ブレンドインターフェースのポインタ、ブレンドファクターの配列値、サンプルカバレッジ(今回はデフォルト指定)
+
+	//	// 2Dオブジェクトの描画設定
+	//	{
+	//		//sample->Set(0);
+	//		immediate_context->OMSetDepthStencilState(depth_stencil_state[DS_TRUE].Get(), 1);	// 3Dオブジェクtの後ろに出すため一旦
+	//		sprites->Render(immediate_context.Get());
+
+	//	}
+	//	// 3Dオブジェクトの描画設定
+	//	{
+	//		D3D11_VIEWPORT viewport;
+	//		UINT num_viewports{ 1 };
+	//		immediate_context->RSGetViewports(&num_viewports, &viewport);	// ラスタライザステージにバインドされたviewportの配列を取得
+
+	//		float aspect_ratio{ viewport.Width / viewport.Height };	// アスペクト比
+	//		// 透視投影行列の作成
+	//		XMMATRIX P{ XMMatrixPerspectiveFovLH(XMConvertToRadians(30),aspect_ratio,0.1f,100.0f) };	// 視野角,縦横比,近くのZ,遠くのZ
+
+	//		XMVECTOR eye{ XMVectorSet(eyePos.x,eyePos.y,eyePos.z,1.0f) };
+	//		XMVECTOR focus;
+	//		if (!focus_zero) {
+	//			focus = { XMVectorSet(eyePos.x,eyePos.y,eyePos.z + 1,1.0f) };	// カメラ位置の前
+	//		}
+	//		else {
+	//			focus = { XMVectorSet(0.0f,0.0f,0.0f,1.0f) };
+	//		}
+	//		XMVECTOR up{ XMVectorSet(0.0f,1.0f,0.0f,0.0f) };
+	//		// ViewMatrixの作成(LH = LeftHand(左手座標系))
+	//		XMMATRIX V{ XMMatrixLookAtLH(eye, focus, up) };	// カメラ座標、焦点、カメラの上方向
+
+	//		scene_constants data{};
+	//		XMStoreFloat4x4(&data.view_projection, V * P);	// Matrixから4x4へ変換
+	//		data.light_direction = { light_dir[0],light_dir[1],light_dir[2],0 };	// シェーダに渡すライトの向き
+	//		data.camera_position = { eyePos.x,eyePos.y,eyePos.z,0 };				// シェーダに渡すカメラの位置
+	//		immediate_context->UpdateSubresource(constant_buffer[0].Get(), 0, 0, &data, 0, 0);
+	//		immediate_context->VSSetConstantBuffers(1, 1, constant_buffer[0].GetAddressOf());	// cBufferはドローコールのたびに消去されるので都度設定する必要がある
+	//		immediate_context->PSSetConstantBuffers(1, 1, constant_buffer[0].GetAddressOf());
+
+	//		immediate_context->OMSetDepthStencilState(depth_stencil_state[DS_TRUE_WRITE].Get(), 1);			// 2Dオブジェクトとの前後関係をしっかりするため再設定
+
+	//		{
+	//			// 3DオブジェクトRender内に移植 現状ここである必要なし？
+	//			//XMMATRIX S{ XMMatrixScaling(geometric_primitive[0]->getSize().x,geometric_primitive[0]->getSize().y,geometric_primitive[0]->getSize().z) };				// 拡縮
+	//			//XMMATRIX R{ XMMatrixRotationRollPitchYaw(geometric_primitive[0]->getAngle().x,geometric_primitive[0]->getAngle().y,geometric_primitive[0]->getAngle().z) };	// 回転
+	//			//XMMATRIX T{ XMMatrixTranslation(geometric_primitive[0]->getPos().x,geometric_primitive[0]->getPos().y,geometric_primitive[0]->getPos().z) };			// 平行移動
+	//			//XMFLOAT4X4 world;
+	//			//XMStoreFloat4x4(&world, S * R * T);	// ワールド変換行列作成
+	//			//geometric_primitive[0]->Render(immediate_context.Get(), world, geometric_primitive[0]->getColor());
+	//			grid->wireframe = true;
+	//			grid->Render(immediate_context.Get());
+	//			//obj_1->Render(immediate_context.Get());
+	//			//obj_2->Render(immediate_context.Get());
+	//			//static_mesh->Render(immediate_context.Get());
+	//			skinned_mesh->Render(immediate_context.Get());
+	//		}
+
+	//	}
+
+	//#ifdef USE_IMGUI
+	//	ImGui::Render();
+	//	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+	//#endif
+
+	//	UINT sync_interval{ 0 };				// sync_interval に 1 をセットすると 60FPS の固定フレームレートで動作する。０で可変フレームレートでの動作を前提に行う
+	//	swap_chain->Present(sync_interval, 0);	// バックバッファをフロントバッファに送信する
+}
+
+bool framework::uninitialize()
+{
+	/*ComPtrに切り替えたのでRelease処理は必要なくなった*/
+	//device->Release();
+	//immediate_context->Release();
+	//swap_chain->Release();
+	//render_target_view->Release();
+	//depth_stensil_view->Release();
+
+	//for (auto& b : blender.states) {
+	//	b->Release();
 	//}
 
-	void framework::Flip(int n) {
-		swap_chain->Present(n, 0);	// バックバッファをフロントバッファに送信する
-	}
+	//for (auto& dss : depth_stencil_state) {
+	//	dss->Release();
+	//}
 
-	// ゲームループのおおもと
-	int framework::run() {
-		MSG msg{};
+	//for (Sprite* p : sprites) {
+	//	delete p;
+	//}
 
-		if (!initialize())	// framework初期化
-		{
-			return 0;
-		}
+	return true;
+}
 
-#ifdef USE_IMGUI
-		IMGUI_CHECKVERSION();
-		ImGui::CreateContext();
-		ImGui::GetIO().Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\consola.ttf", 14.0f, nullptr, glyphRangesJapanese);
-		ImGui_ImplWin32_Init(hwnd);
-		ImGui_ImplDX11_Init(device.Get(), immediate_context.Get());
-		ImGui::StyleColorsDark();
-#endif
-		SceneManager* scenemanager = new SceneManager;
-		scenemanager->ChangeScene(make_unique<SceneFirst>());
+// デバイス,スワップチェーンの作成
+bool framework::CreateDeviceAndSwapCain() {
+	D3D_FEATURE_LEVEL feature_levels{ D3D_FEATURE_LEVEL_11_0 };	// 動作環境。これはDirectX11の基準を完全に満たしたGPUで動作するレベル
 
-		while (WM_QUIT != msg.message)
-		{
-			if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
-			{
-				TranslateMessage(&msg);
-				DispatchMessage(&msg);
-			}
-			else
-			{
-				tictoc.tick();
-				calculate_frame_stats();
-				//update(tictoc.time_interval());
-				//render(tictoc.time_interval());
-				scenemanager->Update();
-				scenemanager->Render();
-			}
-		}
+	DXGI_SWAP_CHAIN_DESC swap_chain_desc{};
+	swap_chain_desc.BufferCount = 1;	// SwapChainのバッファ数
+	swap_chain_desc.BufferDesc.Width = SCREEN_WIDTH;	// バッファの横幅
+	swap_chain_desc.BufferDesc.Height = SCREEN_HEIGHT;	// バッファの縦幅
+	swap_chain_desc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;	// バッファのフォーマット指定 UNORMはUnsigned Normalizedの略、符号なし正規化整数らしい→ https://docs.microsoft.com/ja-jp/windows/uwp/graphics-concepts/data-type-conversion
+	swap_chain_desc.BufferDesc.RefreshRate.Numerator = 60;	        // リフレッシュレートの設定 分母
+	swap_chain_desc.BufferDesc.RefreshRate.Denominator = 1;	        // リフレッシュレートの設定 分子	つまり1/60
+	swap_chain_desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;	// バッファの使用方法の指定 シェーダの出力に使えるようにするらしい→ http://marupeke296.com/DX10_No1_Init.html
+	swap_chain_desc.OutputWindow = hwnd;	// 出力ウィンドウハンドル
+	swap_chain_desc.SampleDesc.Count = 1;	// 1ピクセルの色を決めるサンプリング数	未使用は1
+	swap_chain_desc.SampleDesc.Quality = 0;	// サンプリングの品質(精度)				未使用は0
+	swap_chain_desc.Windowed = !FULLSCREEN;	// ウィンドウモード
+	HRESULT hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, D3D11_CREATE_DEVICE_DEBUG,
+		&feature_levels, 1, D3D11_SDK_VERSION, &swap_chain_desc, &swap_chain, &device, NULL, &immediate_context);	// DeviceとSwapChainの設定を同時に行う 参考→ https://yttm-work.jp/directx/directx_0012.html
+	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));	// _ASSERT_EXPRはおそらくメッセージ表示が可能なassert。SUCCEEDEDで成功判定、hr_traceはおそらくエラーメッセージの表示？
 
-#ifdef USE_IMGUI
-		ImGui_ImplDX11_Shutdown();
-		ImGui_ImplWin32_Shutdown();
-		ImGui::DestroyContext();
-#endif
+	return true;
+}
 
-#if 1
-		BOOL fullscreen = 0;
-		swap_chain->GetFullscreenState(&fullscreen, 0);
-		if (fullscreen)
-		{
-			swap_chain->SetFullscreenState(FALSE, 0);
-		}
-#endif
+// レンダーターゲットビューの設定
+bool framework::CreateRenderTargetView() {
+	ID3D11Texture2D* back_buffer{};
+	HRESULT hr = swap_chain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<LPVOID*>(&back_buffer));	// swap_chainのもつバッファで作成したいのでGetする
+	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 
-		return uninitialize() ? static_cast<int>(msg.wParam) : 0;
-	}
+	hr = device->CreateRenderTargetView(back_buffer, NULL, render_target_view.GetAddressOf());
+	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 
-	LRESULT CALLBACK framework::handle_message(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+	back_buffer->Release();	// Targetの取得が終わったのでバッファを解放。参照カウンタが１加算されているため解放しないとメモリリークの原因となる
+
+	return true;
+}
+
+// 深度ステンシルビューの作成
+bool framework::CreateDepthStencileView() {
+	ComPtr<ID3D11Texture2D> depth_stencil_buffer{};
+	D3D11_TEXTURE2D_DESC textuer2d_desc{};	// 深度ステンシル用テクスチャ
+	textuer2d_desc.Width = SCREEN_WIDTH;	// バッファの横幅
+	textuer2d_desc.Height = SCREEN_HEIGHT;	// バッファの縦幅
+	textuer2d_desc.MipLevels = 1;	// ミニマップのレベル指定
+	textuer2d_desc.ArraySize = 1;	// テクスチャ配列のサイズ指定
+	textuer2d_desc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;	// テクスチャのフォーマット。DXGI_FORMAT_D24_UNORM_S8_UINTを使うとDepth24bit、Stencil8bitとなる
+	textuer2d_desc.SampleDesc.Count = 1;
+	textuer2d_desc.SampleDesc.Quality = 0;
+	textuer2d_desc.Usage = D3D11_USAGE_DEFAULT;				// テクスチャの使用方法
+	textuer2d_desc.BindFlags = D3D11_BIND_DEPTH_STENCIL;	// バインド設定 深度ステンシルターゲットとして設定
+	textuer2d_desc.CPUAccessFlags = 0;	// リソースへのCPUのアクセス権限設定 基本０でいいらしい
+	textuer2d_desc.MiscFlags = 0;		// リソースオプションのフラグ 不必要なので０
+	HRESULT hr = device->CreateTexture2D(&textuer2d_desc, NULL, &depth_stencil_buffer);
+	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+
+	D3D11_DEPTH_STENCIL_VIEW_DESC depth_stencil_view_desc{};
+	depth_stencil_view_desc.Format = textuer2d_desc.Format;
+	depth_stencil_view_desc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	depth_stencil_view_desc.Texture2D.MipSlice = 0;	// 最初に使用するミップマップのレベルを指定
+	hr = device->CreateDepthStencilView(depth_stencil_buffer.Get(), &depth_stencil_view_desc, &depth_stensil_view);
+	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+
+	return true;
+}
+
+// 深度ステンシルステートの生成
+bool framework::CreateDepthStencileState() {
+	D3D11_DEPTH_STENCIL_DESC depth_stencil_desc{};
+	/*-----------------------深度テスト:OFF 深度ライト:OFF-----------------------*/
+	depth_stencil_desc.DepthEnable = FALSE;	                         // 深度テストの有効/無効 ここでは無効
+	depth_stencil_desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO; // 深度ステンシルバッファへの書き込みのOn/Off D3D11_DEPTH_WRITE_MASK_ALL|D3D11_DEPTH_WRITE_MASK_ZERO ここでは無効
+	HRESULT hr = device->CreateDepthStencilState(&depth_stencil_desc, &depth_stencil_state[DS_FALSE]);
+	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+
+	depth_stencil_desc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;	    // COMPARISON:比較	深度データの比較 今回は新規データが既存データ以下の場合に成功
+
+	/*-----------------------深度テスト:ON 深度ライト:OFF-----------------------*/
+	depth_stencil_desc.DepthEnable = TRUE;							 // 深度テストの有効
+	depth_stencil_desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO; // 深度ステンシルバッファへの書き込みの無効
+	hr = device->CreateDepthStencilState(&depth_stencil_desc, &depth_stencil_state[DS_TRUE]);
+	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+	/*-----------------------深度テスト:OFF 深度ライト:ON-----------------------*/
+	depth_stencil_desc.DepthEnable = FALSE;	                        // 深度テストの無効
+	depth_stencil_desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;	// 深度ステンシルバッファへの書き込みの有効
+	hr = device->CreateDepthStencilState(&depth_stencil_desc, &depth_stencil_state[DS_FALSE_WRITE]);
+	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+	/*-----------------------深度テスト:ON 深度ライト:ON-----------------------*/
+	depth_stencil_desc.DepthEnable = TRUE;	                        // 深度テストの有効
+	depth_stencil_desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;	// 深度ステンシルバッファへの書き込みの有効
+	hr = device->CreateDepthStencilState(&depth_stencil_desc, &depth_stencil_state[DS_TRUE_WRITE]);
+	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+
+	return true;
+}
+
+// ブレンドステートの作成
+bool framework::CreateBlendState() {
+	HRESULT hr = { S_OK };
+
+	D3D11_BLEND_DESC blend_desc{};
+
+	/*----------[BS_NONE] なし----------*/
+	blend_desc.AlphaToCoverageEnable = FALSE;	                                        // マスキングによりくりぬき処理を行ったポリゴンを不透明部分に対してのみ陰面処理に対応しつつレンダリングする手法？を有効にするか
+	blend_desc.IndependentBlendEnable = FALSE;	                                        // 複数のRenderTarget[1～]を使用する場合はTrueに
+	blend_desc.RenderTarget[0].BlendEnable = FALSE;	                                    // ブレンディングを有効にするかどうか
+	blend_desc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;	                            // 最初のRGBデータソースの指定
+	blend_desc.RenderTarget[0].DestBlend = D3D11_BLEND_ZERO;	                        // 2番目のRGBデータソースの指定
+	blend_desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;	                        // RGBの組み合わせ方法を定義	今回はSrcBlendとDestBlendを加算
+	blend_desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;	                        // 最初のアルファデータソースを指定 ONEは(1,1,1,1)の白
+	blend_desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;	                    // 2番目のアルファデータソースを指定 ZEROは(0,0,0,0)の黒
+	blend_desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;	                    // アルファデータソースの組み合わせ方法を指定 加算
+	blend_desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;	// 書き込みマスク 今回はすべてのコンポーネントにデータを保存できるように
+	hr = device->CreateBlendState(&blend_desc, bd_states[BS_NONE].GetAddressOf());
+	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+	if (FAILED(hr))assert("NONE_BLEND ERROR");
+
+	/*----------[BS_ALPHA] 透過----------*/
+	blend_desc.AlphaToCoverageEnable = FALSE;
+	blend_desc.IndependentBlendEnable = FALSE;
+	blend_desc.RenderTarget[0].BlendEnable = TRUE;
+	blend_desc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;					// 今回はピクセルシェーダのアルファデータを指定、ブレンディング前の処理は無し
+	blend_desc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;				// 今回はアルファデータ、ブレンディング前の処理によってデータが反転、１－Aが生成される
+	blend_desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;						// 今回はSrcBlendとDestBlendを加算
+	blend_desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;						// ONEは(1,1,1,1)の白
+	blend_desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;					// ZEROは(0,0,0,0)の黒
+	blend_desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;					// 加算
+	blend_desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	hr = device->CreateBlendState(&blend_desc, bd_states[BS_ALPHA].GetAddressOf());
+	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+	if (FAILED(hr))assert("NONE_BLEND ERROR");
+
+	/*----------[BS_ADD] 加算----------*/
+	blend_desc.AlphaToCoverageEnable = FALSE;
+	blend_desc.IndependentBlendEnable = FALSE;
+	blend_desc.RenderTarget[0].BlendEnable = TRUE;
+	blend_desc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	blend_desc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
+	blend_desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	blend_desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ZERO;
+	blend_desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
+	blend_desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	blend_desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	hr = device->CreateBlendState(&blend_desc, bd_states[BS_ADD].GetAddressOf());
+	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+	if (FAILED(hr))assert("NONE_BLEND ERROR");
+
+	/*----------[BS_SUBTRACT] 減算----------*/
+	blend_desc.AlphaToCoverageEnable = FALSE;
+	blend_desc.IndependentBlendEnable = FALSE;
+	blend_desc.RenderTarget[0].BlendEnable = TRUE;
+	blend_desc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	blend_desc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
+	blend_desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_REV_SUBTRACT;
+	blend_desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ZERO;
+	blend_desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
+	blend_desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	blend_desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	hr = device->CreateBlendState(&blend_desc, bd_states[BS_SUBTRACT].GetAddressOf());
+	if (FAILED(hr))assert("NONE_BLEND ERROR");
+
+	/*----------[BS_REPLACE]----------*/
+	blend_desc.AlphaToCoverageEnable = FALSE;
+	blend_desc.IndependentBlendEnable = FALSE;
+	blend_desc.RenderTarget[0].BlendEnable = TRUE;
+	blend_desc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	blend_desc.RenderTarget[0].DestBlend = D3D11_BLEND_ZERO;
+	blend_desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	blend_desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_SRC_ALPHA;
+	blend_desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	blend_desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	blend_desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	hr = device->CreateBlendState(&blend_desc, bd_states[BS_REPLACE].GetAddressOf());
+	if (FAILED(hr))assert("NONE_BLEND ERROR");
+
+	/*----------[BS_MULTIPLY]----------*/
+	ZeroMemory(&blend_desc, sizeof(blend_desc));
+	blend_desc.IndependentBlendEnable = false;
+	blend_desc.AlphaToCoverageEnable = false;
+	blend_desc.RenderTarget[0].BlendEnable = true;
+	blend_desc.RenderTarget[0].SrcBlend = D3D11_BLEND_DEST_COLOR;
+	blend_desc.RenderTarget[0].DestBlend = D3D11_BLEND_ZERO;
+	blend_desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	blend_desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_DEST_ALPHA;
+	blend_desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
+	blend_desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	blend_desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	hr = device->CreateBlendState(&blend_desc, bd_states[BS_MULTIPLY].GetAddressOf());
+	if (FAILED(hr))assert("NONE_BLEND ERROR");
+
+	/*----------[BS_LIGHTEN]----------*/
+	blend_desc.AlphaToCoverageEnable = FALSE;
+	blend_desc.IndependentBlendEnable = FALSE;
+	blend_desc.RenderTarget[0].BlendEnable = TRUE;
+	blend_desc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
+	blend_desc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
+	blend_desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_MAX;
+	blend_desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	blend_desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
+	blend_desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_MAX;
+	blend_desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	hr = device->CreateBlendState(&blend_desc, bd_states[BS_LIGHTEN].GetAddressOf());
+	if (FAILED(hr))assert("NONE_BLEND ERROR");
+
+	/*----------[BS_DARKEN]----------*/
+	blend_desc.AlphaToCoverageEnable = FALSE;
+	blend_desc.IndependentBlendEnable = FALSE;
+	blend_desc.RenderTarget[0].BlendEnable = TRUE;
+	blend_desc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
+	blend_desc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
+	blend_desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_MIN;
+	blend_desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	blend_desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
+	blend_desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_MIN;
+	blend_desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	hr = device->CreateBlendState(&blend_desc, &bd_states[BS_DARKEN]);
+	if (FAILED(hr))assert("NONE_BLEND ERROR");
+
+	/*----------[BS_SCREEN]----------*/
+	blend_desc.AlphaToCoverageEnable = FALSE;
+	blend_desc.IndependentBlendEnable = FALSE;
+	blend_desc.RenderTarget[0].BlendEnable = TRUE;
+	blend_desc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	blend_desc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_COLOR;
+	blend_desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	blend_desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	blend_desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
+	blend_desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	blend_desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	hr = device->CreateBlendState(&blend_desc, bd_states[BS_SCREEN].GetAddressOf());
+	if (FAILED(hr))assert("NONE_BLEND ERROR");
+
+	// (ちなみに「Src」はSource(元)の略称らしい)
+	// (SrcとDestで元と先を表す変数に使われたり？2要素って感じみたい)
+	return true;
+}
+
+// ビューポートの作成
+bool framework::CreateViewPort() {
+	D3D11_VIEWPORT viewport{};
+	viewport.TopLeftX = 0;
+	viewport.TopLeftY = 0;
+	viewport.Width = static_cast<float>(SCREEN_WIDTH);
+	viewport.Height = static_cast<float>(SCREEN_HEIGHT);
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
+	immediate_context->RSSetViewports(1, &viewport);
+
+	return true;
+}
+
+// レンダーターゲットの初期化
+void framework::Clear(FLOAT c[4]) {
+	immediate_context->OMSetRenderTargets(1, render_target_view.GetAddressOf(), depth_stensil_view.Get());
+
+	immediate_context->ClearRenderTargetView(render_target_view.Get(), c);	// クリア対象のView、クリアする色
+	immediate_context->ClearDepthStencilView(depth_stensil_view.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	immediate_context->OMSetDepthStencilState(depth_stencil_state[DS_TRUE].Get(), 1);	// バインドする深度ステンシルステート、参照値？
+}
+
+//void framework::Clear(XMFLOAT4 color) {
+//	FLOAT c[4] = { color.x,color.y,color.z,color.w };
+//	immediate_context->OMSetRenderTargets(1, render_target_view.GetAddressOf(), depth_stensil_view.Get());
+//	immediate_context->ClearRenderTargetView(render_target_view.Get(), c);	// クリア対象のView、クリアする色
+//	immediate_context->ClearDepthStencilView(depth_stensil_view.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+//	immediate_context->OMSetDepthStencilState(depth_stencil_state[DS_TRUE].Get(), 1);	// バインドする深度ステンシルステート、参照値？
+//}
+
+void framework::Flip(int n) {
+	swap_chain->Present(n, 0);	// バックバッファをフロントバッファに送信する
+}
+
+// ゲームループのおおもと
+int framework::run() {
+	MSG msg{};
+
+	if (!initialize())	// framework初期化
 	{
-#ifdef USE_IMGUI
-		if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam)) { return true; }
-#endif
-		switch (msg)
-		{
-		case WM_PAINT:
-		{
-			PAINTSTRUCT ps{};
-			BeginPaint(hwnd, &ps);
-
-			EndPaint(hwnd, &ps);
-		}
-		break;
-
-		case WM_DESTROY:
-			PostQuitMessage(0);
-			break;
-		case WM_CREATE:
-			break;
-		case WM_KEYDOWN:
-			if (wparam == VK_ESCAPE)
-			{
-				PostMessage(hwnd, WM_CLOSE, 0, 0);
-			}
-			break;
-		case WM_ENTERSIZEMOVE:
-			tictoc.stop();
-			break;
-		case WM_EXITSIZEMOVE:
-			tictoc.start();
-			break;
-		default:
-			return DefWindowProc(hwnd, msg, wparam, lparam);
-		}
 		return 0;
 	}
 
-	void framework::calculate_frame_stats()
-	{
-		if (++frames, (tictoc.time_stamp() - elapsed_time) >= 1.0f)
-		{
-			float fps = static_cast<float>(frames);
-			std::wostringstream outs;
-			outs.precision(6);
-			outs << APPLICATION_NAME << L" : FPS : " << fps << L" / " << L"Frame Time : " << 1000.0f / fps << L" (ms)";
-			SetWindowTextW(hwnd, outs.str().c_str());
+#ifdef USE_IMGUI
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGui::GetIO().Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\consola.ttf", 14.0f, nullptr, glyphRangesJapanese);
+	ImGui_ImplWin32_Init(hwnd);
+	ImGui_ImplDX11_Init(device.Get(), immediate_context.Get());
+	ImGui::StyleColorsDark();
+#endif
+	SceneManager* scenemanager = new SceneManager;
+	scenemanager->ChangeScene(make_unique<SceneTitle>());
+	//SceneManager::getInstance().ChangeScene(make_unique<SceneTitle>());
 
-			frames = 0;
-			elapsed_time += 1.0f;
+	while (WM_QUIT != msg.message)
+	{
+		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+		else
+		{
+			tictoc.tick();
+			calculate_frame_stats();
+			//update(tictoc.time_interval());
+			//render(tictoc.time_interval());
+			scenemanager->Update();
+			scenemanager->Render();
+			//SceneManager::getInstance().Update();
+			//SceneManager::getInstance().Render();
+
 		}
 	}
+
+#ifdef USE_IMGUI
+	ImGui_ImplDX11_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
+#endif
+
+#if 1
+	BOOL fullscreen = 0;
+	swap_chain->GetFullscreenState(&fullscreen, 0);
+	if (fullscreen)
+	{
+		swap_chain->SetFullscreenState(FALSE, 0);
+	}
+#endif
+
+	return uninitialize() ? static_cast<int>(msg.wParam) : 0;
+}
+
+LRESULT CALLBACK framework::handle_message(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+{
+#ifdef USE_IMGUI
+	if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam)) { return true; }
+#endif
+	switch (msg)
+	{
+	case WM_PAINT:
+	{
+		PAINTSTRUCT ps{};
+		BeginPaint(hwnd, &ps);
+
+		EndPaint(hwnd, &ps);
+	}
+	break;
+
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		break;
+	case WM_CREATE:
+		break;
+	case WM_KEYDOWN:
+		if (wparam == VK_ESCAPE)
+		{
+			PostMessage(hwnd, WM_CLOSE, 0, 0);
+		}
+		break;
+	case WM_ENTERSIZEMOVE:
+		tictoc.stop();
+		break;
+	case WM_EXITSIZEMOVE:
+		tictoc.start();
+		break;
+	default:
+		return DefWindowProc(hwnd, msg, wparam, lparam);
+	}
+	return 0;
+}
+
+void framework::calculate_frame_stats()
+{
+	if (++frames, (tictoc.time_stamp() - elapsed_time) >= 1.0f)
+	{
+		float fps = static_cast<float>(frames);
+		std::wostringstream outs;
+		outs.precision(6);
+		outs << APPLICATION_NAME << L" : FPS : " << fps << L" / " << L"Frame Time : " << 1000.0f / fps << L" (ms)";
+		SetWindowTextW(hwnd, outs.str().c_str());
+
+		frames = 0;
+		elapsed_time += 1.0f;
+	}
+}

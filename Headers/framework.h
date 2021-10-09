@@ -40,7 +40,7 @@ private:
 	ComPtr<ID3D11Device> device;
 
 	ComPtr<ID3D11DeviceContext> immediate_context;	// 描画コマンドの追加や送信などの処理を扱っている。CPU側で追加された描画コマンドをGPU側に送信する。
-													// Immediateは生成したコマンドを即時実行することを表す。反対にDeferredというものが存在する。要検索
+													// Immediateは生成したコマンドを即時実行することを表す。反対にDeferredというものが存在する。
 
 	ComPtr<IDXGISwapChain> swap_chain;
 	ComPtr<ID3D11RenderTargetView>		render_target_view;

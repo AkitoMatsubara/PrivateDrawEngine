@@ -173,9 +173,6 @@
     <ClInclude Include="Headers\skinned_mesh.h">
       <Filter>Headers\DataLoad\3D Object</Filter>
     </ClInclude>
-    <ClInclude Include="Headers\object3D.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="Headers\Rasterizer.h">
       <Filter>Headers\RenderOptions</Filter>
     </ClInclude>
@@ -196,6 +193,15 @@
     </ClInclude>
     <ClInclude Include="Headers\shaderEx.h">
       <Filter>Headers\DataLoad\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\SceneTitle.h">
+      <Filter>Headers\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\SceneTest_2.h">
+      <Filter>Headers\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\SceneLoading.h">
+      <Filter>Headers\Scene</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -253,7 +259,7 @@
     <ClCompile Include="Sources\SceneManager.cpp">
       <Filter>Sources\Scenes</Filter>
     </ClCompile>
-    <ClCompile Include="Sources\SceneTest.cpp">
+    <ClCompile Include="Sources\SceneTitle.cpp">
       <Filter>Sources\Scenes</Filter>
     </ClCompile>
     <ClCompile Include="Sources\Rasterizer.cpp">
@@ -275,6 +281,9 @@
       <Filter>Sources\System</Filter>
     </ClCompile>
     <ClCompile Include="Sources\SceneTest_2.cpp">
+      <Filter>Sources\Scenes</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\SceneLoading.cpp">
       <Filter>Sources\Scenes</Filter>
     </ClCompile>
   </ItemGroup>

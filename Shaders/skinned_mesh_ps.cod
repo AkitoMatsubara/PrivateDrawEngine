@@ -18,7 +18,7 @@
 //
 // Name                                 Type  Format         Dim      HLSL Bind  Count
 // ------------------------------ ---------- ------- ----------- -------------- ------
-// sampler_states[2]                 sampler      NA          NA             s2      1 
+// sampler_states[0]                 sampler      NA          NA             s0      1 
 // texture_states[0]                 texture  float4          2d             t0      1 
 // SCENE_CONSTANT_BUFFER             cbuffer      NA          NA            cb1      1 
 //
@@ -44,7 +44,7 @@
 ps_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
 dcl_constantbuffer CB1[5], immediateIndexed
-dcl_sampler s2, mode_default
+dcl_sampler s0, mode_default
 dcl_resource_texture2d (float,float,float,float) t0
 dcl_input_ps linear v2.xyz
 dcl_input_ps linear v3.xy
@@ -61,7 +61,7 @@ dcl_temps 3
 //   o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
 //
 #line 13 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine\Shaders\skinned_mesh_ps.hlsl"
-sample_indexable(texture2d)(float,float,float,float) r0.xyzw, v3.xyxx, t0.xyzw, s2  // r0.x <- color.x; r0.y <- color.y; r0.z <- color.z; r0.w <- color.w
+sample_indexable(texture2d)(float,float,float,float) r0.xyzw, v3.xyxx, t0.xyzw, s0  // r0.x <- color.x; r0.y <- color.y; r0.z <- color.z; r0.w <- color.w
 
 #line 14
 dp3 r1.x, v2.xyzx, v2.xyzx

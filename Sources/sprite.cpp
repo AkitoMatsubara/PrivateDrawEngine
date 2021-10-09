@@ -281,8 +281,6 @@ void Sprite::CreateVertexData(ID3D11DeviceContext* immediate_context, Shader* sh
 	immediate_context->Draw(4, 0);	// 頂点の数、描画開始時点で使う頂点バッファの最初のインデックス
 	// シェーダの無効化
 	shader->Inactivate();
-
-
 }
 
 void Sprite::Render(Shader* shader,ID3D11DeviceContext* immediate_context, XMFLOAT2 pos, XMFLOAT2 size, float angle, XMFLOAT4 color, XMFLOAT2 TexPos, XMFLOAT2 TexSize) {

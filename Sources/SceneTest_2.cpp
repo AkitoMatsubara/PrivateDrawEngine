@@ -1,4 +1,5 @@
-#include "SceneManager.h"
+#include "SceneTest_2.h"
+#include "SceneTitle.h"
 
 bool SceneTest_2::Initialize() {
 	ComPtr<ID3D11Device> device = FRAMEWORK->GetDevice();	// frameworkからdeviceを取得
@@ -18,12 +19,12 @@ bool SceneTest_2::Initialize() {
 	}
 
 	// Samplerの設定
-	sample = std::make_shared<Sampler>(D3D11_FILTER_MIN_MAG_MIP_LINEAR, D3D11_TEXTURE_ADDRESS_CLAMP);
+	sampleClamp = std::make_shared<Sampler>(D3D11_FILTER_MIN_MAG_MIP_LINEAR, D3D11_TEXTURE_ADDRESS_CLAMP);
 
 	// 各種クラス設定
 	{
 		// spriteオブジェクトを生成(今回は先頭の１つだけを生成する)
-		sprites = make_unique<Sprite>(L".\\resources\\screenshot.jpg");	// シェーダーはコンストラクタ内で指定しているため、別を使うには改良が必要
+		sprites = make_unique<Sprite>(L".\\Resources\\screenshot.jpg");	// シェーダーはコンストラクタ内で指定しているため、別を使うには改良が必要
 		sprites->setSize(1280, 720);
 		SpriteShader = std::make_unique<ShaderEx>();
 		SpriteShader->Create(L"Shaders\\sprite_vs", L"Shaders\\sprite_ps");
@@ -37,13 +38,13 @@ bool SceneTest_2::Initialize() {
 			GeomtricShader->Create(L"Shaders\\geometric_primitive_vs", L"Shaders\\geometric_primitive_ps");
 		}
 
-		//skinned_mesh = make_unique<Skinned_Mesh>(device.Get(), ".\\resources\\cube.000.fbx");		// テクスチャ、マテリアル無し
-		//skinned_mesh = make_unique<Skinned_Mesh>(device.Get(), ".\\resources\\cube.001.0.fbx");	// テクスチャ使用
-		//skinned_mesh = make_unique<Skinned_Mesh>(device.Get(), ".\\resources\\cube.001.1.fbx");	// 埋め込みテクスチャ
-		//skinned_mesh = make_unique<Skinned_Mesh>(device.Get(), ".\\resources\\cube.002.0.fbx");	// 3種テクスチャ使用
-		//skinned_mesh = make_unique<Skinned_Mesh>(device.Get(), ".\\resources\\cube.002.1.fbx");	// テクスチャ有り無し、マテリアル有り無し混合
-		skinned_mesh = make_unique<Skinned_Mesh>(".\\resources\\cube.003.0.fbx");	// 複数メッシュ キューブと猿
-		//skinned_mesh = make_unique<Skinned_Mesh>(".\\resources\\cube.003.1.fbx", Skinned_Mesh::CST_RIGHT_Z, true);	// 3角形化されていない複数メッシュ キューブ
+		//skinned_mesh = make_unique<Skinned_Mesh>(device.Get(), ".\\Resources\\cube.000.fbx");		// テクスチャ、マテリアル無し
+		//skinned_mesh = make_unique<Skinned_Mesh>(device.Get(), ".\\Resources\\cube.001.0.fbx");	// テクスチャ使用
+		//skinned_mesh = make_unique<Skinned_Mesh>(device.Get(), ".\\Resources\\cube.001.1.fbx");	// 埋め込みテクスチャ
+		//skinned_mesh = make_unique<Skinned_Mesh>(device.Get(), ".\\Resources\\cube.002.0.fbx");	// 3種テクスチャ使用
+		//skinned_mesh = make_unique<Skinned_Mesh>(device.Get(), ".\\Resources\\cube.002.1.fbx");	// テクスチャ有り無し、マテリアル有り無し混合
+		skinned_mesh = make_unique<Skinned_Mesh>(".\\Resources\\cube.003.0.fbx");	// 複数メッシュ キューブと猿
+		//skinned_mesh = make_unique<Skinned_Mesh>(".\\Resources\\cube.003.1.fbx", Skinned_Mesh::CST_RIGHT_Z, true);	// 3角形化されていない複数メッシュ キューブ
 		SkinnedShader = std::make_unique<ShaderEx>();
 		SkinnedShader->Create(L"Shaders\\skinned_mesh_vs", L"Shaders\\skinned_mesh_ps");
 	}
@@ -136,6 +137,10 @@ bool SceneTest_2::Initialize() {
 void SceneTest_2::Update() {
 	imguiUpdate();
 	const float elapsed_time = FRAMEWORK->GetElapsedTime();
+	// シーン切り替え
+	if (GetKeyState('G') < 0) setScene(std::make_unique<SceneTitle>());
+
+
 	// カメラ操作
 	static float speed = 7.0f;
 	if (GetKeyState('D') < 0)  eyePos.x += speed * elapsed_time;	// 右に
@@ -174,18 +179,19 @@ void SceneTest_2::Update() {
 
 
 		// アンオーダードアクセスビューのバッファの内容を CPU から読み込み可能なバッファへコピーする
-		//ID3D11Buffer* debugbuf = CreateAndCopyToDebugBuf(pD3DDevice, pD3DDeviceContext, pBufResult);
-		ID3D11Buffer* debugbuf = NULL;
-		D3D11_BUFFER_DESC BufferDesc;
-		ZeroMemory(&BufferDesc, sizeof(D3D11_BUFFER_DESC));
-		pBufResult->GetDesc(&BufferDesc);	// バッファの初期化情報を取得
-		BufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;	// CPUから読み込み出来るように設定する
-		BufferDesc.Usage = D3D11_USAGE_STAGING;				// GPUからCPUへのデータ転送をサポート
-		BufferDesc.BindFlags = 0;
-		BufferDesc.MiscFlags = 0;
-		hr = device->CreateBuffer(&BufferDesc, NULL, &debugbuf);	// 再設定したDescからバッファを作成
-		_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-		DevCon->CopyResource(debugbuf, pBufResult.Get());	// バッファの中身をコピー
+		ID3D11Buffer* debugbuf = CreateAndCopyToDebugBuf(device.Get(), DevCon.Get(), pBufResult.Get());
+
+		//ID3D11Buffer* debugbuf = NULL;
+		//D3D11_BUFFER_DESC BufferDesc;
+		//ZeroMemory(&BufferDesc, sizeof(D3D11_BUFFER_DESC));
+		//pBufResult->GetDesc(&BufferDesc);	// バッファの初期化情報を取得
+		//BufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;	// CPUから読み込み出来るように設定する
+		//BufferDesc.Usage = D3D11_USAGE_STAGING;				// GPUからCPUへのデータ転送をサポート
+		//BufferDesc.BindFlags = 0;
+		//BufferDesc.MiscFlags = 0;
+		//hr = device->CreateBuffer(&BufferDesc, NULL, &debugbuf);	// 再設定したDescからバッファを作成
+		//_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+		//DevCon->CopyResource(debugbuf, pBufResult.Get());	// バッファの中身をコピー
 
 		D3D11_MAPPED_SUBRESOURCE MappedResource;
 		DevCon->Map(debugbuf, 0, D3D11_MAP_READ, 0, &MappedResource);	// 読み取り専用でマップ
@@ -200,7 +206,7 @@ void SceneTest_2::Update() {
 		}
 
 		DevCon->Unmap(debugbuf, 0);	// マップ解除
-		skinned_mesh->setPos(p[0].i*0.1, p[2].i, p[4].i);
+		skinned_mesh->setPos(p[0].i*0.1f, p[2].i, p[4].i);
 
 		hr = S_OK;
 	}
@@ -217,7 +223,7 @@ void SceneTest_2::Render() {
 	FRAMEWORK->CreateViewPort();
 
 	// サンプラーステートをバインド
-	sample->Set(0);
+	sampleClamp->Set(0);
 
 	immediate_context->OMSetBlendState(FRAMEWORK->GetBlendState(FRAMEWORK->BS_ALPHA), nullptr, 0xFFFFFFFF);	// ブレンドインターフェースのポインタ、ブレンドファクターの配列値、サンプルカバレッジ(今回はデフォルト指定)
 

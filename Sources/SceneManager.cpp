@@ -2,15 +2,15 @@
 
 void SceneBase::imguiSceneChanger() {
 	ImGui::Begin(u8"SceneChanger");
-	if (ImGui::Button(u8"SceneTest"))
-	{
-		setScene(std::make_unique<SceneTest>());
-	}
+	//if (ImGui::Button(u8"SceneTest"))
+	//{
+	//	setScene(std::make_unique<SceneTest>());
+	//}
 
-	if (ImGui::Button(u8"SceneTest_2"))
-	{
-		setScene(std::make_unique<SceneTest_2>());
-	}
+	//if (ImGui::Button(u8"SceneTest_2"))
+	//{
+	//	setScene(std::make_unique<SceneTest_2>());
+	//}
 	ImGui::End();
 
 }

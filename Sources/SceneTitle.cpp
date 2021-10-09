@@ -1,6 +1,9 @@
-#include "SceneManager.h"
+//#include "SceneManager.h"
+#include "SceneTitle.h"
+#include "SceneTest_2.h"
+#include "SceneLoading.h"
 
-bool SceneTest::Initialize() {
+bool SceneTitle::Initialize() {
 	ComPtr<ID3D11Device> device = FRAMEWORK->GetDevice();	// frameworkからdeviceを取得
 // シーンコンスタントバッファの設定
 	D3D11_BUFFER_DESC buffer_desc{};
@@ -17,13 +20,13 @@ bool SceneTest::Initialize() {
 	//blender.setBlend(device.Get());
 
 	// Samplerの設定
-	sample = std::make_shared<Sampler>(D3D11_FILTER_MIN_MAG_MIP_LINEAR, D3D11_TEXTURE_ADDRESS_CLAMP);
+	sampleClamp = std::make_shared<Sampler>(D3D11_FILTER_MIN_MAG_MIP_LINEAR, D3D11_TEXTURE_ADDRESS_CLAMP);
 
 	// 各種クラス設定
 	{
 		// spriteオブジェクトを生成(今回は先頭の１つだけを生成する)
-		sprites = make_unique<Sprite>(L".\\resources\\screenshot.jpg");	// シェーダーはコンストラクタ内で指定しているため、別を使うには改良が必要
-		sprites->setSize(1280, 720);
+		TitleImage = make_unique<Sprite>(L".\\Resources\\screenshot.jpg");	// シェーダーはコンストラクタ内で指定しているため、別を使うには改良が必要
+		TitleImage->setSize(1280, 720);
 		SpriteShader = std::make_unique<ShaderEx>();
 		SpriteShader->Create(L"Shaders\\sprite_vs", L"Shaders\\sprite_ps");
 
@@ -36,22 +39,28 @@ bool SceneTest::Initialize() {
 			GeomtricShader->Create(L"Shaders\\geometric_primitive_vs", L"Shaders\\geometric_primitive_ps");
 		}
 
-		//skinned_mesh = make_unique<Skinned_Mesh>(".\\resources\\cube.000.fbx");		// テクスチャ、マテリアル無し
-		skinned_mesh = make_unique<Skinned_Mesh>(".\\resources\\cube.001.0.fbx");	// テクスチャ使用
-		//skinned_mesh = make_unique<Skinned_Mesh>(".\\resources\\cube.001.1.fbx");	// 埋め込みテクスチャ
-		//skinned_mesh = make_unique<Skinned_Mesh>(".\\resources\\cube.002.0.fbx");	// 3種テクスチャ使用
-		//skinned_mesh = make_unique<Skinned_Mesh>(".\\resources\\cube.002.1.fbx");	// テクスチャ有り無し、マテリアル有り無し混合
-		//skinned_mesh = make_unique<Skinned_Mesh>(".\\resources\\cube.003.0.fbx");	// 複数メッシュ キューブと猿
-		//skinned_mesh = make_unique<Skinned_Mesh>(".\\resources\\cube.003.1.fbx", Skinned_Mesh::CST_RIGHT_Z, true);	// 3角形化されていない複数メッシュ キューブ
+		//skinned_mesh = make_unique<Skinned_Mesh>(".\\Resources\\cube.000.fbx");		// テクスチャ、マテリアル無し
+		skinned_mesh = make_unique<Skinned_Mesh>(".\\Resources\\cube.001.0.fbx");	// テクスチャ使用
+		//skinned_mesh = make_unique<Skinned_Mesh>(".\\Resources\\cube.001.1.fbx");	// 埋め込みテクスチャ
+		//skinned_mesh = make_unique<Skinned_Mesh>(".\\Resources\\cube.002.0.fbx");	// 3種テクスチャ使用
+		//skinned_mesh = make_unique<Skinned_Mesh>(".\\Resources\\cube.002.1.fbx");	// テクスチャ有り無し、マテリアル有り無し混合
+		//skinned_mesh = make_unique<Skinned_Mesh>(".\\Resources\\cube.003.0.fbx");	// 複数メッシュ キューブと猿
+		//skinned_mesh = make_unique<Skinned_Mesh>(".\\Resources\\cube.003.1.fbx", Skinned_Mesh::CST_RIGHT_Z, true);	// 3角形化されていない複数メッシュ キューブ
 		SkinnedShader = std::make_unique<ShaderEx>();
 		SkinnedShader->Create(L"Shaders\\skinned_mesh_vs", L"Shaders\\skinned_mesh_ps");
 }
 	return true;
 }
 
-void SceneTest::Update() {
+void SceneTitle::Update() {
 	imguiUpdate();
 	const float elapsed_time = FRAMEWORK->GetElapsedTime();
+
+	// シーン切り替え
+	//if (GetKeyState('G') < 0) {
+	//	setScene(std::make_unique<SceneLoading>(std::make_unique<SceneTest_2>()));
+	//}
+	if (GetKeyState('G') < 0) setScene(std::make_unique<SceneTest_2>());
 	// カメラ操作
 	static float speed = 7.0f;
 	if (GetKeyState('D') < 0)  eyePos.x += speed * elapsed_time;	// 右に
@@ -62,7 +71,7 @@ void SceneTest::Update() {
 	if (GetKeyState(VK_SHIFT) < 0)  eyePos.y -= speed * elapsed_time;	// 下に
 }
 
-void SceneTest::Render() {
+void SceneTitle::Render() {
 	HRESULT hr{ S_OK };
 
 	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();	// DevCon取得
@@ -73,14 +82,14 @@ void SceneTest::Render() {
 	FRAMEWORK->CreateViewPort();
 
 	// サンプラーステートをバインド
-	sample->Set(0);
+	sampleClamp->Set(0);
 
 	immediate_context->OMSetBlendState(FRAMEWORK->GetBlendState(FRAMEWORK->BS_ALPHA), nullptr, 0xFFFFFFFF);	// ブレンドインターフェースのポインタ、ブレンドファクターの配列値、サンプルカバレッジ(今回はデフォルト指定)
 
 	// 2Dオブジェクトの描画設定
 	{
 		immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(DS_TRUE), 1);	// 3Dオブジェクトの後ろに出すため一旦
-		sprites->Render(SpriteShader.get(),immediate_context);
+		TitleImage->Render(SpriteShader.get(),immediate_context);
 	}
 	// 3Dオブジェクトの描画設定
 	{
@@ -138,14 +147,14 @@ void SceneTest::Render() {
 	FRAMEWORK->Flip();
 }
 
-void SceneTest::imguiUpdate() {
+void SceneTitle::imguiUpdate() {
 #ifdef USE_IMGUI
 	ImGui_ImplDX11_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
 	imguiSceneChanger();
 	// 2D用 内部関数で完結させてる
-	sprites->ImguiWindow();
+	TitleImage->ImguiWindow();
 	// 3D用パラメータ
 	skinned_mesh->imguiWindow("fbx");
 
