@@ -160,8 +160,9 @@ Sprite::~Sprite() {
 }
 
 
-void Sprite::CreateVertexData(ID3D11DeviceContext* immediate_context, Shader* shader,XMFLOAT2 pos, XMFLOAT2 size, float angle, XMFLOAT4 color
+void Sprite::CreateVertexData(Shader* shader,XMFLOAT2 pos, XMFLOAT2 size, float angle, XMFLOAT4 color
 	, XMFLOAT2 TexPos, XMFLOAT2 TexSize) {
+	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();
 	// スクリーン(ビューポート)のサイズを取得する
 	D3D11_VIEWPORT viewport{};
 	UINT num_viewports{ 1 };
@@ -283,16 +284,16 @@ void Sprite::CreateVertexData(ID3D11DeviceContext* immediate_context, Shader* sh
 	shader->Inactivate();
 }
 
-void Sprite::Render(Shader* shader,ID3D11DeviceContext* immediate_context, XMFLOAT2 pos, XMFLOAT2 size, float angle, XMFLOAT4 color, XMFLOAT2 TexPos, XMFLOAT2 TexSize) {
-	CreateVertexData(immediate_context, shader, pos, size, angle, color, TexPos, TexSize);
+void Sprite::Render(Shader* shader,XMFLOAT2 pos, XMFLOAT2 size, float angle, XMFLOAT4 color, XMFLOAT2 TexPos, XMFLOAT2 TexSize) {
+	CreateVertexData(shader, pos, size, angle, color, TexPos, TexSize);
 }
 
-void Sprite::Render(Shader* shader, ID3D11DeviceContext* immediate_context) {
-	CreateVertexData(immediate_context, shader, param.Pos, param.Size, param.Angle, param.Color, param.TexPos, param.TexSize);
+void Sprite::Render(Shader* shader) {
+	CreateVertexData(shader, param.Pos, param.Size, param.Angle, param.Color, param.TexPos, param.TexSize);
 }
 
-void Sprite::Render(Shader* shader, ID3D11DeviceContext* immediate_context, XMFLOAT2 Pos, XMFLOAT2 Size) {
-	CreateVertexData(immediate_context, shader, Pos, Size, param.Angle, param.Color, param.TexPos, param.TexSize);
+void Sprite::Render(Shader* shader, XMFLOAT2 Pos, XMFLOAT2 Size) {
+	CreateVertexData(shader, Pos, Size, param.Angle, param.Color, param.TexPos, param.TexSize);
 }
 
 //void Sprite::Text_Out(ID3D11DeviceContext* immediate_context, std::string s, XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 color) {

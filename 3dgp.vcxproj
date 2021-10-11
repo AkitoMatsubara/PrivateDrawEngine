@@ -271,6 +271,7 @@
     <ClInclude Include="Headers\geometric_primitive.h" />
     <ClInclude Include="Headers\high_resolution_timer.h" />
     <ClInclude Include="Headers\misc.h" />
+    <ClInclude Include="Headers\Player.h" />
     <ClInclude Include="Headers\Rasterizer.h" />
     <ClInclude Include="Headers\Sampler.h" />
     <ClInclude Include="Headers\SceneLoading.h">
@@ -304,6 +305,7 @@
     <ClCompile Include="Sources\geometric_primitive.cpp" />
     <ClCompile Include="Sources\geometric_sphere.cpp" />
     <ClCompile Include="Sources\main.cpp" />
+    <ClCompile Include="Sources\Player.cpp" />
     <ClCompile Include="Sources\Rasterizer.cpp" />
     <ClCompile Include="Sources\Sampler.cpp" />
     <ClCompile Include="Sources\SceneLoading.cpp">

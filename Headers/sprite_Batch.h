@@ -40,23 +40,23 @@ public:
 	~sprite_Batch();	// すべてのCOMオブジェクトを解放する
 
 	// メンバ関数
-	void begin(ID3D11DeviceContext* immediate_context);
-	void end(ID3D11DeviceContext* immediate_context);	// 頂点バッファの更新、各ステートのバインド、ドローコールを記述
+	void begin();
+	void end();	// 頂点バッファの更新、各ステートのバインド、ドローコールを記述
 
 	// 頂点情報の生成、更新
-	void CreateVertexData(ID3D11DeviceContext* immediate_context, XMFLOAT2 pos, XMFLOAT2 size, float angle, XMFLOAT4 color
+	void CreateVertexData(XMFLOAT2 pos, XMFLOAT2 size, float angle, XMFLOAT4 color
 		, XMFLOAT2 TexPos, XMFLOAT2 TexSize);
 
 	// メンバ変数でできるならいらない？と思い削除←やっぱいるわ課題的に
-	void Render(ID3D11DeviceContext* immediate_context, XMFLOAT2 pos, XMFLOAT2 size, float andle, XMFLOAT4 color
+	void Render(XMFLOAT2 pos, XMFLOAT2 size, float andle, XMFLOAT4 color
 		, XMFLOAT2 TexPos, XMFLOAT2 TexSize);	// immediate(対象となるデータそのものをコード中に記したものを即値という)
 
 
 	// メンバ変数のパラメータで描画
-	void Render(ID3D11DeviceContext* immediate_context);	// immediate(対象となるデータそのものをコード中に記したものを即値という)
+	void Render();	// immediate(対象となるデータそのものをコード中に記したものを即値という)
 
 		// テクスチャ位置だけ指定するRender 課題的に(ry
-	void Render(ID3D11DeviceContext* immediate_context, XMFLOAT2 TexPos, XMFLOAT2 TexSize);
+	void Render(XMFLOAT2 TexPos, XMFLOAT2 TexSize);
 
 	// XMFLOAT2同士の割り算
 	XMFLOAT2 Division(XMFLOAT2 val1, XMFLOAT2 val2);

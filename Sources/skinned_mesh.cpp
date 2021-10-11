@@ -42,7 +42,7 @@ inline XMFLOAT4 ConvertToXmfloat4(const FbxDouble4& fbxdouble3) {
 	return value;
 }
 
-Skinned_Mesh::Skinned_Mesh(const char* fbx_filename, int cstNo, bool triangulate, const char* vs_cso_name, const char* ps_cso_name) {
+Skinned_Mesh::Skinned_Mesh(const char* fbx_filename, int cstNo, bool triangulate) {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
 
 	FbxManager* fbx_manager{ FbxManager::Create() };	// マネージャの生成
@@ -99,7 +99,7 @@ Skinned_Mesh::Skinned_Mesh(const char* fbx_filename, int cstNo, bool triangulate
 	// マテリアル情報がない場合に備え予めダミーテクスチャをセット
 	make_dummy_texture(dummyTexture.GetAddressOf(), 0xFFFFFFFF, 16);
 
-	Create_com_buffers(fbx_filename, vs_cso_name, ps_cso_name);
+	Create_com_buffers(fbx_filename);
 
 	rasterizer.SetRasterizer(device);
 	CstNo = cstNo;
@@ -171,7 +171,7 @@ void Skinned_Mesh::Render(Shader* shader, int rasterize) {
 	shader->Inactivate();
 }
 
-void Skinned_Mesh::Create_com_buffers(const char* fbx_filename, const char* vs_cso_name, const char* ps_cso_name) {
+void Skinned_Mesh::Create_com_buffers(const char* fbx_filename) {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
 
 	HRESULT hr{ S_OK };

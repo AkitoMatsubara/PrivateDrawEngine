@@ -60,7 +60,7 @@ void SceneTitle::Update() {
 	//if (GetKeyState('G') < 0) {
 	//	setScene(std::make_unique<SceneLoading>(std::make_unique<SceneTest_2>()));
 	//}
-	if (GetKeyState('G') < 0) setScene(std::make_unique<SceneTest_2>());
+	if (GetAsyncKeyState('G') & 1) setScene(std::make_unique<SceneTest_2>());
 	// カメラ操作
 	static float speed = 7.0f;
 	if (GetKeyState('D') < 0)  eyePos.x += speed * elapsed_time;	// 右に
@@ -89,7 +89,7 @@ void SceneTitle::Render() {
 	// 2Dオブジェクトの描画設定
 	{
 		immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(DS_TRUE), 1);	// 3Dオブジェクトの後ろに出すため一旦
-		TitleImage->Render(SpriteShader.get(),immediate_context);
+		TitleImage->Render(SpriteShader.get());
 	}
 	// 3Dオブジェクトの描画設定
 	{

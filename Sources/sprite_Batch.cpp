@@ -78,7 +78,9 @@ sprite_Batch::~sprite_Batch() {
 	rerease_all_textures();
 }
 
-void sprite_Batch::begin(ID3D11DeviceContext* immediate_context) {
+void sprite_Batch::begin() {
+	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();
+
 	vertices.clear();
 	// シェーダのバインド
 	immediate_context->VSSetShader(vertex_shader.Get(), nullptr, 0);
@@ -87,7 +89,8 @@ void sprite_Batch::begin(ID3D11DeviceContext* immediate_context) {
 	immediate_context->PSSetShaderResources(0, 1, shader_resource_view.GetAddressOf());	// レジスタ番号、シェーダリソースの数、SRVのポインタ
 }
 
-void sprite_Batch::end(ID3D11DeviceContext* immediate_context) {
+void sprite_Batch::end() {
+	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();
 
 	// テクスチャ座標を頂点バッファにセットする
 	HRESULT hr = { S_OK };
@@ -130,8 +133,9 @@ void sprite_Batch::end(ID3D11DeviceContext* immediate_context) {
 
 }
 
-void sprite_Batch::CreateVertexData(ID3D11DeviceContext* immediate_context, XMFLOAT2 pos, XMFLOAT2 size, float angle, XMFLOAT4 color
+void sprite_Batch::CreateVertexData(XMFLOAT2 pos, XMFLOAT2 size, float angle, XMFLOAT4 color
 	, XMFLOAT2 TexPos, XMFLOAT2 TexSize) {
+	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();
 
 	// スクリーン(ビューポート)のサイズを取得する
 	D3D11_VIEWPORT viewport{};
@@ -188,16 +192,16 @@ void sprite_Batch::CreateVertexData(ID3D11DeviceContext* immediate_context, XMFL
 	vertices.push_back({ { right_bottom.x,right_bottom.y,0 }, {0,0,1}, { TexRight_bottom.x,	TexRight_bottom.y}, { color.x,color.y,color.z,color.w } });	// 右下
 }
 
-void sprite_Batch::Render(ID3D11DeviceContext* immediate_context, XMFLOAT2 pos, XMFLOAT2 size, float angle, XMFLOAT4 color, XMFLOAT2 sPos, XMFLOAT2 sSize) {
-	CreateVertexData(immediate_context, pos, size, angle, color, sPos, sSize);
+void sprite_Batch::Render(XMFLOAT2 pos, XMFLOAT2 size, float angle, XMFLOAT4 color, XMFLOAT2 sPos, XMFLOAT2 sSize) {
+	CreateVertexData(pos, size, angle, color, sPos, sSize);
 }
 
-void sprite_Batch::Render(ID3D11DeviceContext* immediate_context) {
-	CreateVertexData(immediate_context, param.Pos, param.Size, param.Angle, param.Color, param.TexPos, param.TexSize);
+void sprite_Batch::Render() {
+	CreateVertexData(param.Pos, param.Size, param.Angle, param.Color, param.TexPos, param.TexSize);
 }
 
-void sprite_Batch::Render(ID3D11DeviceContext* immediate_context, XMFLOAT2 Pos, XMFLOAT2 Size) {
-	CreateVertexData(immediate_context, Pos, Size, 0, param.Color, param.TexPos, param.TexSize);
+void sprite_Batch::Render(XMFLOAT2 Pos, XMFLOAT2 Size) {
+	CreateVertexData(Pos, Size, 0, param.Color, param.TexPos, param.TexSize);
 }
 
 XMFLOAT3 sprite_Batch::ConvertToNDC(XMFLOAT3 pos, D3D11_VIEWPORT viewport) {

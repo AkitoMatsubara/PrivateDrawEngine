@@ -56,18 +56,18 @@ public:
 	// メンバ関数
 
 	// 頂点情報の生成、更新
-	void CreateVertexData(ID3D11DeviceContext* immediate_context, Shader* shader, XMFLOAT2 pos, XMFLOAT2 size, float angle, XMFLOAT4 color
+	void CreateVertexData(Shader* shader, XMFLOAT2 pos, XMFLOAT2 size, float angle, XMFLOAT4 color
 		, XMFLOAT2 TexPos, XMFLOAT2 TexSize);
 
 	// メンバ変数でできるならいらない？と思い削除←やっぱいるわ課題的に
-	void Render(Shader* shader, ID3D11DeviceContext* immediate_context, XMFLOAT2 pos, XMFLOAT2 size, float andle, XMFLOAT4 color
+	void Render(Shader* shader, XMFLOAT2 pos, XMFLOAT2 size, float andle, XMFLOAT4 color
 		, XMFLOAT2 TexPos, XMFLOAT2 TexSize);	// immediate(対象となるデータそのものをコード中に記したものを即値という)
 
 	// メンバ変数のパラメータで描画
-	void Render(Shader* shader, ID3D11DeviceContext* immediate_context);	// immediate(対象となるデータそのものをコード中に記したものを即値という)
+	void Render(Shader* shader);	// immediate(対象となるデータそのものをコード中に記したものを即値という)
 
 	// 位置だけ指定するRender アニメーション不可
-	void Render(Shader* shader, ID3D11DeviceContext* immediate_context, XMFLOAT2 Pos, XMFLOAT2 Size);
+	void Render(Shader* shader, XMFLOAT2 Pos, XMFLOAT2 Size);
 
 	//// テキスト画像からテキストを切り抜いて描画(画像なのでフォーマット固定)
 	//void Text_Out(ID3D11DeviceContext* immediate_context, std::string s, XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 color);

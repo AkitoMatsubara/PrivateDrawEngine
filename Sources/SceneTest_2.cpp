@@ -138,7 +138,7 @@ void SceneTest_2::Update() {
 	imguiUpdate();
 	const float elapsed_time = FRAMEWORK->GetElapsedTime();
 	// シーン切り替え
-	if (GetKeyState('G') < 0) setScene(std::make_unique<SceneTitle>());
+	if (GetAsyncKeyState('G') &1) setScene(std::make_unique<SceneTitle>());
 
 
 	// カメラ操作
@@ -230,7 +230,7 @@ void SceneTest_2::Render() {
 	// 2Dオブジェクトの描画設定
 	{
 		immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(DS_TRUE), 1);	// 3Dオブジェクトの後ろに出すため一旦
-		sprites->Render(SpriteShader.get(), immediate_context);
+		sprites->Render(SpriteShader.get());
 	}
 	// 3Dオブジェクトの描画設定
 	{

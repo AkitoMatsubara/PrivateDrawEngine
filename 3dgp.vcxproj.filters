@@ -56,12 +56,6 @@
     <Filter Include="Headers\RenderOptions">
       <UniqueIdentifier>{6a7d56e3-0d38-4bee-970b-e91abe8c45e0}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Headers\GeometricPrimitives">
-      <UniqueIdentifier>{c9203c75-d77d-49fe-9e3d-9e9e45f65a96}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Sources\GeometricPrimitives">
-      <UniqueIdentifier>{b3f9812c-1a28-4a7c-9e66-bfa6b1a9da00}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Sources\DataLoad\Sprite">
       <UniqueIdentifier>{4932be0c-edef-48d0-b5ae-0e63bc444e71}</UniqueIdentifier>
     </Filter>
@@ -82,6 +76,12 @@
     </Filter>
     <Filter Include="Sources\System">
       <UniqueIdentifier>{14724a93-b7c3-40f3-a0df-2c39419428cf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Sources\DataLoad\GeometricPrimitives">
+      <UniqueIdentifier>{b3f9812c-1a28-4a7c-9e66-bfa6b1a9da00}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Headers\DataLoad\GeometricPrimitives">
+      <UniqueIdentifier>{c9203c75-d77d-49fe-9e3d-9e9e45f65a96}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -183,7 +183,7 @@
       <Filter>Headers\RenderOptions</Filter>
     </ClInclude>
     <ClInclude Include="Headers\geometric_primitive.h">
-      <Filter>Headers\GeometricPrimitives</Filter>
+      <Filter>Headers\DataLoad\GeometricPrimitives</Filter>
     </ClInclude>
     <ClInclude Include="Headers\texture.h">
       <Filter>Headers\DataLoad</Filter>
@@ -202,6 +202,9 @@
     </ClInclude>
     <ClInclude Include="Headers\SceneLoading.h">
       <Filter>Headers\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\Player.h">
+      <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -230,22 +233,22 @@
       <Filter>Sources\DataLoad\Sprite</Filter>
     </ClCompile>
     <ClCompile Include="Sources\geometric_cube.cpp">
-      <Filter>Sources\GeometricPrimitives</Filter>
+      <Filter>Sources\DataLoad\GeometricPrimitives</Filter>
     </ClCompile>
     <ClCompile Include="Sources\geometric_cylinder.cpp">
-      <Filter>Sources\GeometricPrimitives</Filter>
+      <Filter>Sources\DataLoad\GeometricPrimitives</Filter>
     </ClCompile>
     <ClCompile Include="Sources\geometric_sphere.cpp">
-      <Filter>Sources\GeometricPrimitives</Filter>
+      <Filter>Sources\DataLoad\GeometricPrimitives</Filter>
     </ClCompile>
     <ClCompile Include="Sources\geometric_capsule.cpp">
-      <Filter>Sources\GeometricPrimitives</Filter>
+      <Filter>Sources\DataLoad\GeometricPrimitives</Filter>
     </ClCompile>
     <ClCompile Include="Sources\texture.cpp">
       <Filter>Sources\DataLoad</Filter>
     </ClCompile>
     <ClCompile Include="Sources\geometric_primitive.cpp">
-      <Filter>Sources\GeometricPrimitives</Filter>
+      <Filter>Sources\DataLoad\GeometricPrimitives</Filter>
     </ClCompile>
     <ClCompile Include="Sources\Sampler.cpp">
       <Filter>Sources\RenderOptions</Filter>
@@ -285,6 +288,9 @@
     </ClCompile>
     <ClCompile Include="Sources\SceneLoading.cpp">
       <Filter>Sources\Scenes</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\Player.cpp">
+      <Filter>Sources</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

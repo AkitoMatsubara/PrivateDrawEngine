@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Rasterizer.h"
+#include "shaderEx.h"
 
 #include "imgui.h"
 #include "imgui_impl_dx11.h"
@@ -137,7 +138,7 @@ private:
 	 int CstNo;
 
 public:
-	Skinned_Mesh(const char* fbx_filename, int cstNo = 0, const bool triangulate = false, const char* vs_cso_name = "Shaders\\skinned_mesh_vs.cso", const char* ps_cso_name = "Shaders\\skinned_mesh_ps.cso");
+	Skinned_Mesh(const char* fbx_filename, int cstNo = 0, const bool triangulate = false);
 
 	virtual ~Skinned_Mesh() = default;
 
@@ -170,7 +171,7 @@ public:
 	XMFLOAT4 getColor() { return param.Color; }
 
 private:
-	void Create_com_buffers(const char* fbx_filename, const char* vs_cso_name, const char* ps_cso_name);
+	void Create_com_buffers(const char* fbx_filename);
 protected:
 	scene scene_view;
 };

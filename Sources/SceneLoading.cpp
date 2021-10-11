@@ -63,7 +63,7 @@ void SceneLoading::Render() {
 	// 2Dオブジェクトの描画設定
 	{
 		immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(DS_TRUE), 1);	// 3Dオブジェクトの後ろに出すため一旦
-		loadingImage->Render(SpriteShader.get(), immediate_context);
+		loadingImage->Render(SpriteShader.get());
 	}
 	// 3Dオブジェクトの描画設定
 	{
