@@ -1,12 +1,12 @@
 #pragma once
 #include "SceneManager.h"
+#include "Player.h"
 
 class SceneTest_2 :public SceneBase {
 
 	// 変数 //
 private:
-	// てすと
-	ComPtr<ID3D11ComputeShader> cs;
+	// てすと-------------------------------------------------------------------------
 	unique_ptr<ShaderEx> ComputeShader;
 
 
@@ -20,10 +20,14 @@ private:
 
 	struct BUFOUT_TYPE
 	{
-		int i;
+		float i;
 	};
 
-	ComPtr<ID3D11ComputeShader> pComputeShader = nullptr;      // コンピュートシェーダー インターフェース
+	// シーン定数バッファ
+	struct cs_constants {
+		float Theta;	// sinカーブ用
+		XMFLOAT3 dummy;
+	};
 
 	ComPtr<ID3D11Buffer> pBufInput = nullptr;                      // 入力用の構造化バッファー
 	ComPtr<ID3D11Buffer> pBufResult = nullptr;                      // 出力用の構造化バッファー
@@ -37,9 +41,9 @@ private:
 	// コンピュートシェーダーからの出力時に使用するアンオーダードアクセスビューを作成する
 	HRESULT CreateUAVForStructuredBuffer(UINT uElementSize, UINT uCount, VOID* pInitData, ID3D11Buffer** ppBuf, ID3D11UnorderedAccessView** ppUAVOut);
 	// アンオーダードアクセスビューのバッファの内容を CPU から読み込み可能なバッファへコピーする
-	ID3D11Buffer* CreateAndCopyToDebugBuf(ID3D11Device* pD3DDevice, ID3D11DeviceContext* pD3DDeviceContext, ID3D11Buffer* pBuffer);
+	ID3D11Buffer* CreateAndCopyToBuffer(ID3D11Device* pD3DDevice, ID3D11DeviceContext* pD3DDeviceContext, ID3D11Buffer* pBuffer);
 
-	// てすとしめ
+	// てすとしめ---------------------------------------------------------------------
 
 public:
 	// Sprite型 画像描画用
@@ -63,6 +67,8 @@ public:
 	unique_ptr<Skinned_Mesh> skinned_mesh;
 	unique_ptr<ShaderEx> SkinnedShader = nullptr;
 
+	// プレイヤーオブジェクト
+	unique_ptr<Player> player;
 
 	// 個人 ImGuiで数値を編集、格納して関数に渡す変数
 	float light_dir[3]{ 0.5f,-1.0f,1.0f };	// ライトの向かう方向

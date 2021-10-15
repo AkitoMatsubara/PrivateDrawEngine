@@ -1,8 +1,9 @@
-//[numthreads(1, 1, 1)]
-//void main( uint3 DTid : SV_DispatchThreadID )
-//{
-//}
 
+cbuffer CS_CONSTANT : register(b2)
+{
+    float Theta;
+    float3 dummy;
+}
 // 入力用の構造体定義
 struct BufInType
 {
@@ -13,7 +14,7 @@ struct BufInType
 // 出力用の構造体定義
 struct BufOutType
 {
-    int i;
+    float i;
 };
 
 // 読み取り専用の構造化バッファー
@@ -28,8 +29,8 @@ RWStructuredBuffer<BufOutType> BufferOut : register(u0);
 void main(uint3 DTid : SV_DispatchThreadID) // SV_DispatchThreadID：SV_GroupID * Numthreads と groupthreadid の合計
 {
     //BufferOut[DTid.x].i = 10;
-    BufferOut[DTid.x].i = BufferIn[DTid.x].i + (int) BufferIn[DTid.x].f;
-    //BufferOut[DTid.y].i = BufferIn[DTid.y].i + (int) BufferIn[DTid.y].f;
+    //BufferOut[DTid.x].i = BufferIn[DTid.x].i + (int) BufferIn[DTid.x].f;
+    BufferOut[DTid.x].i = abs(sin(Theta) * (1 + DTid.x * 4));
 }
 
 // http://maverickproj.web.fc2.com/d3d11_17.html

@@ -133,8 +133,7 @@ void sprite_Batch::end() {
 
 }
 
-void sprite_Batch::CreateVertexData(XMFLOAT2 pos, XMFLOAT2 size, float angle, XMFLOAT4 color
-	, XMFLOAT2 TexPos, XMFLOAT2 TexSize) {
+void sprite_Batch::CreateVertexData(XMFLOAT2 pos, XMFLOAT2 size, float angle, XMFLOAT4 color, XMFLOAT2 TexPos, XMFLOAT2 TexSize) {
 	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();
 
 	// スクリーン(ビューポート)のサイズを取得する
@@ -170,9 +169,9 @@ void sprite_Batch::CreateVertexData(XMFLOAT2 pos, XMFLOAT2 size, float angle, XM
 	right_top    = ConvertToNDC(right_top   , viewport);
 	right_bottom = ConvertToNDC(right_bottom, viewport);
 
-	XMFLOAT2 TexLeft_top    { (TexPos.x)           / texture2d_desc.Width , (TexPos.y)			  / texture2d_desc.Height };
-	XMFLOAT2 TexRight_top   { (TexPos.x + TexSize.x) / texture2d_desc.Width , (TexPos.y)			  / texture2d_desc.Height };
-	XMFLOAT2 TexLeft_bottom { (TexPos.x)           / texture2d_desc.Width , (TexPos.y + TexSize.y) / texture2d_desc.Height };
+	XMFLOAT2 TexLeft_top    { (TexPos.x)             / texture2d_desc.Width , (TexPos.y)             / texture2d_desc.Height };
+	XMFLOAT2 TexRight_top   { (TexPos.x + TexSize.x) / texture2d_desc.Width , (TexPos.y)             / texture2d_desc.Height };
+	XMFLOAT2 TexLeft_bottom { (TexPos.x)             / texture2d_desc.Width , (TexPos.y + TexSize.y) / texture2d_desc.Height };
 	XMFLOAT2 TexRight_bottom{ (TexPos.x + TexSize.x) / texture2d_desc.Width , (TexPos.y + TexSize.y) / texture2d_desc.Height };
 
 

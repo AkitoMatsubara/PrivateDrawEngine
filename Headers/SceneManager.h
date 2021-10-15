@@ -1,13 +1,6 @@
 #pragma once
-#include <DirectXMath.h>
-#include <queue>
 
-#include "imgui.h"
-#include "imgui_impl_dx11.h"
-#include "imgui_impl_win32.h"
-
-#include "framework.h"
-
+// ƒ‚ƒfƒ‹“Ç‚İ‚İA•`‰æŒn
 #include "shader.h"
 #include "shaderEx.h"
 #include "texture.h"
@@ -18,6 +11,16 @@
 #include "skinned_mesh.h"
 
 #include "Sampler.h"
+
+#include "imgui.h"
+#include "imgui_impl_dx11.h"
+#include "imgui_impl_win32.h"
+
+#include "framework.h"
+
+#include <DirectXMath.h>
+#include <queue>
+
 
 class SceneBase {
 	// •Ï”

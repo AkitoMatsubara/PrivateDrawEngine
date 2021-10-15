@@ -1,6 +1,8 @@
-#include <d3d11.h>
 #include "framework.h"
 #include "Sampler.h"
+
+#include <assert.h>
+#include <d3d11.h>
 
 Sampler::Sampler(D3D11_SAMPLER_DESC sd) {
 	ID3D11Device* device = FRAMEWORK->GetDevice();

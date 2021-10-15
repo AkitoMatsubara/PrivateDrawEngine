@@ -55,10 +55,10 @@ private:
 	ComPtr<ID3D11SamplerState>			sampler_states[3];
 	shared_ptr<Sampler> sample;
 
+	static framework* instance;
 public:
 	CONST HWND hwnd;
 
-	static framework* instance;
 
 	//DepthStencilState
 	enum { DS_FALSE, DS_TRUE, DS_FALSE_WRITE, DS_TRUE_WRITE, DS_END };

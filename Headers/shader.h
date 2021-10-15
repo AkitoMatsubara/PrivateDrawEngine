@@ -4,13 +4,9 @@
 #include <DirectXMath.h>
 #include <d3dcompiler.h>
 
+#include <wrl.h>
 using namespace DirectX;
-
-//HRESULT create_vs_from_cso(const char* cso_name, ID3D11VertexShader** vertex_shader, ID3D11InputLayout** input_layout, D3D11_INPUT_ELEMENT_DESC* input_element_desc, UINT num_elements);
-//
-//HRESULT create_ps_from_cso(const char* ps_cso_name, ID3D11PixelShader** pixel_shader);
-//
-//HRESULT create_cs_from_cso(const char* cs_cso_name, ID3D11ComputeShader** compute_shader);
+using namespace Microsoft::WRL;
 
 // Šî’êƒNƒ‰ƒX
 class Shader {

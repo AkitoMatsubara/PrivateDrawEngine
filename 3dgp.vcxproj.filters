@@ -206,6 +206,9 @@
     <ClInclude Include="Headers\Player.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="Headers\XMFLOAT_Helper.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui\imgui.cpp">

@@ -51,11 +51,7 @@ private:
 	ComPtr<ID3D11Buffer> vertex_buffer;
 	ComPtr<ID3D11Buffer> index_buffer;
 
-	//ComPtr<ID3D11VertexShader> vertex_shader;
-	//ComPtr<ID3D11PixelShader> pixel_shader;
-	//ComPtr<ID3D11InputLayout> input_layout;
 	ComPtr<ID3D11Buffer> constant_buffer;
-	//ComPtr<ID3D11RasterizerState>	rasterizer_states[4];	// 0:片面塗りつぶし,1:両面塗り潰し,2:片面ワイヤーフレーム,3:両面ワイヤーフレーム
 	vector<Subset> subsets;
 	vector<Material> materials;
 
