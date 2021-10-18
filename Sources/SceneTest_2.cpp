@@ -100,9 +100,9 @@ void SceneTest_2::Update() {
 	// カメラ操作
 	static float cameraSpeed = 7.0f;
 	if (GetKeyState(VK_RIGHT) < 0)  eyePos.x += cameraSpeed * elapsed_time;	// 右に
-	if (GetKeyState(VK_LEFT) < 0)  eyePos.x -= cameraSpeed * elapsed_time;	// 左に
-	if (GetKeyState(VK_UP) < 0)  eyePos.z += cameraSpeed * elapsed_time;	// 前に
-	if (GetKeyState(VK_DOWN) < 0)  eyePos.z -= cameraSpeed * elapsed_time;	// 後に
+	if (GetKeyState(VK_LEFT) < 0)   eyePos.x -= cameraSpeed * elapsed_time;	// 左に
+	if (GetKeyState(VK_UP) < 0)     eyePos.z += cameraSpeed * elapsed_time;	// 前に
+	if (GetKeyState(VK_DOWN) < 0)   eyePos.z -= cameraSpeed * elapsed_time;	// 後に
 	if (GetKeyState(VK_SPACE) < 0)  eyePos.y += cameraSpeed * elapsed_time;	// 上に
 	if (GetKeyState(VK_SHIFT) < 0)  eyePos.y -= cameraSpeed * elapsed_time;	// 下に
 

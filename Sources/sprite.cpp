@@ -141,12 +141,12 @@ Sprite::Sprite(const wchar_t* filename, const char* vs_cso_name ,const char* ps_
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 
 
-	param.Pos = XMFLOAT2(0.0f, 0.0f);
-	param.Size    = XMFLOAT2(texture2d_desc.Width, texture2d_desc.Height);
-	param.TexPos  = XMFLOAT2(0.0f, 0.0f);
-	param.TexSize = XMFLOAT2(texture2d_desc.Width, texture2d_desc.Height);
+	param.Pos = DirectX::XMFLOAT2(0.0f, 0.0f);
+	param.Size    = DirectX::XMFLOAT2(texture2d_desc.Width, texture2d_desc.Height);
+	param.TexPos  = DirectX::XMFLOAT2(0.0f, 0.0f);
+	param.TexSize = DirectX::XMFLOAT2(texture2d_desc.Width, texture2d_desc.Height);
 	param.Angle   = 0.0f;
-	param.Color   = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	param.Color   = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 Sprite::~Sprite() {
@@ -160,8 +160,8 @@ Sprite::~Sprite() {
 }
 
 
-void Sprite::CreateVertexData(Shader* shader,XMFLOAT2 pos, XMFLOAT2 size, float angle, XMFLOAT4 color
-	, XMFLOAT2 TexPos, XMFLOAT2 TexSize) {
+void Sprite::CreateVertexData(Shader* shader,DirectX::XMFLOAT2 pos, DirectX::XMFLOAT2 size, float angle, DirectX::XMFLOAT4 color
+	, DirectX::XMFLOAT2 TexPos, DirectX::XMFLOAT2 TexSize) {
 	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();
 	// スクリーン(ビューポート)のサイズを取得する
 	D3D11_VIEWPORT viewport{};
@@ -175,13 +175,13 @@ void Sprite::CreateVertexData(Shader* shader,XMFLOAT2 pos, XMFLOAT2 size, float 
 	/*					| /  |						*/
 	/*		left_bottom	*----*	right_bottom		*/
 
-	XMFLOAT3 left_top    { pos.x         ,pos.y          ,0 };	// 左上
-	XMFLOAT3 right_top   { pos.x + size.x,pos.y          ,0 };	// 右上
-	XMFLOAT3 left_bottom { pos.x         ,pos.y + size.y ,0 };	// 左下
-	XMFLOAT3 right_bottom{ pos.x + size.x,pos.y + size.y ,0 };	// 右下
+	DirectX::XMFLOAT3 left_top    { pos.x         ,pos.y          ,0 };	// 左上
+	DirectX::XMFLOAT3 right_top   { pos.x + size.x,pos.y          ,0 };	// 右上
+	DirectX::XMFLOAT3 left_bottom { pos.x         ,pos.y + size.y ,0 };	// 左下
+	DirectX::XMFLOAT3 right_bottom{ pos.x + size.x,pos.y + size.y ,0 };	// 右下
 
 	//// 回転を実装 簡単に関数を実装する方法、ラムダ式というらしい
-	//auto rotate = [](XMFLOAT3& pos, XMFLOAT2 center, float angle) {
+	//auto rotate = [](DirectX::XMFLOAT3& pos, DirectX::XMFLOAT2 center, float angle) {
 	//	pos.x -= center.x;	// 一度中心点分ずらす
 	//	pos.y -= center.y;
 
@@ -197,7 +197,7 @@ void Sprite::CreateVertexData(Shader* shader,XMFLOAT2 pos, XMFLOAT2 size, float 
 	//};
 
 	// 回転の中心を矩形の中心点に
-	XMFLOAT2 center{ 0,0 };
+	DirectX::XMFLOAT2 center{ 0,0 };
 	center.x = pos.x + size.x * 0.5f;	// 位置-(大きさ/2)で頂点位置から半サイズ分動く=半分になる
 	center.y = pos.y + size.y * 0.5f;
 	rotate(left_top, center, angle);
@@ -211,10 +211,10 @@ void Sprite::CreateVertexData(Shader* shader,XMFLOAT2 pos, XMFLOAT2 size, float 
 	right_top    = ConvertToNDC(right_top   , viewport);
 	right_bottom = ConvertToNDC(right_bottom, viewport);
 
-	XMFLOAT2 TexLeft_top    { (TexPos.x)             / texture2d_desc.Width , (TexPos.y)				/ texture2d_desc.Height };
-	XMFLOAT2 TexRight_top   { (TexPos.x + TexSize.x) / texture2d_desc.Width , (TexPos.y)				/ texture2d_desc.Height };
-	XMFLOAT2 TexLeft_bottom { (TexPos.x)             / texture2d_desc.Width , (TexPos.y + TexSize.y)	/ texture2d_desc.Height };
-	XMFLOAT2 TexRight_bottom{ (TexPos.x + TexSize.x) / texture2d_desc.Width , (TexPos.y + TexSize.y)	/ texture2d_desc.Height };
+	DirectX::XMFLOAT2 TexLeft_top    { (TexPos.x)             / texture2d_desc.Width , (TexPos.y)				/ texture2d_desc.Height };
+	DirectX::XMFLOAT2 TexRight_top   { (TexPos.x + TexSize.x) / texture2d_desc.Width , (TexPos.y)				/ texture2d_desc.Height };
+	DirectX::XMFLOAT2 TexLeft_bottom { (TexPos.x)             / texture2d_desc.Width , (TexPos.y + TexSize.y)	/ texture2d_desc.Height };
+	DirectX::XMFLOAT2 TexRight_bottom{ (TexPos.x + TexSize.x) / texture2d_desc.Width , (TexPos.y + TexSize.y)	/ texture2d_desc.Height };
 
 
 	// 計算結果で頂点バッファオブジェクトを更新する
@@ -243,10 +243,10 @@ void Sprite::CreateVertexData(Shader* shader,XMFLOAT2 pos, XMFLOAT2 size, float 
 		vertices[3].texcoord = TexRight_bottom;
 
 		// 法線情報を設定
-		vertices[0].normal = XMFLOAT3(0, 0, 1);
-		vertices[1].normal = XMFLOAT3(0, 0, 1);
-		vertices[2].normal = XMFLOAT3(0, 0, 1);
-		vertices[3].normal = XMFLOAT3(0, 0, 1);
+		vertices[0].normal = DirectX::XMFLOAT3(0, 0, 1);
+		vertices[1].normal = DirectX::XMFLOAT3(0, 0, 1);
+		vertices[2].normal = DirectX::XMFLOAT3(0, 0, 1);
+		vertices[3].normal = DirectX::XMFLOAT3(0, 0, 1);
 
 	}
 	immediate_context->Unmap(vertex_buffer.Get(), 0);	// マッピング解除 頂点バッファを上書きしたら必ず実行。Map&Unmapはセットで使用する
@@ -284,7 +284,7 @@ void Sprite::CreateVertexData(Shader* shader,XMFLOAT2 pos, XMFLOAT2 size, float 
 	shader->Inactivate();
 }
 
-void Sprite::Render(Shader* shader,XMFLOAT2 pos, XMFLOAT2 size, float angle, XMFLOAT4 color, XMFLOAT2 TexPos, XMFLOAT2 TexSize) {
+void Sprite::Render(Shader* shader,DirectX::XMFLOAT2 pos, DirectX::XMFLOAT2 size, float angle, DirectX::XMFLOAT4 color, DirectX::XMFLOAT2 TexPos, DirectX::XMFLOAT2 TexSize) {
 	CreateVertexData(shader, pos, size, angle, color, TexPos, TexSize);
 }
 
@@ -292,21 +292,21 @@ void Sprite::Render(Shader* shader) {
 	CreateVertexData(shader, param.Pos, param.Size, param.Angle, param.Color, param.TexPos, param.TexSize);
 }
 
-void Sprite::Render(Shader* shader, XMFLOAT2 Pos, XMFLOAT2 Size) {
+void Sprite::Render(Shader* shader, DirectX::XMFLOAT2 Pos, DirectX::XMFLOAT2 Size) {
 	CreateVertexData(shader, Pos, Size, param.Angle, param.Color, param.TexPos, param.TexSize);
 }
 
-//void Sprite::Text_Out(ID3D11DeviceContext* immediate_context, std::string s, XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 color) {
-//	XMFLOAT2 TexPos(static_cast<float>(texture2d_desc.Width / 16), static_cast<float>(texture2d_desc.Height / 16));
+//void Sprite::Text_Out(ID3D11DeviceContext* immediate_context, std::string s, DirectX::XMFLOAT2 pos, DirectX::XMFLOAT2 size, DirectX::XMFLOAT4 color) {
+//	DirectX::XMFLOAT2 TexPos(static_cast<float>(texture2d_desc.Width / 16), static_cast<float>(texture2d_desc.Height / 16));
 //	float carriage = 0;
 //	for (const char c : s) {
-//		Render(immediate_context, XMFLOAT2(pos.x + carriage, pos.y), size, 0, color,
-//			XMFLOAT2(TexPos.x * (c & 0x0F), TexPos.y * (c >> 4)), TexPos);
+//		Render(immediate_context, DirectX::XMFLOAT2(pos.x + carriage, pos.y), size, 0, color,
+//			DirectX::XMFLOAT2(TexPos.x * (c & 0x0F), TexPos.y * (c >> 4)), TexPos);
 //		carriage += size.x;
 //	}
 //}
 
-XMFLOAT3 Sprite::ConvertToNDC(XMFLOAT3 pos, D3D11_VIEWPORT viewport) {
+DirectX::XMFLOAT3 Sprite::ConvertToNDC(DirectX::XMFLOAT3 pos, D3D11_VIEWPORT viewport) {
 	pos.x = (pos.x * 2 / viewport.Width) - 1.0f;	// x値を２倍、その後スクリーンサイズで割って１を引くと正規化される
 	pos.y = 1.0f - (pos.y * 2.0f / viewport.Height);	// y値を２倍、スクリーンサイズで割ったもので１を引くと正規化	xと違うのはおそらく左手右手座標系の関係
 	// 今回はsprite(画像)なのでz値は変更する必要なし
@@ -332,18 +332,18 @@ void Sprite::ImguiWindow() {
 
 	ImGui::End();
 
-	setPos(DirectX::XMFLOAT2(pos[0], pos[1]));
-	setSize(DirectX::XMFLOAT2(size[0], size[1]));
-	setAngle(angle);
-	setTexPos(DirectX::XMFLOAT2(TexPos[0], TexPos[1]));
+	setPos    (DirectX::XMFLOAT2(pos[0], pos[1]));
+	setSize   (DirectX::XMFLOAT2(size[0], size[1]));
+	setAngle  (angle);
+	setTexPos (DirectX::XMFLOAT2(TexPos[0], TexPos[1]));
 	setTexSize(DirectX::XMFLOAT2(TexSize[0], TexSize[1]));
-	setColor(DirectX::XMFLOAT4(Color[0], Color[1], Color[2], Color[3]));
+	setColor  (DirectX::XMFLOAT4(Color[0], Color[1], Color[2], Color[3]));
 
 }
 
 
-XMFLOAT2 Sprite::Division(XMFLOAT2 val1, XMFLOAT2 val2) {
-	XMFLOAT2 valOut;
+DirectX::XMFLOAT2 Sprite::Division(DirectX::XMFLOAT2 val1, DirectX::XMFLOAT2 val2) {
+	DirectX::XMFLOAT2 valOut;
 	valOut.x = val1.x / val2.x;
 	valOut.y = val1.y / val2.y;
 	return valOut;

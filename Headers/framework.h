@@ -11,9 +11,6 @@
 
 #include "Sampler.h"
 
-using namespace Microsoft::WRL;
-using namespace std;
-
 #ifdef USE_IMGUI
 #include "imgui.h"
 #include "imgui_internal.h"
@@ -37,23 +34,23 @@ private:
 	float elapsed_time{ 0.0f };
 	void calculate_frame_stats();
 
-	ComPtr<ID3D11Device> device;
+	Microsoft::WRL::ComPtr<ID3D11Device> device;
 
-	ComPtr<ID3D11DeviceContext> immediate_context;	// 描画コマンドの追加や送信などの処理を扱っている。CPU側で追加された描画コマンドをGPU側に送信する。
+	Microsoft::WRL::ComPtr<ID3D11DeviceContext> immediate_context;	// 描画コマンドの追加や送信などの処理を扱っている。CPU側で追加された描画コマンドをGPU側に送信する。
 													// Immediateは生成したコマンドを即時実行することを表す。反対にDeferredというものが存在する。
 
-	ComPtr<IDXGISwapChain> swap_chain;
-	ComPtr<ID3D11RenderTargetView>		render_target_view;
-	ComPtr<ID3D11DepthStencilView>		depth_stensil_view;
+	Microsoft::WRL::ComPtr<IDXGISwapChain> swap_chain;
+	Microsoft::WRL::ComPtr<ID3D11RenderTargetView>		render_target_view;
+	Microsoft::WRL::ComPtr<ID3D11DepthStencilView>		depth_stensil_view;
 
 	static const int DEPTH_STENCIL_TYPE = 9;
-	ComPtr<ID3D11DepthStencilState>		depth_stencil_state[DEPTH_STENCIL_TYPE];
+	Microsoft::WRL::ComPtr<ID3D11DepthStencilState>		depth_stencil_state[DEPTH_STENCIL_TYPE];
 
 	static const int BLEND_TYPE = 9;
-	ComPtr<ID3D11BlendState> bd_states[BLEND_TYPE];
+	Microsoft::WRL::ComPtr<ID3D11BlendState> bd_states[BLEND_TYPE];
 
-	ComPtr<ID3D11SamplerState>			sampler_states[3];
-	shared_ptr<Sampler> sample;
+	Microsoft::WRL::ComPtr<ID3D11SamplerState>			sampler_states[3];
+	std::shared_ptr<Sampler> sample;
 
 	static framework* instance;
 public:

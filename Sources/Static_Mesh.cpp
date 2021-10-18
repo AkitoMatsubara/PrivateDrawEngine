@@ -7,15 +7,15 @@
 
 Static_Mesh::Static_Mesh(const wchar_t* obj_filename, const char* vs_cso_name, const char* ps_cso_name) {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
-	vector<Vertex> vertices;
-	vector<uint32_t> indices;
+	std::vector<Vertex> vertices;
+	std::vector<uint32_t> indices;
 	uint32_t current_index{ 0 };
 
-	vector<XMFLOAT3>positions;
-	vector<XMFLOAT3>normals;
-	vector<XMFLOAT2>texcoords;
-	vector<wstring>mtl_filenames;
-	wifstream fin(obj_filename);	// 読み取り操作のできるファイルストリーム
+	std::vector<DirectX::XMFLOAT3>positions;
+	std::vector<DirectX::XMFLOAT3>normals;
+	std::vector<DirectX::XMFLOAT2>texcoords;
+	std::vector<std::wstring>mtl_filenames;
+	std::wifstream fin(obj_filename);	// 読み取り操作のできるファイルストリーム
 	wchar_t command[256];
 	// OBJファイルの読み込み
 	{
@@ -106,8 +106,8 @@ Static_Mesh::Static_Mesh(const wchar_t* obj_filename, const char* vs_cso_name, c
 
 	// マテリアルの読み込み
 	{
-		filesystem::path mtl_filename(obj_filename);	// ファイルのパスを扱うクラス
-		mtl_filename.replace_filename(filesystem::path(mtl_filenames[0]).filename());	// パスに含まれるファイル名を置き換える
+		std::filesystem::path mtl_filename(obj_filename);	// ファイルのパスを扱うクラス
+		mtl_filename.replace_filename(std::filesystem::path(mtl_filenames[0]).filename());	// パスに含まれるファイル名を置き換える
 		fin.open(mtl_filename);
 		//_ASSERT_EXPR(fin, L"'MTL file not found.");	// mtl無しにも対応させるためアサーションチェックは無くす
 
@@ -258,10 +258,10 @@ Static_Mesh::Static_Mesh(const wchar_t* obj_filename, const char* vs_cso_name, c
 	rasterizer.SetRasterizer(device);
 
 	// 各種パラメータの初期化
-	param.Pos = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	param.Size = XMFLOAT3(1.0f, 1.0f, 1.0f);
-	param.Angle = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	param.Color = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	param.Pos = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+	param.Size = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
+	param.Angle = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+	param.Color = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 void Static_Mesh::Create_com_buffers(ID3D11Device* device, Vertex* vertices, size_t vertex_count, uint32_t* indices, size_t index_count) {
@@ -292,7 +292,7 @@ void Static_Mesh::Create_com_buffers(ID3D11Device* device, Vertex* vertices, siz
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 }
 
-void Static_Mesh::Render(Shader* shader,const XMFLOAT4X4& world, const XMFLOAT4& material_color, bool WireFrame) {
+void Static_Mesh::Render(Shader* shader,const DirectX::XMFLOAT4X4& world, const DirectX::XMFLOAT4& material_color, bool WireFrame) {
 	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();
 	uint32_t stride{ sizeof(Vertex) };
 	uint32_t offset{ 0 };
@@ -326,7 +326,7 @@ void Static_Mesh::Render(Shader* shader,const XMFLOAT4X4& world, const XMFLOAT4&
 			immediate_context->PSSetShaderResources(1, 1, material.shader_resource_view[1].GetAddressOf());	// レジスタ番号、シェーダリソースの数、SRVのポインタ
 
 			Constants data{ world, param.Color };
-			XMStoreFloat4(&data.material_color, XMLoadFloat4(&param.Color) * XMLoadFloat4(&material.Kd));
+			DirectX::XMStoreFloat4(&data.material_color, DirectX::XMVectorMultiply(DirectX::XMLoadFloat4(&param.Color), DirectX::XMLoadFloat4(&material.Kd)));
 			// メモリからマップ不可能なメモリに作成されたサブリソースにデータをコピー
 			immediate_context->UpdateSubresource(constant_buffer.Get(),	// 宛先リソースへのポインタ
 				0,	// 宛先サブリソースを識別するインデックス
@@ -353,12 +353,12 @@ void Static_Mesh::Render(Shader* shader,const XMFLOAT4X4& world, const XMFLOAT4&
 
 void Static_Mesh::Render(Shader* shader) {
 	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();
-	XMMATRIX S{ XMMatrixScaling(param.Size.x,param.Size.y,param.Size.z) };				// 拡縮
-	XMMATRIX R{ XMMatrixRotationRollPitchYaw(XMConvertToRadians(param.Angle.x),XMConvertToRadians(param.Angle.y),XMConvertToRadians(param.Angle.z)) };	// 回転
-	XMMATRIX T{ XMMatrixTranslation(param.Pos.x,param.Pos.y,param.Pos.z) };					// 平行移動
+	DirectX::XMMATRIX S{DirectX::XMMatrixScaling(param.Size.x,param.Size.y,param.Size.z) };				// 拡縮
+	DirectX::XMMATRIX R{DirectX::XMMatrixRotationRollPitchYaw(DirectX::XMConvertToRadians(param.Angle.x), DirectX::XMConvertToRadians(param.Angle.y), DirectX::XMConvertToRadians(param.Angle.z)) };	// 回転
+	DirectX::XMMATRIX T{DirectX::XMMatrixTranslation(param.Pos.x,param.Pos.y,param.Pos.z) };					// 平行移動
 
-	XMFLOAT4X4 world;
-	XMStoreFloat4x4(&world, S * R * T);	// ワールド変換行列作成
+	DirectX::XMFLOAT4X4 world;
+	DirectX::XMStoreFloat4x4(&world, S * R * T);	// ワールド変換行列作成
 
 	uint32_t stride{ sizeof(Vertex) };
 	uint32_t offset{ 0 };
@@ -392,7 +392,7 @@ void Static_Mesh::Render(Shader* shader) {
 			immediate_context->PSSetShaderResources(1, 1, material.shader_resource_view[1].GetAddressOf());	// レジスタ番号、シェーダリソースの数、SRVのポインタ
 
 			Constants data{ world, param.Color };
-			XMStoreFloat4(&data.material_color, XMLoadFloat4(&param.Color) * XMLoadFloat4(&material.Kd));
+			DirectX::XMStoreFloat4(&data.material_color, DirectX::XMVectorMultiply(DirectX::XMLoadFloat4(&param.Color), DirectX::XMLoadFloat4(&material.Kd)));
 			// メモリからマップ不可能なメモリに作成されたサブリソースにデータをコピー
 			immediate_context->UpdateSubresource(constant_buffer.Get(),	// 宛先リソースへのポインタ
 				0,	// 宛先サブリソースを識別するインデックス
@@ -454,8 +454,8 @@ void Static_Mesh::imguiWindow(const char* beginname) {
 
 	ImGui::End();	// ウィンドウ終了
 	// パラメータ代入
-	setPos(DirectX::XMFLOAT3(pos[0], pos[1], pos[2]));
-	setSize(DirectX::XMFLOAT3(size[0], size[1], size[2]));
+	setPos  (DirectX::XMFLOAT3(pos[0], pos[1], pos[2]));
+	setSize (DirectX::XMFLOAT3(size[0], size[1], size[2]));
 	setAngle(DirectX::XMFLOAT3(angle[0], angle[1], angle[2]));
 	setColor(DirectX::XMFLOAT4(Color[0], Color[1], Color[2], Color[3]));
 }

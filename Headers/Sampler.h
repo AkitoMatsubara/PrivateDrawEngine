@@ -1,12 +1,11 @@
 #pragma once
 
 #include <wrl.h>	// ComPtr使用に必要
-using namespace Microsoft::WRL;
 
 class Sampler
 {
 protected:
-	ComPtr<ID3D11SamplerState> sampler_state = nullptr;
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> sampler_state = nullptr;
 
 public:
 	// コンストラクタ1

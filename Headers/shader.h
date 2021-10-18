@@ -5,22 +5,20 @@
 #include <d3dcompiler.h>
 
 #include <wrl.h>
-using namespace DirectX;
-using namespace Microsoft::WRL;
 
 // 基底クラス
 class Shader {
 	// 関数
 public:
 protected:
-	ComPtr<ID3D11VertexShader>	 VS = nullptr; // 頂点シェーダ
-	ComPtr<ID3D11PixelShader>	 PS = nullptr; // ピクセルシェーダ
-	ComPtr<ID3D11GeometryShader> GS = nullptr; // ジオメトリシェーダ
-	ComPtr<ID3D11HullShader>	 HS = nullptr; // ハルシェーダ
-	ComPtr<ID3D11DomainShader>	 DS = nullptr; // ドメインネームシェーダ
-	ComPtr<ID3D11ComputeShader>	 CS = nullptr; // コンピュートシェーダ
+	Microsoft::WRL::ComPtr<ID3D11VertexShader>	 VS = nullptr; // 頂点シェーダ
+	Microsoft::WRL::ComPtr<ID3D11PixelShader>	 PS = nullptr; // ピクセルシェーダ
+	Microsoft::WRL::ComPtr<ID3D11GeometryShader> GS = nullptr; // ジオメトリシェーダ
+	Microsoft::WRL::ComPtr<ID3D11HullShader>	 HS = nullptr; // ハルシェーダ
+	Microsoft::WRL::ComPtr<ID3D11DomainShader>	 DS = nullptr; // ドメインネームシェーダ
+	Microsoft::WRL::ComPtr<ID3D11ComputeShader>	 CS = nullptr; // コンピュートシェーダ
 
-	ComPtr<ID3D11InputLayout> InputLayout = nullptr;	// VS用
+	Microsoft::WRL::ComPtr<ID3D11InputLayout> InputLayout = nullptr;	// VS用
 private:
 	// 変数
 public:
@@ -43,8 +41,8 @@ private:
 
 // 頂点フォーマット
 struct Vertex {
-	XMFLOAT3 position;
-	XMFLOAT3 normal;
-	XMFLOAT2 texcoord;	// TextuerCoordinateの略、UV座標の取得などによく使われる様子
-	XMFLOAT4 color;
+	DirectX::XMFLOAT3 position;
+	DirectX::XMFLOAT3 normal;
+	DirectX::XMFLOAT2 texcoord;	// TextuerCoordinateの略、UV座標の取得などによく使われる様子
+	DirectX::XMFLOAT4 color;
 };

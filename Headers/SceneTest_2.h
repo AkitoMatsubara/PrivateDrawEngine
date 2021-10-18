@@ -1,6 +1,7 @@
 #pragma once
 #include "SceneManager.h"
 #include "Player.h"
+#include "Stage.h"
 
 class SceneTest_2 :public SceneBase {
 
@@ -69,6 +70,8 @@ public:
 
 	// プレイヤーオブジェクト
 	unique_ptr<Player> player;
+
+	// ステージ;
 
 	// 個人 ImGuiで数値を編集、格納して関数に渡す変数
 	float light_dir[3]{ 0.5f,-1.0f,1.0f };	// ライトの向かう方向

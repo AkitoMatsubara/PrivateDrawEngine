@@ -1,6 +1,7 @@
 #include "framework.h"
 #include "shader.h"
 
+using namespace Microsoft::WRL;
 
 HRESULT Shader::Compile(WCHAR* filename, LPCSTR method, LPCSTR shaderModel, ID3DBlob** ppBlobOut) {
 	DWORD ShaderFlags = D3DCOMPILE_ENABLE_STRICTNESS;

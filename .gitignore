@@ -34,9 +34,10 @@
 # コメントは `#'
 
 # 除外フォルダ
-/resources
-/others
+/Resources
+/Others
 /Debug
+/Cache
 /.vs
 /x64
 *.pdb

@@ -8,13 +8,13 @@ void Player::Initialize() {
 	SkinnedShader->Create(L"Shaders\\skinned_mesh_vs", L"Shaders\\skinned_mesh_ps");
 
 	// パラメーターの初期化
-	Position = { 0,0,0 };
-	Vector = { 0,0,0 };
+	Position     = { 0,0,0 };
+	Vector       = { 0,0,0 };
 	acceleration = { 0,0,0 };
-	Velocity = { 0,0,0 };
-	Size = { 1,1,1 };
-	Rotate = { 0,0,0 };
-	Color = { 1,1,1,1 };
+	Velocity     = { 0,0,0 };
+	Size         = { 1,1,1 };
+	Rotate       = { 0,0,0 };
+	Color        = { 1,1,1,1 };
 }
 
 void Player::Update() {

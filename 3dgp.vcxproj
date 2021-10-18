@@ -78,6 +78,7 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>.\</OutDir>
     <TargetName>TestBuild</TargetName>
+    <IntDir>Cache\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -274,6 +275,7 @@
     <ClInclude Include="Headers\geometric_primitive.h" />
     <ClInclude Include="Headers\high_resolution_timer.h" />
     <ClInclude Include="Headers\misc.h" />
+    <ClInclude Include="Headers\Object3D.h" />
     <ClInclude Include="Headers\Player.h" />
     <ClInclude Include="Headers\Rasterizer.h" />
     <ClInclude Include="Headers\Sampler.h" />
@@ -290,6 +292,9 @@
     <ClInclude Include="Headers\skinned_mesh.h" />
     <ClInclude Include="Headers\sprite.h" />
     <ClInclude Include="Headers\sprite_Batch.h" />
+    <ClInclude Include="Headers\Stage.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="Headers\static_mesh.h" />
     <ClInclude Include="Headers\texture.h" />
     <ClInclude Include="Headers\XMFLOAT_Helper.h" />
@@ -327,6 +332,9 @@
     <ClCompile Include="Sources\skinned_mesh.cpp" />
     <ClCompile Include="Sources\sprite.cpp" />
     <ClCompile Include="Sources\sprite_Batch.cpp" />
+    <ClCompile Include="Sources\Stage.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="Sources\static_mesh.cpp" />
     <ClCompile Include="Sources\texture.cpp" />
   </ItemGroup>

@@ -9,12 +9,12 @@
 class sprite_Batch {
 private:
 	// メンバ変数
-	ComPtr<ID3D11VertexShader>			vertex_shader;
-	ComPtr<ID3D11PixelShader>			pixel_shader;
-	ComPtr<ID3D11InputLayout>			input_layout;
-	ComPtr<ID3D11Buffer>				vertex_buffer;
-	ComPtr<ID3D11ShaderResourceView>	shader_resource_view;
-	ComPtr<ID3D11RasterizerState>		rasterizer_states[3];	// 0:片面塗りつぶし,1:片面ワイヤーフレーム,2:両面ワイヤーフレーム
+	Microsoft::WRL::ComPtr<ID3D11VertexShader>			vertex_shader;
+	Microsoft::WRL::ComPtr<ID3D11PixelShader>			pixel_shader;
+	Microsoft::WRL::ComPtr<ID3D11InputLayout>			input_layout;
+	Microsoft::WRL::ComPtr<ID3D11Buffer>				vertex_buffer;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>	shader_resource_view;
+	Microsoft::WRL::ComPtr<ID3D11RasterizerState>		rasterizer_states[3];	// 0:片面塗りつぶし,1:片面ワイヤーフレーム,2:両面ワイヤーフレーム
 
 	D3D11_TEXTURE2D_DESC				texture2d_desc;
 
@@ -26,7 +26,7 @@ private:
 
 	// 内部使用メンバ関数
 	// dx,dy＝矩形の左上のスクリーン座標、dw,dh＝矩形サイズ
-	XMFLOAT3 ConvertToNDC(XMFLOAT3 val, D3D11_VIEWPORT viewport);
+	DirectX::XMFLOAT3 ConvertToNDC(DirectX::XMFLOAT3 val, D3D11_VIEWPORT viewport);
 
 public:
 	// コンストラクタ、デストラクタ
@@ -39,42 +39,42 @@ public:
 	void end();	// 頂点バッファの更新、各ステートのバインド、ドローコールを記述
 
 	// 頂点情報の生成、更新
-	void CreateVertexData(XMFLOAT2 pos, XMFLOAT2 size, float angle, XMFLOAT4 color
-		, XMFLOAT2 TexPos, XMFLOAT2 TexSize);
+	void CreateVertexData(DirectX::XMFLOAT2 pos, DirectX::XMFLOAT2 size, float angle, DirectX::XMFLOAT4 color
+		, DirectX::XMFLOAT2 TexPos, DirectX::XMFLOAT2 TexSize);
 
 	// メンバ変数でできるならいらない？と思い削除←やっぱいるわ課題的に
-	void Render(XMFLOAT2 pos, XMFLOAT2 size, float andle, XMFLOAT4 color
-		, XMFLOAT2 TexPos, XMFLOAT2 TexSize);	// immediate(対象となるデータそのものをコード中に記したものを即値という)
+	void Render(DirectX::XMFLOAT2 pos, DirectX::XMFLOAT2 size, float andle, DirectX::XMFLOAT4 color
+		, DirectX::XMFLOAT2 TexPos, DirectX::XMFLOAT2 TexSize);	// immediate(対象となるデータそのものをコード中に記したものを即値という)
 
 
 	// メンバ変数のパラメータで描画
 	void Render();	// immediate(対象となるデータそのものをコード中に記したものを即値という)
 
 		// テクスチャ位置だけ指定するRender 課題的に(ry
-	void Render(XMFLOAT2 TexPos, XMFLOAT2 TexSize);
+	void Render(DirectX::XMFLOAT2 TexPos, DirectX::XMFLOAT2 TexSize);
 
-	// XMFLOAT2同士の割り算
-	XMFLOAT2 Division(XMFLOAT2 val1, XMFLOAT2 val2);
+	// DirectX::XMFLOAT2同士の割り算
+	DirectX::XMFLOAT2 Division(DirectX::XMFLOAT2 val1, DirectX::XMFLOAT2 val2);
 
 	// セッター
-	void setPos    (XMFLOAT2 pos)     { param.Pos     = pos; }
-	void setSize   (XMFLOAT2 Size)    { param.Size    = Size; }
-	void setTexPos (XMFLOAT2 texPos)  { param.TexPos  = texPos; }
-	void setTexSize(XMFLOAT2 texSize) { param.TexSize = texSize; }
+	void setPos    (DirectX::XMFLOAT2 pos)     { param.Pos     = pos; }
+	void setSize   (DirectX::XMFLOAT2 Size)    { param.Size    = Size; }
+	void setTexPos (DirectX::XMFLOAT2 texPos)  { param.TexPos  = texPos; }
+	void setTexSize(DirectX::XMFLOAT2 texSize) { param.TexSize = texSize; }
 	void setAngle  (float angle)      { param.Angle   = angle; }
-	void setColor  (XMFLOAT4 color)   { param.Color   = color; }
+	void setColor  (DirectX::XMFLOAT4 color)   { param.Color   = color; }
 
-	void setPos    (float posX, float posY)             { param.Pos     = XMFLOAT2(posX, posY); }
-	void setSize   (float SizeX, float SizeY)           { param.Size    = XMFLOAT2(SizeX, SizeY); }
-	void setTexPos (float texPosX, float texPosY)       { param.TexPos  = XMFLOAT2(texPosX, texPosY); }
-	void setTexSize(float texSizeX, float texSizeY)     { param.TexSize = XMFLOAT2(texSizeX, texSizeY); }
-	void setColor  (float r, float g, float b, float a) { param.Color   = XMFLOAT4(r, g, b, a); }
+	void setPos    (float posX, float posY)             { param.Pos     = DirectX::XMFLOAT2(posX, posY); }
+	void setSize   (float SizeX, float SizeY)           { param.Size    = DirectX::XMFLOAT2(SizeX, SizeY); }
+	void setTexPos (float texPosX, float texPosY)       { param.TexPos  = DirectX::XMFLOAT2(texPosX, texPosY); }
+	void setTexSize(float texSizeX, float texSizeY)     { param.TexSize = DirectX::XMFLOAT2(texSizeX, texSizeY); }
+	void setColor  (float r, float g, float b, float a) { param.Color   = DirectX::XMFLOAT4(r, g, b, a); }
 
 	// ゲッター
-	XMFLOAT2 getPos()     { return param.Pos; }
-	XMFLOAT2 getSize()    { return param.Size; }
-	XMFLOAT2 getTexPos()  { return param.TexPos; }
-	XMFLOAT2 getTexSize() { return param.TexSize; }
+	DirectX::XMFLOAT2 getPos()     { return param.Pos; }
+	DirectX::XMFLOAT2 getSize()    { return param.Size; }
+	DirectX::XMFLOAT2 getTexPos()  { return param.TexPos; }
+	DirectX::XMFLOAT2 getTexSize() { return param.TexSize; }
 	float	 getAngle()   { return param.Angle; }
-	XMFLOAT4 getColor()   { return param.Color; }
+	DirectX::XMFLOAT4 getColor()   { return param.Color; }
 };

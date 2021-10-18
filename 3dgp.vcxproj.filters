@@ -209,6 +209,12 @@
     <ClInclude Include="Headers\XMFLOAT_Helper.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="Headers\Stage.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\Object3D.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui\imgui.cpp">
@@ -246,9 +252,6 @@
     </ClCompile>
     <ClCompile Include="Sources\geometric_capsule.cpp">
       <Filter>Sources\DataLoad\GeometricPrimitives</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\texture.cpp">
-      <Filter>Sources\DataLoad</Filter>
     </ClCompile>
     <ClCompile Include="Sources\geometric_primitive.cpp">
       <Filter>Sources\DataLoad\GeometricPrimitives</Filter>
@@ -293,6 +296,12 @@
       <Filter>Sources\Scenes</Filter>
     </ClCompile>
     <ClCompile Include="Sources\Player.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\texture.cpp">
+      <Filter>Sources\DataLoad\Sprite</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\Stage.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
   </ItemGroup>
