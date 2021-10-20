@@ -28,14 +28,14 @@ private:
 	bool ready = false;
 
 protected:
-	unique_ptr<SceneBase> newScene;
+	std::unique_ptr<SceneBase> newScene;
 	//コンスタントバッファ
-	ComPtr<ID3D11Buffer> ConstantBuffer;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> ConstantBuffer;
 
 	//DepthStencilState
 	enum { DS_FALSE, DS_TRUE, DS_FALSE_WRITE, DS_TRUE_WRITE, DS_END };
 
-	shared_ptr<Sampler> sampleClamp;
+	std::shared_ptr<Sampler> sampleClamp;
 
 	FLOAT ClearColor[4] = { 0.2f,0.2f,0.2f,1.0f };
 
@@ -60,8 +60,8 @@ public:
 
 	void imguiSceneChanger();
 
-	void setScene(unique_ptr<SceneBase> scene) { newScene = move(scene); }
-	unique_ptr<SceneBase> getScene() { return move(newScene); }
+	void setScene(std::unique_ptr<SceneBase> scene) { newScene = move(scene); }
+	std::unique_ptr<SceneBase> getScene() { return move(newScene); }
 
 	// 準備完了しているか
 	bool isReady() const { return ready; }
@@ -81,7 +81,7 @@ public:
 
 class SceneManager{
 private:
-	unique_ptr<SceneBase> scene;
+	std::unique_ptr<SceneBase> scene;
 public:
 	static SceneManager& getInstance() {
 		static SceneManager instance;
@@ -94,5 +94,5 @@ public:
 
 	void Update();
 	void Render();
-	void ChangeScene(unique_ptr<SceneBase> newScene);	// シーン切り替え関数
+	void ChangeScene(std::unique_ptr<SceneBase> newScene);	// シーン切り替え関数
 };

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "geometric_primitive.h"
+#include "skinned_mesh.h"
 #include "shaderEx.h"
 
 #include <memory>
@@ -9,19 +9,21 @@ class Stage
 {
 	// 変数
 private:
-	std::unique_ptr<Geometric_Cylinder> Model;	// そのままモデル
 	// デフォルトのシェーダー
-	std::unique_ptr<ShaderEx> GeomtricShader;
+	std::unique_ptr<ShaderEx> SkinnedShader;
 
 public:
+	std::unique_ptr<Skinned_Mesh> Model;	// そのままモデル
+
 	//関数
 private:
-	Stage();
+public:
+	Stage(const char* fbx_filename = ".\\Resources\\Stage\\Stage.fbx", int cstNo = 0, const bool triangulate = false);
 	~Stage() {};
 
-	void  Initialize();
+	void Initialize();
 	void Update();
 	void Render();
 
-
+	void setStageFbx(const char* fbx_filename, int cstNo = 0, const bool triangulate = false);	// SkinnedMeshのイニシャライザをそのまま呼び出し
 };

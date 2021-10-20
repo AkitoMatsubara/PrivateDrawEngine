@@ -19,14 +19,14 @@ Geometric_Cube::Geometric_Cube(const char* vs_cso_name, const char* ps_cso_name 
 
 	// 上面
 	int face = FACE::TOP_FACE;
-	vertices[face * 4 + LEFT_TOP].position = XMFLOAT3(LEFT, TOP, BACK);
-	vertices[face * 4 + RIGHT_TOP].position = XMFLOAT3(RIGHT, TOP, BACK);
-	vertices[face * 4 + LEFT_BOTTOM].position = XMFLOAT3(LEFT, TOP, FRONT);
-	vertices[face * 4 + RIGHT_BOTTOM].position = XMFLOAT3(RIGHT, TOP, FRONT);
-	vertices[face * 4 + LEFT_TOP].normal = XMFLOAT3(0.0f, 1.0f, 0.0f);
-	vertices[face * 4 + RIGHT_TOP].normal = XMFLOAT3(0.0f, 1.0f, 0.0f);
-	vertices[face * 4 + LEFT_BOTTOM].normal = XMFLOAT3(0.0f, 1.0f, 0.0f);
-	vertices[face * 4 + RIGHT_BOTTOM].normal = XMFLOAT3(0.0f, 1.0f, 0.0f);
+	vertices[face * 4 + LEFT_TOP].position = DirectX::XMFLOAT3(LEFT, TOP, BACK);
+	vertices[face * 4 + RIGHT_TOP].position = DirectX::XMFLOAT3(RIGHT, TOP, BACK);
+	vertices[face * 4 + LEFT_BOTTOM].position = DirectX::XMFLOAT3(LEFT, TOP, FRONT);
+	vertices[face * 4 + RIGHT_BOTTOM].position = DirectX::XMFLOAT3(RIGHT, TOP, FRONT);
+	vertices[face * 4 + LEFT_TOP].normal = DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f);
+	vertices[face * 4 + RIGHT_TOP].normal = DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f);
+	vertices[face * 4 + LEFT_BOTTOM].normal = DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f);
+	vertices[face * 4 + RIGHT_BOTTOM].normal = DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f);
 
 	indeces[face * 6 + 0] = face * 4 + LEFT_TOP;
 	indeces[face * 6 + 1] = face * 4 + RIGHT_TOP;
@@ -38,14 +38,14 @@ Geometric_Cube::Geometric_Cube(const char* vs_cso_name, const char* ps_cso_name 
 
 	// 下面
 	face = FACE::BOTTOM_FACE;
-	vertices[face * 4 + LEFT_TOP].position = XMFLOAT3(LEFT, BOTTOM, BACK);
-	vertices[face * 4 + RIGHT_TOP].position = XMFLOAT3(RIGHT, BOTTOM, BACK);
-	vertices[face * 4 + LEFT_BOTTOM].position = XMFLOAT3(LEFT, BOTTOM, FRONT);
-	vertices[face * 4 + RIGHT_BOTTOM].position = XMFLOAT3(RIGHT, BOTTOM, FRONT);
-	vertices[face * 4 + LEFT_TOP].normal = XMFLOAT3(0.0f, -1.0f, 0.0f);
-	vertices[face * 4 + RIGHT_TOP].normal = XMFLOAT3(0.0f, -1.0f, 0.0f);
-	vertices[face * 4 + LEFT_BOTTOM].normal = XMFLOAT3(0.0f, -1.0f, 0.0f);
-	vertices[face * 4 + RIGHT_BOTTOM].normal = XMFLOAT3(0.0f, -1.0f, 0.0f);
+	vertices[face * 4 + LEFT_TOP].position = DirectX::XMFLOAT3(LEFT, BOTTOM, BACK);
+	vertices[face * 4 + RIGHT_TOP].position = DirectX::XMFLOAT3(RIGHT, BOTTOM, BACK);
+	vertices[face * 4 + LEFT_BOTTOM].position = DirectX::XMFLOAT3(LEFT, BOTTOM, FRONT);
+	vertices[face * 4 + RIGHT_BOTTOM].position = DirectX::XMFLOAT3(RIGHT, BOTTOM, FRONT);
+	vertices[face * 4 + LEFT_TOP].normal = DirectX::XMFLOAT3(0.0f, -1.0f, 0.0f);
+	vertices[face * 4 + RIGHT_TOP].normal = DirectX::XMFLOAT3(0.0f, -1.0f, 0.0f);
+	vertices[face * 4 + LEFT_BOTTOM].normal = DirectX::XMFLOAT3(0.0f, -1.0f, 0.0f);
+	vertices[face * 4 + RIGHT_BOTTOM].normal = DirectX::XMFLOAT3(0.0f, -1.0f, 0.0f);
 
 	indeces[face * 6 + 0] = face * 4 + LEFT_TOP;
 	indeces[face * 6 + 1] = face * 4 + LEFT_BOTTOM;
@@ -57,14 +57,14 @@ Geometric_Cube::Geometric_Cube(const char* vs_cso_name, const char* ps_cso_name 
 
 	// 前面
 	face = FACE::FRONT_FACE;
-	vertices[face * 4 + LEFT_TOP].position = XMFLOAT3(LEFT, TOP, FRONT);
-	vertices[face * 4 + RIGHT_TOP].position = XMFLOAT3(RIGHT, TOP, FRONT);
-	vertices[face * 4 + LEFT_BOTTOM].position = XMFLOAT3(LEFT, BOTTOM, FRONT);
-	vertices[face * 4 + RIGHT_BOTTOM].position = XMFLOAT3(RIGHT, BOTTOM, FRONT);
-	vertices[face * 4 + LEFT_TOP].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
-	vertices[face * 4 + RIGHT_TOP].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
-	vertices[face * 4 + LEFT_BOTTOM].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
-	vertices[face * 4 + RIGHT_BOTTOM].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
+	vertices[face * 4 + LEFT_TOP].position = DirectX::XMFLOAT3(LEFT, TOP, FRONT);
+	vertices[face * 4 + RIGHT_TOP].position = DirectX::XMFLOAT3(RIGHT, TOP, FRONT);
+	vertices[face * 4 + LEFT_BOTTOM].position = DirectX::XMFLOAT3(LEFT, BOTTOM, FRONT);
+	vertices[face * 4 + RIGHT_BOTTOM].position = DirectX::XMFLOAT3(RIGHT, BOTTOM, FRONT);
+	vertices[face * 4 + LEFT_TOP].normal = DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f);
+	vertices[face * 4 + RIGHT_TOP].normal = DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f);
+	vertices[face * 4 + LEFT_BOTTOM].normal = DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f);
+	vertices[face * 4 + RIGHT_BOTTOM].normal = DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f);
 
 	indeces[face * 6 + 0] = face * 4 + LEFT_TOP;
 	indeces[face * 6 + 1] = face * 4 + RIGHT_TOP;
@@ -76,14 +76,14 @@ Geometric_Cube::Geometric_Cube(const char* vs_cso_name, const char* ps_cso_name 
 
 	// 後面
 	face = FACE::BACK_FACE;
-	vertices[face * 4 + LEFT_TOP].position = XMFLOAT3(LEFT, TOP, BACK);
-	vertices[face * 4 + RIGHT_TOP].position = XMFLOAT3(RIGHT, TOP, BACK);
-	vertices[face * 4 + LEFT_BOTTOM].position = XMFLOAT3(LEFT, BOTTOM, BACK);
-	vertices[face * 4 + RIGHT_BOTTOM].position = XMFLOAT3(RIGHT, BOTTOM, BACK);
-	vertices[face * 4 + LEFT_TOP].normal = XMFLOAT3(0.0f, 0.0f, 1.0f);
-	vertices[face * 4 + RIGHT_TOP].normal = XMFLOAT3(0.0f, 0.0f, 1.0f);
-	vertices[face * 4 + LEFT_BOTTOM].normal = XMFLOAT3(0.0f, 0.0f, 1.0f);
-	vertices[face * 4 + RIGHT_BOTTOM].normal = XMFLOAT3(0.0f, 0.0f, 1.0f);
+	vertices[face * 4 + LEFT_TOP].position = DirectX::XMFLOAT3(LEFT, TOP, BACK);
+	vertices[face * 4 + RIGHT_TOP].position = DirectX::XMFLOAT3(RIGHT, TOP, BACK);
+	vertices[face * 4 + LEFT_BOTTOM].position = DirectX::XMFLOAT3(LEFT, BOTTOM, BACK);
+	vertices[face * 4 + RIGHT_BOTTOM].position = DirectX::XMFLOAT3(RIGHT, BOTTOM, BACK);
+	vertices[face * 4 + LEFT_TOP].normal = DirectX::XMFLOAT3(0.0f, 0.0f, 1.0f);
+	vertices[face * 4 + RIGHT_TOP].normal = DirectX::XMFLOAT3(0.0f, 0.0f, 1.0f);
+	vertices[face * 4 + LEFT_BOTTOM].normal = DirectX::XMFLOAT3(0.0f, 0.0f, 1.0f);
+	vertices[face * 4 + RIGHT_BOTTOM].normal = DirectX::XMFLOAT3(0.0f, 0.0f, 1.0f);
 
 	indeces[face * 6 + 0] = face * 4 + LEFT_TOP;
 	indeces[face * 6 + 1] = face * 4 + LEFT_BOTTOM;
@@ -95,14 +95,14 @@ Geometric_Cube::Geometric_Cube(const char* vs_cso_name, const char* ps_cso_name 
 
 	// 右面
 	face = FACE::RIGHT_FACE;
-	vertices[face * 4 + LEFT_TOP].position = XMFLOAT3(RIGHT, TOP, FRONT);
-	vertices[face * 4 + RIGHT_TOP].position = XMFLOAT3(RIGHT, TOP, BACK);
-	vertices[face * 4 + LEFT_BOTTOM].position = XMFLOAT3(RIGHT, BOTTOM, FRONT);
-	vertices[face * 4 + RIGHT_BOTTOM].position = XMFLOAT3(RIGHT, BOTTOM, BACK);
-	vertices[face * 4 + LEFT_TOP].normal = XMFLOAT3(1.0f, 0.0f, 0.0f);
-	vertices[face * 4 + RIGHT_TOP].normal = XMFLOAT3(1.0f, 0.0f, 0.0f);
-	vertices[face * 4 + LEFT_BOTTOM].normal = XMFLOAT3(1.0f, 0.0f, 0.0f);
-	vertices[face * 4 + RIGHT_BOTTOM].normal = XMFLOAT3(1.0f, 0.0f, 0.0f);
+	vertices[face * 4 + LEFT_TOP].position = DirectX::XMFLOAT3(RIGHT, TOP, FRONT);
+	vertices[face * 4 + RIGHT_TOP].position = DirectX::XMFLOAT3(RIGHT, TOP, BACK);
+	vertices[face * 4 + LEFT_BOTTOM].position = DirectX::XMFLOAT3(RIGHT, BOTTOM, FRONT);
+	vertices[face * 4 + RIGHT_BOTTOM].position = DirectX::XMFLOAT3(RIGHT, BOTTOM, BACK);
+	vertices[face * 4 + LEFT_TOP].normal = DirectX::XMFLOAT3(1.0f, 0.0f, 0.0f);
+	vertices[face * 4 + RIGHT_TOP].normal = DirectX::XMFLOAT3(1.0f, 0.0f, 0.0f);
+	vertices[face * 4 + LEFT_BOTTOM].normal = DirectX::XMFLOAT3(1.0f, 0.0f, 0.0f);
+	vertices[face * 4 + RIGHT_BOTTOM].normal = DirectX::XMFLOAT3(1.0f, 0.0f, 0.0f);
 
 	indeces[face * 6 + 0] = face * 4 + LEFT_TOP;
 	indeces[face * 6 + 1] = face * 4 + RIGHT_TOP;
@@ -114,14 +114,14 @@ Geometric_Cube::Geometric_Cube(const char* vs_cso_name, const char* ps_cso_name 
 
 	// 左面
 	face = FACE::LEFT_FACE;
-	vertices[face * 4 + LEFT_TOP].position = XMFLOAT3(LEFT, TOP, FRONT);
-	vertices[face * 4 + RIGHT_TOP].position = XMFLOAT3(LEFT, TOP, BACK);
-	vertices[face * 4 + LEFT_BOTTOM].position = XMFLOAT3(LEFT, BOTTOM, FRONT);
-	vertices[face * 4 + RIGHT_BOTTOM].position = XMFLOAT3(LEFT, BOTTOM, BACK);
-	vertices[face * 4 + LEFT_TOP].normal = XMFLOAT3(-1.0f, 0.0f, 0.0f);
-	vertices[face * 4 + RIGHT_TOP].normal = XMFLOAT3(-1.0f, 0.0f, 0.0f);
-	vertices[face * 4 + LEFT_BOTTOM].normal = XMFLOAT3(-1.0f, 0.0f, 0.0f);
-	vertices[face * 4 + RIGHT_BOTTOM].normal = XMFLOAT3(-1.0f, 0.0f, 0.0f);
+	vertices[face * 4 + LEFT_TOP].position = DirectX::XMFLOAT3(LEFT, TOP, FRONT);
+	vertices[face * 4 + RIGHT_TOP].position = DirectX::XMFLOAT3(LEFT, TOP, BACK);
+	vertices[face * 4 + LEFT_BOTTOM].position = DirectX::XMFLOAT3(LEFT, BOTTOM, FRONT);
+	vertices[face * 4 + RIGHT_BOTTOM].position = DirectX::XMFLOAT3(LEFT, BOTTOM, BACK);
+	vertices[face * 4 + LEFT_TOP].normal = DirectX::XMFLOAT3(-1.0f, 0.0f, 0.0f);
+	vertices[face * 4 + RIGHT_TOP].normal = DirectX::XMFLOAT3(-1.0f, 0.0f, 0.0f);
+	vertices[face * 4 + LEFT_BOTTOM].normal = DirectX::XMFLOAT3(-1.0f, 0.0f, 0.0f);
+	vertices[face * 4 + RIGHT_BOTTOM].normal = DirectX::XMFLOAT3(-1.0f, 0.0f, 0.0f);
 
 	indeces[face * 6 + 0] = face * 4 + LEFT_TOP;
 	indeces[face * 6 + 1] = face * 4 + LEFT_BOTTOM;
@@ -151,14 +151,14 @@ Geometric_Cube::Geometric_Cube(float left, float right, float bottom, float top,
 
 	// 上面
 	int face = FACE::TOP_FACE;
-	vertices[face * 4 + LEFT_TOP].position = XMFLOAT3(left, top, back);
-	vertices[face * 4 + RIGHT_TOP].position = XMFLOAT3(right, top, back);
-	vertices[face * 4 + LEFT_BOTTOM].position = XMFLOAT3(left, top, front);
-	vertices[face * 4 + RIGHT_BOTTOM].position = XMFLOAT3(right, top, front);
-	vertices[face * 4 + LEFT_TOP].normal = XMFLOAT3(0.0f, 1.0f, 0.0f);
-	vertices[face * 4 + RIGHT_TOP].normal = XMFLOAT3(0.0f, 1.0f, 0.0f);
-	vertices[face * 4 + LEFT_BOTTOM].normal = XMFLOAT3(0.0f, 1.0f, 0.0f);
-	vertices[face * 4 + RIGHT_BOTTOM].normal = XMFLOAT3(0.0f, 1.0f, 0.0f);
+	vertices[face * 4 + LEFT_TOP].position = DirectX::XMFLOAT3(left, top, back);
+	vertices[face * 4 + RIGHT_TOP].position = DirectX::XMFLOAT3(right, top, back);
+	vertices[face * 4 + LEFT_BOTTOM].position = DirectX::XMFLOAT3(left, top, front);
+	vertices[face * 4 + RIGHT_BOTTOM].position = DirectX::XMFLOAT3(right, top, front);
+	vertices[face * 4 + LEFT_TOP].normal = DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f);
+	vertices[face * 4 + RIGHT_TOP].normal = DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f);
+	vertices[face * 4 + LEFT_BOTTOM].normal = DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f);
+	vertices[face * 4 + RIGHT_BOTTOM].normal = DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f);
 
 	indeces[face * 6 + 0] = face * 4 + LEFT_TOP;
 	indeces[face * 6 + 1] = face * 4 + RIGHT_TOP;
@@ -170,14 +170,14 @@ Geometric_Cube::Geometric_Cube(float left, float right, float bottom, float top,
 
 	// 下面
 	face = FACE::BOTTOM_FACE;
-	vertices[face * 4 + LEFT_TOP].position = XMFLOAT3(left, bottom, back);
-	vertices[face * 4 + RIGHT_TOP].position = XMFLOAT3(right, bottom, back);
-	vertices[face * 4 + LEFT_BOTTOM].position = XMFLOAT3(left, bottom, front);
-	vertices[face * 4 + RIGHT_BOTTOM].position = XMFLOAT3(right, bottom, front);
-	vertices[face * 4 + LEFT_TOP].normal = XMFLOAT3(0.0f, -1.0f, 0.0f);
-	vertices[face * 4 + RIGHT_TOP].normal = XMFLOAT3(0.0f, -1.0f, 0.0f);
-	vertices[face * 4 + LEFT_BOTTOM].normal = XMFLOAT3(0.0f, -1.0f, 0.0f);
-	vertices[face * 4 + RIGHT_BOTTOM].normal = XMFLOAT3(0.0f, -1.0f, 0.0f);
+	vertices[face * 4 + LEFT_TOP].position = DirectX::XMFLOAT3(left, bottom, back);
+	vertices[face * 4 + RIGHT_TOP].position = DirectX::XMFLOAT3(right, bottom, back);
+	vertices[face * 4 + LEFT_BOTTOM].position = DirectX::XMFLOAT3(left, bottom, front);
+	vertices[face * 4 + RIGHT_BOTTOM].position = DirectX::XMFLOAT3(right, bottom, front);
+	vertices[face * 4 + LEFT_TOP].normal = DirectX::XMFLOAT3(0.0f, -1.0f, 0.0f);
+	vertices[face * 4 + RIGHT_TOP].normal = DirectX::XMFLOAT3(0.0f, -1.0f, 0.0f);
+	vertices[face * 4 + LEFT_BOTTOM].normal = DirectX::XMFLOAT3(0.0f, -1.0f, 0.0f);
+	vertices[face * 4 + RIGHT_BOTTOM].normal = DirectX::XMFLOAT3(0.0f, -1.0f, 0.0f);
 
 	indeces[face * 6 + 0] = face * 4 + LEFT_TOP;
 	indeces[face * 6 + 1] = face * 4 + LEFT_BOTTOM;
@@ -189,14 +189,14 @@ Geometric_Cube::Geometric_Cube(float left, float right, float bottom, float top,
 
 	// 前面
 	face = FACE::FRONT_FACE;
-	vertices[face * 4 + LEFT_TOP].position = XMFLOAT3(left, top, front);
-	vertices[face * 4 + RIGHT_TOP].position = XMFLOAT3(right, top, front);
-	vertices[face * 4 + LEFT_BOTTOM].position = XMFLOAT3(left, bottom, front);
-	vertices[face * 4 + RIGHT_BOTTOM].position = XMFLOAT3(right, bottom, front);
-	vertices[face * 4 + LEFT_TOP].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
-	vertices[face * 4 + RIGHT_TOP].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
-	vertices[face * 4 + LEFT_BOTTOM].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
-	vertices[face * 4 + RIGHT_BOTTOM].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
+	vertices[face * 4 + LEFT_TOP].position = DirectX::XMFLOAT3(left, top, front);
+	vertices[face * 4 + RIGHT_TOP].position = DirectX::XMFLOAT3(right, top, front);
+	vertices[face * 4 + LEFT_BOTTOM].position = DirectX::XMFLOAT3(left, bottom, front);
+	vertices[face * 4 + RIGHT_BOTTOM].position = DirectX::XMFLOAT3(right, bottom, front);
+	vertices[face * 4 + LEFT_TOP].normal = DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f);
+	vertices[face * 4 + RIGHT_TOP].normal = DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f);
+	vertices[face * 4 + LEFT_BOTTOM].normal = DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f);
+	vertices[face * 4 + RIGHT_BOTTOM].normal = DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f);
 
 	indeces[face * 6 + 0] = face * 4 + LEFT_TOP;
 	indeces[face * 6 + 1] = face * 4 + RIGHT_TOP;
@@ -208,14 +208,14 @@ Geometric_Cube::Geometric_Cube(float left, float right, float bottom, float top,
 
 	// 後面
 	face = FACE::BACK_FACE;
-	vertices[face * 4 + LEFT_TOP].position = XMFLOAT3(left, top, back);
-	vertices[face * 4 + RIGHT_TOP].position = XMFLOAT3(right, top, back);
-	vertices[face * 4 + LEFT_BOTTOM].position = XMFLOAT3(left, bottom, back);
-	vertices[face * 4 + RIGHT_BOTTOM].position = XMFLOAT3(right, bottom, back);
-	vertices[face * 4 + LEFT_TOP].normal = XMFLOAT3(0.0f, 0.0f, 1.0f);
-	vertices[face * 4 + RIGHT_TOP].normal = XMFLOAT3(0.0f, 0.0f, 1.0f);
-	vertices[face * 4 + LEFT_BOTTOM].normal = XMFLOAT3(0.0f, 0.0f, 1.0f);
-	vertices[face * 4 + RIGHT_BOTTOM].normal = XMFLOAT3(0.0f, 0.0f, 1.0f);
+	vertices[face * 4 + LEFT_TOP].position = DirectX::XMFLOAT3(left, top, back);
+	vertices[face * 4 + RIGHT_TOP].position = DirectX::XMFLOAT3(right, top, back);
+	vertices[face * 4 + LEFT_BOTTOM].position = DirectX::XMFLOAT3(left, bottom, back);
+	vertices[face * 4 + RIGHT_BOTTOM].position = DirectX::XMFLOAT3(right, bottom, back);
+	vertices[face * 4 + LEFT_TOP].normal = DirectX::XMFLOAT3(0.0f, 0.0f, 1.0f);
+	vertices[face * 4 + RIGHT_TOP].normal = DirectX::XMFLOAT3(0.0f, 0.0f, 1.0f);
+	vertices[face * 4 + LEFT_BOTTOM].normal = DirectX::XMFLOAT3(0.0f, 0.0f, 1.0f);
+	vertices[face * 4 + RIGHT_BOTTOM].normal = DirectX::XMFLOAT3(0.0f, 0.0f, 1.0f);
 
 	indeces[face * 6 + 0] = face * 4 + LEFT_TOP;
 	indeces[face * 6 + 1] = face * 4 + LEFT_BOTTOM;
@@ -227,14 +227,14 @@ Geometric_Cube::Geometric_Cube(float left, float right, float bottom, float top,
 
 	// 右面
 	face = FACE::RIGHT_FACE;
-	vertices[face * 4 + LEFT_TOP].position = XMFLOAT3(right, top, front);
-	vertices[face * 4 + RIGHT_TOP].position = XMFLOAT3(right, top, back);
-	vertices[face * 4 + LEFT_BOTTOM].position = XMFLOAT3(right, bottom, front);
-	vertices[face * 4 + RIGHT_BOTTOM].position = XMFLOAT3(right, bottom, back);
-	vertices[face * 4 + LEFT_TOP].normal = XMFLOAT3(1.0f, 0.0f, 0.0f);
-	vertices[face * 4 + RIGHT_TOP].normal = XMFLOAT3(1.0f, 0.0f, 0.0f);
-	vertices[face * 4 + LEFT_BOTTOM].normal = XMFLOAT3(1.0f, 0.0f, 0.0f);
-	vertices[face * 4 + RIGHT_BOTTOM].normal = XMFLOAT3(1.0f, 0.0f, 0.0f);
+	vertices[face * 4 + LEFT_TOP].position = DirectX::XMFLOAT3(right, top, front);
+	vertices[face * 4 + RIGHT_TOP].position = DirectX::XMFLOAT3(right, top, back);
+	vertices[face * 4 + LEFT_BOTTOM].position = DirectX::XMFLOAT3(right, bottom, front);
+	vertices[face * 4 + RIGHT_BOTTOM].position = DirectX::XMFLOAT3(right, bottom, back);
+	vertices[face * 4 + LEFT_TOP].normal = DirectX::XMFLOAT3(1.0f, 0.0f, 0.0f);
+	vertices[face * 4 + RIGHT_TOP].normal = DirectX::XMFLOAT3(1.0f, 0.0f, 0.0f);
+	vertices[face * 4 + LEFT_BOTTOM].normal = DirectX::XMFLOAT3(1.0f, 0.0f, 0.0f);
+	vertices[face * 4 + RIGHT_BOTTOM].normal = DirectX::XMFLOAT3(1.0f, 0.0f, 0.0f);
 
 	indeces[face * 6 + 0] = face * 4 + LEFT_TOP;
 	indeces[face * 6 + 1] = face * 4 + RIGHT_TOP;
@@ -246,14 +246,14 @@ Geometric_Cube::Geometric_Cube(float left, float right, float bottom, float top,
 
 	// 左面
 	face = FACE::LEFT_FACE;
-	vertices[face * 4 + LEFT_TOP].position = XMFLOAT3(left, top, front);
-	vertices[face * 4 + RIGHT_TOP].position = XMFLOAT3(left, top, back);
-	vertices[face * 4 + LEFT_BOTTOM].position = XMFLOAT3(left, bottom, front);
-	vertices[face * 4 + RIGHT_BOTTOM].position = XMFLOAT3(left, bottom, back);
-	vertices[face * 4 + LEFT_TOP].normal = XMFLOAT3(-1.0f, 0.0f, 0.0f);
-	vertices[face * 4 + RIGHT_TOP].normal = XMFLOAT3(-1.0f, 0.0f, 0.0f);
-	vertices[face * 4 + LEFT_BOTTOM].normal = XMFLOAT3(-1.0f, 0.0f, 0.0f);
-	vertices[face * 4 + RIGHT_BOTTOM].normal = XMFLOAT3(-1.0f, 0.0f, 0.0f);
+	vertices[face * 4 + LEFT_TOP].position = DirectX::XMFLOAT3(left, top, front);
+	vertices[face * 4 + RIGHT_TOP].position = DirectX::XMFLOAT3(left, top, back);
+	vertices[face * 4 + LEFT_BOTTOM].position = DirectX::XMFLOAT3(left, bottom, front);
+	vertices[face * 4 + RIGHT_BOTTOM].position = DirectX::XMFLOAT3(left, bottom, back);
+	vertices[face * 4 + LEFT_TOP].normal = DirectX::XMFLOAT3(-1.0f, 0.0f, 0.0f);
+	vertices[face * 4 + RIGHT_TOP].normal = DirectX::XMFLOAT3(-1.0f, 0.0f, 0.0f);
+	vertices[face * 4 + LEFT_BOTTOM].normal = DirectX::XMFLOAT3(-1.0f, 0.0f, 0.0f);
+	vertices[face * 4 + RIGHT_BOTTOM].normal = DirectX::XMFLOAT3(-1.0f, 0.0f, 0.0f);
 
 	indeces[face * 6 + 0] = face * 4 + LEFT_TOP;
 	indeces[face * 6 + 1] = face * 4 + LEFT_BOTTOM;

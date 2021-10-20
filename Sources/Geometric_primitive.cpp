@@ -63,10 +63,10 @@ Geometric_Primitive::Geometric_Primitive(const char* vs_cso_name, const char* ps
 
 	// 各種パラメータの初期化
 	wireframe = false;
-	param.Pos   = XMFLOAT3(0.0f, 0.0f,0.0f);
-	param.Size  = XMFLOAT3(1.0f,1.0f,1.0f);
-	param.Angle = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	param.Color = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	param.Pos   = DirectX::XMFLOAT3(0.0f, 0.0f,0.0f);
+	param.Size  = DirectX::XMFLOAT3(1.0f,1.0f,1.0f);
+	param.Angle = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+	param.Color = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 
 }
 
@@ -102,7 +102,7 @@ void Geometric_Primitive::Create_com_buffers(Vertex* vertices, size_t vertex_cou
 
 }
 
-void Geometric_Primitive::Render(Shader* shader, const XMFLOAT4X4& world, const XMFLOAT4& material_color, bool WireFrame) {
+void Geometric_Primitive::Render(Shader* shader, const DirectX::XMFLOAT4X4& world, const DirectX::XMFLOAT4& material_color, bool WireFrame) {
 	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();
 	uint32_t stride{ sizeof(Vertex) };
 	uint32_t offset{ 0 };
@@ -149,12 +149,12 @@ void Geometric_Primitive::Render(Shader* shader, const XMFLOAT4X4& world, const 
 void Geometric_Primitive::Render(Shader* shader) {
 	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();
 
-	XMMATRIX S{ XMMatrixScaling(param.Size.x,param.Size.y,param.Size.z) }	;				// 拡縮
-	XMMATRIX R{ XMMatrixRotationRollPitchYaw(XMConvertToRadians(param.Angle.x),XMConvertToRadians(param.Angle.y),XMConvertToRadians(param.Angle.z)) };	// 回転
-	XMMATRIX T{ XMMatrixTranslation(param.Pos.x,param.Pos.y,param.Pos.z) };					// 平行移動
+	DirectX::XMMATRIX S{ DirectX::XMMatrixScaling(param.Size.x,param.Size.y,param.Size.z) }	;				// 拡縮
+	DirectX::XMMATRIX R{ DirectX::XMMatrixRotationRollPitchYaw(DirectX::XMConvertToRadians(param.Angle.x), DirectX::XMConvertToRadians(param.Angle.y), DirectX::XMConvertToRadians(param.Angle.z)) };	// 回転
+	DirectX::XMMATRIX T{ DirectX::XMMatrixTranslation(param.Pos.x,param.Pos.y,param.Pos.z) };					// 平行移動
 
-	XMFLOAT4X4 world;
-	XMStoreFloat4x4(&world, S * R * T);	// ワールド変換行列作成
+	DirectX::XMFLOAT4X4 world;
+	DirectX::XMStoreFloat4x4(&world, S * R * T);	// ワールド変換行列作成
 
 	uint32_t stride{ sizeof(Vertex) };
 	uint32_t offset{ 0 };

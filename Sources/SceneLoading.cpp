@@ -2,7 +2,7 @@
 #include "SceneLoading.h"
 
 bool SceneLoading::Initialize() {
-	ComPtr<ID3D11Device> device = FRAMEWORK->GetDevice();	// frameworkからdeviceを取得
+	Microsoft::WRL::ComPtr<ID3D11Device> device = FRAMEWORK->GetDevice();	// frameworkからdeviceを取得
 	HRESULT hr = { S_OK };
 
 	// シーンコンスタントバッファの設定
@@ -25,7 +25,7 @@ bool SceneLoading::Initialize() {
 	{
 
 		// ロード画像の初期化
-		loadingImage = make_unique<Sprite>(L".\\Resources\\screenshot.jpg");	// シェーダーはコンストラクタ内で指定しているため、別を使うには改良が必要
+		loadingImage = std::make_unique<Sprite>(L".\\Resources\\screenshot.jpg");	// シェーダーはコンストラクタ内で指定しているため、別を使うには改良が必要
 		SpriteShader = std::make_unique<ShaderEx>();
 		SpriteShader->Create(L"Shaders\\sprite_vs", L"Shaders\\sprite_ps");
 	}
@@ -73,20 +73,20 @@ void SceneLoading::Render() {
 
 		float aspect_ratio{ viewport.Width / viewport.Height };	// アスペクト比
 		// 透視投影行列の作成
-		XMMATRIX P{ XMMatrixPerspectiveFovLH(XMConvertToRadians(30),aspect_ratio,0.1f,100.0f) };	// 視野角,縦横比,近くのZ,遠くのZ
+		DirectX::XMMATRIX P{DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(30),aspect_ratio,0.1f,100.0f) };	// 視野角,縦横比,近くのZ,遠くのZ
 
-		XMVECTOR eye{ XMVectorSet(eyePos.x,eyePos.y,eyePos.z,1.0f) };
-		XMVECTOR focus;
+		DirectX::XMVECTOR eye{DirectX::XMVectorSet(eyePos.x,eyePos.y,eyePos.z,1.0f) };
+		DirectX::XMVECTOR focus;
 		//if (!focus_zero) {
 		//	//focus = { XMVectorSet(eyePos.x,eyePos.y,eyePos.z + 1,1.0f) };	// カメラ位置の前
 		//	focus = { XMVectorSet(skinned_mesh->getPos().x,skinned_mesh->getPos().y,skinned_mesh->getPos().z,1.0f) };	// カメラ位置の前
 		//}
 		//else {
-			focus = { XMVectorSet(0.0f,0.0f,0.0f,1.0f) };
+			focus = {DirectX::XMVectorSet(0.0f,0.0f,0.0f,1.0f) };
 		//}
-		XMVECTOR up{ XMVectorSet(0.0f,1.0f,0.0f,0.0f) };
+		DirectX::XMVECTOR up{DirectX::XMVectorSet(0.0f,1.0f,0.0f,0.0f) };
 		// ViewMatrixの作成(LH = LeftHand(左手座標系))
-		XMMATRIX V{ XMMatrixLookAtLH(eye, focus, up) };	// カメラ座標、焦点、カメラの上方向
+		DirectX::XMMATRIX V{DirectX::XMMatrixLookAtLH(eye, focus, up) };	// カメラ座標、焦点、カメラの上方向
 
 		// コンスタントバッファ更新
 		scene_constants data{};

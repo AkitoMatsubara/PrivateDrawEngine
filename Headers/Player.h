@@ -36,4 +36,20 @@ public:
 	void Update();
 	void Render();
 
+	// セッター
+	void setPos(DirectX::XMFLOAT3 pos)     { Position = pos; }
+	void setSize(DirectX::XMFLOAT3 Size)   { Size = Size; }
+	void setAngle(DirectX::XMFLOAT3 angle) { Rotate = angle; }
+	void setColor(DirectX::XMFLOAT4 color) { Color = color; }
+
+	void setPos(float posX, float posY, float posZ)         { Position = DirectX::XMFLOAT3(posX, posY, posZ); }
+	void setSize(float sizeX, float sizeY, float sizeZ)     { Size = DirectX::XMFLOAT3(sizeX, sizeY, sizeZ); }
+	void setAngle(float angleX, float angleY, float angleZ) { Rotate = DirectX::XMFLOAT3(angleX, angleY, angleZ); }
+	void setColor(float r, float g, float b, float a)       { Color = DirectX::XMFLOAT4(r, g, b, a); }
+
+	// ゲッター
+	DirectX::XMFLOAT3 getPos()   { return Position; }
+	DirectX::XMFLOAT3 getSize()  { return Size; }
+	DirectX::XMFLOAT3 getAngle() { return Rotate; }
+	DirectX::XMFLOAT4 getColor() { return Color; }
 };

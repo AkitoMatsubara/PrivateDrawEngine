@@ -13,66 +13,64 @@
 #include <vector>
 
 
-using namespace DirectX;
-using namespace Microsoft::WRL;
 
 class Geometric_Primitive {
 public:
 	struct Vertex {
-		XMFLOAT3 position;
-		XMFLOAT3 normal;
+		DirectX::XMFLOAT3 position;
+		DirectX::XMFLOAT3 normal;
 	};
 	struct Constants {
-		XMFLOAT4X4 world;
-		XMFLOAT4 material_color;
+		DirectX::XMFLOAT4X4 world;
+		DirectX::XMFLOAT4 material_color;
 	};
 
 	bool wireframe;	// ワイヤーフレーム表示の有無
 
 private:
-	ComPtr<ID3D11Buffer> vertex_buffer;
-	ComPtr<ID3D11Buffer> index_buffer;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> vertex_buffer;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> index_buffer;
 
 	//ComPtr<ID3D11VertexShader> vertex_shader;
 	//ComPtr<ID3D11PixelShader> pixel_shader;
 	//ComPtr<ID3D11InputLayout> input_layout;
-	ComPtr<ID3D11Buffer> constant_buffer;
-	ComPtr<ID3D11RasterizerState>	rasterizer_states[3];	// 0:片面塗りつぶし,1:片面ワイヤーフレーム,2:両面ワイヤーフレーム
+	Microsoft::WRL::ComPtr<ID3D11Buffer> constant_buffer;
+	Microsoft::WRL::ComPtr<ID3D11RasterizerState>	rasterizer_states[3];	// 0:片面塗りつぶし,1:片面ワイヤーフレーム,2:両面ワイヤーフレーム
 
 
 	struct primitivParam {
-		XMFLOAT3 Pos;		// 描画位置
-		XMFLOAT3 Size;		// 描画サイズ
-		XMFLOAT3 Angle;		// 回転角度
-		XMFLOAT4 Color;		// 加算色
+		DirectX::XMFLOAT3 Pos;		// 描画位置
+		DirectX::XMFLOAT3 Size;		// 描画サイズ
+		DirectX::XMFLOAT3 Angle;		// 回転角度
+		DirectX::XMFLOAT4 Color;		// 加算色
 	}param;
 
 public:
 	Geometric_Primitive(const char* vs_cso_name = "Shaders\\geometric_primitive_vs.cso", const char* ps_cso_name = "Shaders\\geometric_primitive_ps.cso");
 	virtual ~Geometric_Primitive() = default;
 
-	void Render(Shader* shader, const XMFLOAT4X4& world, const XMFLOAT4& material_color, bool WireFrame);	// 外部からワールド行列を取りたい時
+	void Render(Shader* shader, const DirectX::XMFLOAT4X4& world, const DirectX::XMFLOAT4& material_color, bool WireFrame);	// 外部からワールド行列を取りたい時
 	void Render(Shader* shader);							// 内部のワールド行列を使用=移動などを内部で完結させている
 
 	// paramを編集するimguiウィンドウ
 	void imguiWindow(const char* beginname = "geometric_primitive");
 
 	// セッター
-	void setPos    (XMFLOAT3 pos)   { param.Pos = pos; }
-	void setSize   (XMFLOAT3 Size)  { param.Size = Size; }
-	void setAngle  (XMFLOAT3 angle) { param.Angle = angle; }
-	void setColor  (XMFLOAT4 color) { param.Color = color; }
+	void setPos    (DirectX::XMFLOAT3 pos)   { param.Pos = pos; }
+	void setSize   (DirectX::XMFLOAT3 Size)  { param.Size = Size; }
+	void setAngle  (DirectX::XMFLOAT3 angle) { param.Angle = angle; }
+	void setColor  (DirectX::XMFLOAT4 color) { param.Color = color; }
 
-	void setPos   (float posX, float posY,float posZ)       { param.Pos   = XMFLOAT3(posX, posY,posZ); }
-	void setSize  (float sizeX, float sizeY,float sizeZ)    { param.Size  = XMFLOAT3(sizeX, sizeY,sizeZ); }
-	void setAngle (float angleX, float angleY,float angleZ) { param.Angle = XMFLOAT3(angleX, angleY,angleZ); }
-	void setColor (float r, float g, float b, float a)      { param.Color = XMFLOAT4(r, g, b, a); }
+	void setPos   (float posX, float posY,float posZ)       { param.Pos   = DirectX::XMFLOAT3(posX, posY,posZ); }
+	void setSize  (float sizeX, float sizeY,float sizeZ)    { param.Size  = DirectX::XMFLOAT3(sizeX, sizeY,sizeZ); }
+	void setAngle (float angleX, float angleY,float angleZ) { param.Angle = DirectX::XMFLOAT3(angleX, angleY,angleZ); }
+	void setColor (float r, float g, float b, float a)      { param.Color = DirectX::XMFLOAT4(r, g, b, a); }
 
 	// ゲッター
-	XMFLOAT3 getPos() { return param.Pos; }
-	XMFLOAT3 getSize() { return param.Size; }
-	XMFLOAT3 getAngle() { return param.Angle; }
-	XMFLOAT4 getColor() { return param.Color; }
+	DirectX::XMFLOAT3 getPos() { return param.Pos; }
+	DirectX::XMFLOAT3 getSize() { return param.Size; }
+	DirectX::XMFLOAT3 getAngle() { return param.Angle; }
+	DirectX::XMFLOAT4 getColor() { return param.Color; }
 
 protected:
 	void Create_com_buffers(Vertex* vertices, size_t vertex_count, uint32_t* indices, size_t index_count);

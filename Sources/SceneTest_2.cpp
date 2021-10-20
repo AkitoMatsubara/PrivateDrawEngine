@@ -2,7 +2,7 @@
 #include "SceneTitle.h"
 
 bool SceneTest_2::Initialize() {
-	ComPtr<ID3D11Device> device = FRAMEWORK->GetDevice();	// frameworkからdeviceを取得
+	Microsoft::WRL::ComPtr<ID3D11Device> device = FRAMEWORK->GetDevice();	// frameworkからdeviceを取得
 	HRESULT hr = { S_OK };
 
 	// シーンコンスタントバッファの設定
@@ -24,30 +24,33 @@ bool SceneTest_2::Initialize() {
 	// 各種クラス設定
 	{
 		// spriteオブジェクトを生成(今回は先頭の１つだけを生成する)
-		sprites = make_unique<Sprite>(L".\\Resources\\screenshot.jpg");	// シェーダーはコンストラクタ内で指定しているため、別を使うには改良が必要
+		sprites = std::make_unique<Sprite>(L".\\Resources\\screenshot.jpg");	// シェーダーはコンストラクタ内で指定しているため、別を使うには改良が必要
 		sprites->setSize(1280, 720);
 		SpriteShader = std::make_unique<ShaderEx>();
 		SpriteShader->Create(L"Shaders\\sprite_vs", L"Shaders\\sprite_ps");
 
 		// Geometric_primitiveオブジェクトの生成
 		{
-			grid = make_unique<Geometric_Cube>();
-			grid->setPos(XMFLOAT3(0, -1, 0));
-			grid->setSize(XMFLOAT3(10, 0.1f, 10));
+			grid = std::make_unique<Geometric_Cube>();
+			grid->setPos(DirectX::XMFLOAT3(0, -1, 0));
+			grid->setSize(DirectX::XMFLOAT3(10, 0.1f, 10));
 			GeomtricShader = std::make_unique<ShaderEx>();
 			GeomtricShader->Create(L"Shaders\\geometric_primitive_vs", L"Shaders\\geometric_primitive_ps");
 		}
 
-		//skinned_mesh = make_unique<Skinned_Mesh>(device.Get(), ".\\Resources\\cube.000.fbx");		// テクスチャ、マテリアル無し
-		//skinned_mesh = make_unique<Skinned_Mesh>(device.Get(), ".\\Resources\\cube.001.0.fbx");	// テクスチャ使用
-		//skinned_mesh = make_unique<Skinned_Mesh>(device.Get(), ".\\Resources\\cube.001.1.fbx");	// 埋め込みテクスチャ
-		//skinned_mesh = make_unique<Skinned_Mesh>(device.Get(), ".\\Resources\\cube.002.0.fbx");	// 3種テクスチャ使用
-		//skinned_mesh = make_unique<Skinned_Mesh>(device.Get(), ".\\Resources\\cube.002.1.fbx");	// テクスチャ有り無し、マテリアル有り無し混合
-		skinned_mesh = make_unique<Skinned_Mesh>(".\\Resources\\cube.003.0.fbx");	// 複数メッシュ キューブと猿
+		//skinned_mesh = std::make_unique<Skinned_Mesh>(device.Get(), ".\\Resources\\cube.000.fbx");		// テクスチャ、マテリアル無し
+		//skinned_mesh = std::make_unique<Skinned_Mesh>(device.Get(), ".\\Resources\\cube.001.0.fbx");	// テクスチャ使用
+		//skinned_mesh = std::make_unique<Skinned_Mesh>(device.Get(), ".\\Resources\\cube.001.1.fbx");	// 埋め込みテクスチャ
+		//skinned_mesh = std::make_unique<Skinned_Mesh>(device.Get(), ".\\Resources\\cube.002.0.fbx");	// 3種テクスチャ使用
+		//skinned_mesh = std::make_unique<Skinned_Mesh>(device.Get(), ".\\Resources\\cube.002.1.fbx");	// テクスチャ有り無し、マテリアル有り無し混合
+		skinned_mesh = std::make_unique<Skinned_Mesh>(".\\Resources\\cube.003.0.fbx");	// 複数メッシュ キューブと猿
 		//skinned_mesh = make_unique<Skinned_Mesh>(".\\Resources\\cube.003.1.fbx", Skinned_Mesh::CST_RIGHT_Z, true);	// 3角形化されていない複数メッシュ キューブ
 
-		player = make_unique<Player>();
+		player = std::make_unique<Player>();
 		player->Initialize();
+
+		stage = std::make_unique<Stage>();
+		stage->Initialize();
 
 		SkinnedShader = std::make_unique<ShaderEx>();
 		SkinnedShader->Create(L"Shaders\\skinned_mesh_vs", L"Shaders\\skinned_mesh_ps");
@@ -69,7 +72,7 @@ bool SceneTest_2::Initialize() {
 			_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 		}
 
-		ComputeShader = make_unique<ShaderEx>();
+		ComputeShader = std::make_unique<ShaderEx>();
 		ComputeShader->Create(L"Shaders\\ComputeShader_cs");
 
 		// 入力用バッファーに初期値を設定する
@@ -96,6 +99,7 @@ void SceneTest_2::Update() {
 	if (GetAsyncKeyState('G') < 0) setScene(std::make_unique<SceneTitle>());
 
 	player->Update();
+	stage->Update();
 
 	// カメラ操作
 	static float cameraSpeed = 7.0f;
@@ -109,8 +113,8 @@ void SceneTest_2::Update() {
 	{
 		//// コンピュートシェーダーを実行する
 		//RunComputeShader(pD3DDeviceContext, pComputeShader, pBufSRV, pBufResultUAV, NUM_ELEMENTS / 2, 1, 1);
-		ComPtr<ID3D11DeviceContext> immediate_context= FRAMEWORK->GetDeviceContext();
-		ComPtr<ID3D11Device> device = FRAMEWORK->GetDevice();
+		Microsoft::WRL::ComPtr<ID3D11DeviceContext> immediate_context= FRAMEWORK->GetDeviceContext();
+		Microsoft::WRL::ComPtr<ID3D11Device> device = FRAMEWORK->GetDevice();
 		HRESULT hr = { S_OK };
 
 		immediate_context->CSSetShader(ComputeShader->GetCS(), NULL, 0);
@@ -203,20 +207,20 @@ void SceneTest_2::Render() {
 
 		float aspect_ratio{ viewport.Width / viewport.Height };	// アスペクト比
 		// 透視投影行列の作成
-		XMMATRIX P{ XMMatrixPerspectiveFovLH(XMConvertToRadians(30),aspect_ratio,0.1f,100.0f) };	// 視野角,縦横比,近くのZ,遠くのZ
+		DirectX::XMMATRIX P{DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(30),aspect_ratio,0.1f,100.0f) };	// 視野角,縦横比,近くのZ,遠くのZ
 
-		XMVECTOR eye{ XMVectorSet(eyePos.x,eyePos.y,eyePos.z,1.0f) };
-		XMVECTOR focus;
+		DirectX::XMVECTOR eye{DirectX::XMVectorSet(eyePos.x,eyePos.y,eyePos.z,1.0f) };
+		DirectX::XMVECTOR focus;
 		if (!focus_zero) {
 			//focus = { XMVectorSet(eyePos.x,eyePos.y,eyePos.z + 1,1.0f) };	// カメラ位置の前
-			focus = { XMVectorSet(skinned_mesh->getPos().x,skinned_mesh->getPos().y,skinned_mesh->getPos().z,1.0f) };	// カメラ位置の前
+			focus = {DirectX::XMVectorSet(player->getPos().x,player->getPos().y,player->getPos().z,1.0f) };	// カメラ位置の前
 		}
 		else {
-			focus = { XMVectorSet(0.0f,0.0f,0.0f,1.0f) };
+			focus = {DirectX::XMVectorSet(0.0f,0.0f,0.0f,1.0f) };
 		}
-		XMVECTOR up{ XMVectorSet(0.0f,1.0f,0.0f,0.0f) };
+		DirectX::XMVECTOR up{DirectX::XMVectorSet(0.0f,1.0f,0.0f,0.0f) };
 		// ViewMatrixの作成(LH = LeftHand(左手座標系))
-		XMMATRIX V{ XMMatrixLookAtLH(eye, focus, up) };	// カメラ座標、焦点、カメラの上方向
+		DirectX::XMMATRIX V{DirectX::XMMatrixLookAtLH(eye, focus, up) };	// カメラ座標、焦点、カメラの上方向
 
 		// コンスタントバッファ更新
 		scene_constants data{};
@@ -234,6 +238,7 @@ void SceneTest_2::Render() {
 			grid->wireframe = true;
 			grid->Render(GeomtricShader.get());
 			//skinned_mesh->Render(SkinnedShader.get());
+			stage->Render();
 			player->Render();
 		}
 	}
@@ -379,7 +384,7 @@ void SceneTest_2::imguiUpdate() {
 	// 2D用 内部関数で完結させてる
 	sprites->ImguiWindow();
 	// 3D用パラメータ
-	skinned_mesh->imguiWindow("fbx");
+	//skinned_mesh->imguiWindow("fbx");
 
 	// ライト調整等グローバル設定
 	ImGui::Begin("Light");

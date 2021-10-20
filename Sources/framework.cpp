@@ -399,7 +399,7 @@ bool framework::CreateRenderTargetView() {
 
 // 深度ステンシルビューの作成
 bool framework::CreateDepthStencileView() {
-	ComPtr<ID3D11Texture2D> depth_stencil_buffer{};
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> depth_stencil_buffer{};
 	D3D11_TEXTURE2D_DESC textuer2d_desc{};	// 深度ステンシル用テクスチャ
 	textuer2d_desc.Width = SCREEN_WIDTH;	// バッファの横幅
 	textuer2d_desc.Height = SCREEN_HEIGHT;	// バッファの縦幅
@@ -649,7 +649,7 @@ int framework::run() {
 	ImGui::StyleColorsDark();
 #endif
 	SceneManager* scenemanager = new SceneManager;
-	scenemanager->ChangeScene(make_unique<SceneTitle>());
+	scenemanager->ChangeScene(std::make_unique<SceneTitle>());
 	//SceneManager::getInstance().ChangeScene(make_unique<SceneTitle>());
 
 	while (WM_QUIT != msg.message)

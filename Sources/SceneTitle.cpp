@@ -4,7 +4,7 @@
 #include "SceneLoading.h"
 
 bool SceneTitle::Initialize() {
-	ComPtr<ID3D11Device> device = FRAMEWORK->GetDevice();	// frameworkからdeviceを取得
+	Microsoft::WRL::ComPtr<ID3D11Device> device = FRAMEWORK->GetDevice();	// frameworkからdeviceを取得
 // シーンコンスタントバッファの設定
 	D3D11_BUFFER_DESC buffer_desc{};
 	buffer_desc.ByteWidth = sizeof(scene_constants);
@@ -25,22 +25,22 @@ bool SceneTitle::Initialize() {
 	// 各種クラス設定
 	{
 		// spriteオブジェクトを生成(今回は先頭の１つだけを生成する)
-		TitleImage = make_unique<Sprite>(L".\\Resources\\screenshot.jpg");	// シェーダーはコンストラクタ内で指定しているため、別を使うには改良が必要
+		TitleImage = std::make_unique<Sprite>(L".\\Resources\\screenshot.jpg");	// シェーダーはコンストラクタ内で指定しているため、別を使うには改良が必要
 		TitleImage->setSize(1280, 720);
 		SpriteShader = std::make_unique<ShaderEx>();
 		SpriteShader->Create(L"Shaders\\sprite_vs", L"Shaders\\sprite_ps");
 
 		// Geometric_primitiveオブジェクトの生成
 		{
-			grid = make_unique<Geometric_Cube>();
-			grid->setPos(XMFLOAT3(0, -1, 0));
-			grid->setSize(XMFLOAT3(10, 0.1f, 10));
+			grid = std::make_unique<Geometric_Cube>();
+			grid->setPos(DirectX::XMFLOAT3(0, -1, 0));
+			grid->setSize(DirectX::XMFLOAT3(10, 0.1f, 10));
 			GeomtricShader = std::make_unique<ShaderEx>();
 			GeomtricShader->Create(L"Shaders\\geometric_primitive_vs", L"Shaders\\geometric_primitive_ps");
 		}
 
 		//skinned_mesh = make_unique<Skinned_Mesh>(".\\Resources\\cube.000.fbx");		// テクスチャ、マテリアル無し
-		skinned_mesh = make_unique<Skinned_Mesh>(".\\Resources\\cube.001.0.fbx");	// テクスチャ使用
+		skinned_mesh = std::make_unique<Skinned_Mesh>(".\\Resources\\cube.001.0.fbx");	// テクスチャ使用
 		//skinned_mesh = make_unique<Skinned_Mesh>(".\\Resources\\cube.001.1.fbx");	// 埋め込みテクスチャ
 		//skinned_mesh = make_unique<Skinned_Mesh>(".\\Resources\\cube.002.0.fbx");	// 3種テクスチャ使用
 		//skinned_mesh = make_unique<Skinned_Mesh>(".\\Resources\\cube.002.1.fbx");	// テクスチャ有り無し、マテリアル有り無し混合
@@ -99,19 +99,19 @@ void SceneTitle::Render() {
 
 		float aspect_ratio{ viewport.Width / viewport.Height };	// アスペクト比
 		// 透視投影行列の作成
-		XMMATRIX P{ XMMatrixPerspectiveFovLH(XMConvertToRadians(30),aspect_ratio,0.1f,100.0f) };	// 視野角,縦横比,近くのZ,遠くのZ
+		DirectX::XMMATRIX P{DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(30),aspect_ratio,0.1f,100.0f) };	// 視野角,縦横比,近くのZ,遠くのZ
 
-		XMVECTOR eye{ XMVectorSet(eyePos.x,eyePos.y,eyePos.z,1.0f) };
-		XMVECTOR focus;
+		DirectX::XMVECTOR eye{DirectX::XMVectorSet(eyePos.x,eyePos.y,eyePos.z,1.0f) };
+		DirectX::XMVECTOR focus;
 		if (!focus_zero) {
-			focus = { XMVectorSet(eyePos.x,eyePos.y,eyePos.z + 1,1.0f) };	// カメラ位置の前
+			focus = {DirectX::XMVectorSet(eyePos.x,eyePos.y,eyePos.z + 1,1.0f) };	// カメラ位置の前
 		}
 		else {
-			focus = { XMVectorSet(0.0f,0.0f,0.0f,1.0f) };
+			focus = {DirectX::XMVectorSet(0.0f,0.0f,0.0f,1.0f) };
 		}
-		XMVECTOR up{ XMVectorSet(0.0f,1.0f,0.0f,0.0f) };
+		DirectX::XMVECTOR up{DirectX::XMVectorSet(0.0f,1.0f,0.0f,0.0f) };
 		// ViewMatrixの作成(LH = LeftHand(左手座標系))
-		XMMATRIX V{ XMMatrixLookAtLH(eye, focus, up) };	// カメラ座標、焦点、カメラの上方向
+		DirectX::XMMATRIX V{DirectX::XMMatrixLookAtLH(eye, focus, up) };	// カメラ座標、焦点、カメラの上方向
 
 		// コンスタントバッファ更新
 		scene_constants data{};

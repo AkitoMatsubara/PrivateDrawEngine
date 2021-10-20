@@ -9,12 +9,10 @@
 #include "texture.h"
 #include "skinned_mesh.h"
 
-using namespace DirectX;
+Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> Skinned_Mesh::dummyTexture;
 
-ComPtr<ID3D11ShaderResourceView> Skinned_Mesh::dummyTexture;
-
-inline XMFLOAT4X4 ConvertToXmfloat4x4(const FbxAMatrix& fbxamatrix) {
-	XMFLOAT4X4 value;
+inline DirectX::XMFLOAT4X4 ConvertToXmfloat4x4(const FbxAMatrix& fbxamatrix) {
+	DirectX::XMFLOAT4X4 value;
 	// 2重for文 4x4だからね
 	for (int row = 0; row < 4; row++) {
 		for (int column = 0; column < 4; column++) {
@@ -24,8 +22,8 @@ inline XMFLOAT4X4 ConvertToXmfloat4x4(const FbxAMatrix& fbxamatrix) {
 	return value;
 }
 
-inline XMFLOAT3 ConvertToXmfloat3(const FbxDouble3& fbxdouble3) {
-	XMFLOAT3 value;
+inline DirectX::XMFLOAT3 ConvertToXmfloat3(const FbxDouble3& fbxdouble3) {
+	DirectX::XMFLOAT3 value;
 	value.x = static_cast<float>(fbxdouble3[0]);
 	value.y = static_cast<float>(fbxdouble3[1]);
 	value.z = static_cast<float>(fbxdouble3[2]);
@@ -33,8 +31,8 @@ inline XMFLOAT3 ConvertToXmfloat3(const FbxDouble3& fbxdouble3) {
 
 }
 
-inline XMFLOAT4 ConvertToXmfloat4(const FbxDouble4& fbxdouble3) {
-	XMFLOAT4 value;
+inline DirectX::XMFLOAT4 ConvertToXmfloat4(const FbxDouble4& fbxdouble3) {
+	DirectX::XMFLOAT4 value;
 	value.x = static_cast<float>(fbxdouble3[0]);
 	value.y = static_cast<float>(fbxdouble3[1]);
 	value.z = static_cast<float>(fbxdouble3[2]);
@@ -104,10 +102,10 @@ Skinned_Mesh::Skinned_Mesh(const char* fbx_filename, int cstNo, bool triangulate
 	rasterizer.SetRasterizer(device);
 	CstNo = cstNo;
 	// 各種パラメータの初期化
-	param.Pos = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	param.Size = XMFLOAT3(1.0f, 1.0f, 1.0f);
-	param.Angle = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	param.Color = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	param.Pos = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+	param.Size = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
+	param.Angle = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+	param.Color = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 void Skinned_Mesh::Render(Shader* shader, int rasterize) {
@@ -118,13 +116,13 @@ void Skinned_Mesh::Render(Shader* shader, int rasterize) {
 	for (const Mesh& mesh : meshes) {
 		// 単位をセンチメートルからメートルに変更するため、scale_factorを0.01に設定する
 		const float scale_factor = 1.0f;
-		XMMATRIX C{ XMLoadFloat4x4(&coordinate_system_transforms[CstNo]) * XMMatrixScaling(scale_factor,scale_factor,scale_factor) };
+		DirectX::XMMATRIX C{ XMLoadFloat4x4(&coordinate_system_transforms[CstNo]) * DirectX::XMMatrixScaling(scale_factor,scale_factor,scale_factor) };
 
-		XMMATRIX S{ XMMatrixScaling(param.Size.x,param.Size.y,param.Size.z) };	// 拡縮
-		XMMATRIX R{ XMMatrixRotationRollPitchYaw(XMConvertToRadians(param.Angle.x),XMConvertToRadians(param.Angle.y),XMConvertToRadians(param.Angle.z)) };	// 回転
-		XMMATRIX T{ XMMatrixTranslation(param.Pos.x,param.Pos.y,param.Pos.z) };	// 平行移動
+		DirectX::XMMATRIX S{DirectX::XMMatrixScaling(param.Size.x,param.Size.y,param.Size.z) };	// 拡縮
+		DirectX::XMMATRIX R{DirectX::XMMatrixRotationRollPitchYaw(DirectX::XMConvertToRadians(param.Angle.x), DirectX::XMConvertToRadians(param.Angle.y), DirectX::XMConvertToRadians(param.Angle.z)) };	// 回転
+		DirectX::XMMATRIX T{DirectX::XMMatrixTranslation(param.Pos.x,param.Pos.y,param.Pos.z) };	// 平行移動
 
-		XMFLOAT4X4 world;
+		DirectX::XMFLOAT4X4 world;
 		XMStoreFloat4x4(&world, C * S * R * T);	// ワールド変換行列作成
 
 		uint32_t stride{ sizeof(Vertex) };	// stride:刻み幅
@@ -143,7 +141,7 @@ void Skinned_Mesh::Render(Shader* shader, int rasterize) {
 		immediate_context->RSSetState(rasterizer.states[rasterize].Get());
 
 		Constants data{ world,param.Color };
-		XMStoreFloat4x4(&data.world, XMLoadFloat4x4(&mesh.default_global_transform) * XMLoadFloat4x4(&world));	// グローバルのTransformとworld行列を掛けてworld座標に変換している
+		DirectX::XMStoreFloat4x4(&data.world, DirectX::XMMatrixMultiply(DirectX::XMLoadFloat4x4(&mesh.default_global_transform) , DirectX::XMLoadFloat4x4(&world)));	// グローバルのTransformとworld行列を掛けてworld座標に変換している
 
 		for (const Mesh::Subset& subset : mesh.subsets) {	// マテリアル別メッシュの数回すよ
 			if (subset.material_unique_id != 0)	// unique_idの確認
@@ -152,7 +150,7 @@ void Skinned_Mesh::Render(Shader* shader, int rasterize) {
 				if (materials.size() > 0)	// マテリアル情報があるか確認
 				{
 					immediate_context->PSSetShaderResources(0, 1, material.srv[0].GetAddressOf());
-					XMStoreFloat4(&data.material_color, XMLoadFloat4(&param.Color) * XMLoadFloat4(&material.Kd));	// マテリアルとカラーを合成
+					XMStoreFloat4(&data.material_color, DirectX::XMVectorMultiply(DirectX::XMLoadFloat4(&param.Color),DirectX::XMLoadFloat4(&material.Kd)));	// マテリアルとカラーを合成
 				}
 			}
 			else
@@ -207,9 +205,9 @@ void Skinned_Mesh::Create_com_buffers(const char* fbx_filename) {
 	}
 
 	// マテリアル数に応じてテクスチャをセット
-	for (unordered_map<uint64_t, Material>::iterator iterator = materials.begin(); iterator != materials.end(); ++iterator) {
+	for (std::unordered_map<uint64_t, Material>::iterator iterator = materials.begin(); iterator != materials.end(); ++iterator) {
 		if (iterator->second.texture_filenames[0].size() > 0) {	// secondは値にアクセスするために使用する
-			filesystem::path path(fbx_filename);
+			std::filesystem::path path(fbx_filename);
 			path.replace_filename(iterator->second.texture_filenames[0]);
 			D3D11_TEXTURE2D_DESC texture2d_desc;
 			load_texture_from_file(path.c_str(), iterator->second.srv[0].GetAddressOf(), &texture2d_desc);
@@ -237,7 +235,7 @@ void Skinned_Mesh::Create_com_buffers(const char* fbx_filename) {
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 }
 
-void Skinned_Mesh::Fetch_Meshes(FbxScene* fbx_scene, vector<Mesh>& meshes) {
+void Skinned_Mesh::Fetch_Meshes(FbxScene* fbx_scene, std::vector<Mesh>& meshes) {
 	for (const scene::node& node : scene_view.nodes) {
 		if (node.attribute != FbxNodeAttribute::EType::eMesh) {	// Mesh属性じゃなかったら
 			continue;
@@ -252,7 +250,7 @@ void Skinned_Mesh::Fetch_Meshes(FbxScene* fbx_scene, vector<Mesh>& meshes) {
 		mesh.node_index = scene_view.indexof(mesh.unique_id);
 		mesh.default_global_transform = ConvertToXmfloat4x4(fbx_mesh->GetNode()->EvaluateGlobalTransform());
 
-		vector <Mesh::Subset>& subsets{ mesh.subsets };
+		std::vector <Mesh::Subset>& subsets{ mesh.subsets };
 		const int material_count{ fbx_mesh->GetNode()->GetMaterialCount() };
 		subsets.resize(material_count > 0 ? material_count : 1);
 		for (int material_index = 0; material_index < material_count; ++material_index) {
@@ -320,7 +318,7 @@ void Skinned_Mesh::Fetch_Meshes(FbxScene* fbx_scene, vector<Mesh>& meshes) {
 	}
 }
 
-void Skinned_Mesh::Fetch_Materials(FbxScene* fbx_scene, unordered_map<uint64_t, Material>& materials) {
+void Skinned_Mesh::Fetch_Materials(FbxScene* fbx_scene, std::unordered_map<uint64_t, Material>& materials) {
 	const size_t node_count{ scene_view.nodes.size() };	// ノードのサイズ
 	for (size_t node_index = 0; node_index < node_count; ++node_index) {
 		const scene::node& node{ scene_view.nodes.at(node_index) };	// 指定番号のノード取得
@@ -370,7 +368,7 @@ void Skinned_Mesh::Fetch_Materials(FbxScene* fbx_scene, unordered_map<uint64_t, 
 					material.Ka.w = 1.0f;
 				}
 			}
-			materials.emplace(material.unique_id, move(material));	// unique番目にmaterialを格納する
+			materials.emplace(material.unique_id, std::move(material));	// unique番目にmaterialを格納する
 		}
 
 	}
