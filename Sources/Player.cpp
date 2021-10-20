@@ -12,7 +12,7 @@ void Player::Initialize() {
 	Vector       = { 0,0,0 };
 	acceleration = { 0,0,0 };
 	Velocity     = { 0,0,0 };
-	Size         = { 1,1,1 };
+	Scale        = { 1,1,1 };
 	Rotate       = { 0,0,0 };
 	Color        = { 1,1,1,1 };
 }
@@ -22,10 +22,28 @@ void Player::Update() {
 	acceleration = { 0,0,0 };
 	Velocity = { 0,0,0 };	// 入力中だけ動かすために毎フレーム初期化 普通いらない
 
-	if (GetKeyState('D') < 0)       acceleration.x += speed;	// 右に
-	if (GetKeyState('A') < 0)       acceleration.x -= speed;	// 左に
-	if (GetKeyState('W') < 0)       acceleration.y += speed;	// 上に
-	if (GetKeyState('S') < 0)       acceleration.y -= speed;	// 下に
+
+	//--------------------------------------------------------
+	//前進処理
+	if (GetKeyState('W') < 0){
+		Position.x += sinf(DirectX::XMConvertToRadians(Rotate.y)) * speed;
+		Position.z += cosf(DirectX::XMConvertToRadians(Rotate.y)) * speed;
+	}
+	//後退処理
+	if (GetKeyState('S') < 0){
+		Position.x -= sinf(DirectX::XMConvertToRadians(Rotate.y)) * speed;
+		Position.z -= cosf(DirectX::XMConvertToRadians(Rotate.y)) * speed;
+	}
+	//回転処理
+	{
+		if (GetKeyState('D') < 0){
+			Rotate.y += DirectX::XMConvertToRadians(40);
+		}
+		if (GetKeyState('A') < 0){
+			Rotate.y -= DirectX::XMConvertToRadians(40);
+		}
+	}
+	//--------------------------------------------------------
 
 	Velocity+= acceleration;
 	Position += Velocity;
@@ -33,7 +51,7 @@ void Player::Update() {
 	// モデルに描画系パラメーターを渡す
 	Model->setPos(Position);
 	Model->setAngle(Rotate);
-	Model->setSize(Size);
+	Model->setSize(Scale);
 	Model->setColor(Color);
 }
 

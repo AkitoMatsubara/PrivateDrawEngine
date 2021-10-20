@@ -21,10 +21,10 @@ static inline void operator-= (DirectX::XMFLOAT3& v1, const float& v2) { v1.x -=
 
 // XMFLOAT3 系
 
-float Vector3Length(const DirectX::XMFLOAT3& v1)
+inline float Vector3Length(const DirectX::XMFLOAT3& v1)
 {
-	DirectX::XMFLOAT3 in_out_data;
-	//XMVECTORにロードする
+	DirectX::XMFLOAT3 in_out_data{0};
+	//XMFLOAT3を一度XMVECTORにロードする
 	DirectX::XMVECTOR Vec = DirectX::XMLoadFloat3(&v1);
 	//計算する
 	Vec = DirectX::XMVector3Length(Vec);

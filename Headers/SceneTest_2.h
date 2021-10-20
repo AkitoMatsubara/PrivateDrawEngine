@@ -74,8 +74,9 @@ public:
 
 	// ステージ;
 	std::unique_ptr<Stage>stage;
+
 	// 個人 ImGuiで数値を編集、格納して関数に渡す変数
-	float light_dir[3]{ 0.5f,-1.0f,1.0f };	// ライトの向かう方向
+	float light_dir[3]{ 0.5f,-2.0f,1.0f };	// ライトの向かう方向
 	bool focus_zero = false;	// 焦点が(0,0,0)に向けるかどうか
 	DirectX::XMFLOAT3 eyePos = DirectX::XMFLOAT3(0.0f, 0.0f, -10.0f);	// カメラの位置
 

@@ -1,4 +1,4 @@
-#include "SceneTest_2.h"
+	#include "SceneTest_2.h"
 #include "SceneTitle.h"
 
 bool SceneTest_2::Initialize() {
@@ -144,11 +144,9 @@ void SceneTest_2::Update() {
 		immediate_context->Dispatch(/*NUM_ELEMENTS / 2*/3, 1, 1);
 		// CS‚ÌÝ’è‰ðœ
 		immediate_context->CSSetShader(NULL, NULL, 0);
-
 		ID3D11UnorderedAccessView* ppUAViewNULL[1] = { NULL };
 		immediate_context->CSSetUnorderedAccessViews(0, 1, ppUAViewNULL, NULL);
-
-		ID3D11ShaderResourceView* ppSRVNULL[2] = { NULL, NULL };
+				ID3D11ShaderResourceView* ppSRVNULL[2] = { NULL, NULL };
 		immediate_context->CSSetShaderResources(0, 2, ppSRVNULL);
 
 		ID3D11Buffer* ppCBNULL[1] = { NULL };
