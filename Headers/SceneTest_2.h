@@ -2,6 +2,7 @@
 #include "SceneManager.h"
 
 #include "Player.h"
+#include "Enemy.h"
 #include "Stage.h"
 
 class SceneTest_2 :public SceneBase {
@@ -44,7 +45,8 @@ private:
 	HRESULT CreateUAVForStructuredBuffer(UINT uElementSize, UINT uCount, VOID* pInitData, ID3D11Buffer** ppBuf, ID3D11UnorderedAccessView** ppUAVOut);
 	// アンオーダードアクセスビューのバッファの内容を CPU から読み込み可能なバッファへコピーする
 	ID3D11Buffer* CreateAndCopyToBuffer(ID3D11Device* pD3DDevice, ID3D11DeviceContext* pD3DDeviceContext, ID3D11Buffer* pBuffer);
-
+	// コンピュートシェーダーを実行する
+	void RunComputeShader(ID3D11ComputeShader* pComputeShader, ID3D11ShaderResourceView* pRscSRV, ID3D11UnorderedAccessView* pDstUAV, UINT X, UINT Y, UINT Z);
 	// てすとしめ---------------------------------------------------------------------
 
 public:
@@ -71,6 +73,9 @@ public:
 
 	// プレイヤーオブジェクト
 	std::unique_ptr<Player> player;
+
+	// 敵
+	std::unique_ptr<Enemy> enemy;
 
 	// ステージ;
 	std::unique_ptr<Stage>stage;

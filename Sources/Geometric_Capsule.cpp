@@ -1,7 +1,7 @@
 #include "framework.h"
 #include "geometric_primitive.h"
 
-Geometric_Capsule::Geometric_Capsule(FLOAT radian, FLOAT height, u_int slices, u_int stacks, const char* vs_cso_name, const char* ps_cso_name) :Geometric_Primitive(vs_cso_name, ps_cso_name) {
+Geometric_Capsule::Geometric_Capsule(FLOAT radian, FLOAT height, u_int slices, u_int stacks) :Geometric_Primitive() {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
 	// 基本は球生成の応用
 	std::vector<Vertex> vertices;
@@ -10,17 +10,23 @@ Geometric_Capsule::Geometric_Capsule(FLOAT radian, FLOAT height, u_int slices, u
 	u_int base_index = 0;
 	u_int vertex_offset = 2;	// 上下頂点分のずれ
 
+	// 変数に数値を保存
+	Radian = radian;
+	Height = height;
+
 	float h = height * 0.5f;	// 円柱の高さ(の半分)
-	float degree = 2.0f * 3.141592653589893f / slices;	// 2 * Pi = 360° これを分割数で割ることによって一つの三角形の角度が求まる
+	float degree = 2.0f * 3.141592653589793f / slices;	// 2 * Pi = 360° これを分割数で割ることによって一つの三角形の角度が求まる
 
 	// 球部分
 	{
 		Vertex top_vertex;		// 上の頂点(上向き)
-		top_vertex.position = DirectX::XMFLOAT3(0.0f, h + radian, 0.0f);
+		TopPos = h + radian;
+		top_vertex.position = DirectX::XMFLOAT3(0.0f, TopPos, 0.0f);
 		top_vertex.normal = DirectX::XMFLOAT3(0.0f, +1.0f, 0.0f);
 
 		Vertex bottom_vertex;	// 下の頂点(下向き)
-		bottom_vertex.position = DirectX::XMFLOAT3(0.0f, -h - radian, 0.0f);
+		BottomPos = -h - radian;
+		bottom_vertex.position = DirectX::XMFLOAT3(0.0f, BottomPos, 0.0f);
 		bottom_vertex.normal = DirectX::XMFLOAT3(0.0f, -1.0f, 0.0f);
 
 		vertices.push_back(top_vertex);	// 上に頂点を[0]に登録

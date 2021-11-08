@@ -131,8 +131,7 @@ void SceneTitle::Render() {
 			//XMMATRIX T{ XMMatrixTranslation(geometric_primitive[0]->getPos().x,geometric_primitive[0]->getPos().y,geometric_primitive[0]->getPos().z) };			// 平行移動
 			//XMFLOAT4X4 world;
 			//XMStoreFloat4x4(&world, S * R * T);	// ワールド変換行列作成
-			grid->wireframe = true;
-			grid->Render(GeomtricShader.get());
+			grid->Render(true);
 			//obj_1->Render(immediate_context.Get());
 			//obj_2->Render(immediate_context.Get());
 			//static_mesh->Render(immediate_context.Get());

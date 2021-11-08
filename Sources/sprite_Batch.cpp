@@ -209,10 +209,3 @@ DirectX::XMFLOAT3 sprite_Batch::ConvertToNDC(DirectX::XMFLOAT3 pos, D3D11_VIEWPO
 	// 今回はsprite(画像)なのでz値は変更する必要なし
 	return pos;
 }
-
-DirectX::XMFLOAT2 sprite_Batch::Division(DirectX::XMFLOAT2 val1, DirectX::XMFLOAT2 val2) {
-	DirectX::XMFLOAT2 valOut;
-	valOut.x = val1.x / val2.x;
-	valOut.y = val1.y / val2.y;
-	return valOut;
-}

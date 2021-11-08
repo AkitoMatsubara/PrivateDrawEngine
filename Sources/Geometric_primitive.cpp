@@ -9,20 +9,14 @@
 
 #include <vector>
 
-
-Geometric_Primitive::Geometric_Primitive(const char* vs_cso_name, const char* ps_cso_name) {
+Geometric_Primitive::Geometric_Primitive(const WCHAR* vs_name, const WCHAR* ps_name) {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
 
 	HRESULT hr{ S_OK };
 
-	//D3D11_INPUT_ELEMENT_DESC input_element_desc[]{
-	//	{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-	//	{ "NORMAL"	, 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-	//};
-
-	//// シェーダ作成
-	//create_vs_from_cso(vs_cso_name, vertex_shader.GetAddressOf(), input_layout.GetAddressOf(), input_element_desc, ARRAYSIZE(input_element_desc));
-	//create_ps_from_cso(ps_cso_name, pixel_shader.GetAddressOf());
+	// シェーダ作成
+	GeometricShader = std::make_unique<ShaderEx>();
+	GeometricShader->Create(vs_name, ps_name);
 
 	// コンスタントバッファ作成
 	D3D11_BUFFER_DESC buffer_desc{};
@@ -62,15 +56,14 @@ Geometric_Primitive::Geometric_Primitive(const char* vs_cso_name, const char* ps
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 
 	// 各種パラメータの初期化
-	wireframe = false;
-	param.Pos   = DirectX::XMFLOAT3(0.0f, 0.0f,0.0f);
-	param.Size  = DirectX::XMFLOAT3(1.0f,1.0f,1.0f);
-	param.Angle = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
-	param.Color = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-
+	Parameters = std::make_unique<Object3d>();
+	Parameters->Position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+	Parameters->Scale = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
+	Parameters->Rotate = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+	Parameters->Color = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
-void Geometric_Primitive::Create_com_buffers(Vertex* vertices, size_t vertex_count, uint32_t* indices, size_t index_count){
+void Geometric_Primitive::Create_com_buffers(Vertex* vertices, size_t vertex_count, uint32_t* indices, size_t index_count) {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
 	HRESULT hr{ S_OK };
 
@@ -90,7 +83,6 @@ void Geometric_Primitive::Create_com_buffers(Vertex* vertices, size_t vertex_cou
 	hr = device->CreateBuffer(&buffer_desc, &subresource_data, vertex_buffer.ReleaseAndGetAddressOf());
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 
-
 	buffer_desc.ByteWidth = static_cast<UINT>(sizeof(uint32_t) * index_count);
 	buffer_desc.Usage = D3D11_USAGE_DEFAULT;
 	buffer_desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
@@ -98,11 +90,9 @@ void Geometric_Primitive::Create_com_buffers(Vertex* vertices, size_t vertex_cou
 
 	hr = device->CreateBuffer(&buffer_desc, &subresource_data, index_buffer.ReleaseAndGetAddressOf());
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-
-
 }
 
-void Geometric_Primitive::Render(Shader* shader, const DirectX::XMFLOAT4X4& world, const DirectX::XMFLOAT4& material_color, bool WireFrame) {
+void Geometric_Primitive::Render(bool wireframe) {
 	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();
 	uint32_t stride{ sizeof(Vertex) };
 	uint32_t offset{ 0 };
@@ -118,70 +108,17 @@ void Geometric_Primitive::Render(Shader* shader, const DirectX::XMFLOAT4X4& worl
 	//プリミティブタイプ及びデータの順序に関する情報のバインド
 	immediate_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	// 入力レイアウトオブジェクトのバインド
-	//immediate_context->IASetInputLayout(input_layout.Get());
-
-	//// シェーダのバインド
-	//immediate_context->VSSetShader(vertex_shader.Get(), nullptr, 0);
-	//immediate_context->PSSetShader(pixel_shader.Get(), nullptr, 0);
-
 	// シェーダの有効化
-	shader->Activate();
+	GeometricShader->Activate();
 
-	Constants data{ world,material_color };
-	// メモリからマップ不可能なメモリに作成されたサブリソースにデータをコピー
-	immediate_context->UpdateSubresource(constant_buffer.Get(),	// 宛先リソースへのポインタ
-		0,	// 宛先サブリソースを識別するインデックス
-		0, &data, 0, 0);
-
-	// 定数バッファの設定
-	immediate_context->VSSetConstantBuffers(0, 1, constant_buffer.GetAddressOf());
-
-	// ラスタライザステートの設定
-	wireframe = WireFrame;
-	immediate_context->RSSetState(rasterizer_states[wireframe].Get());
-
-	D3D11_BUFFER_DESC buffer_desc{};
-	index_buffer->GetDesc(&buffer_desc);
-	immediate_context->DrawIndexed(buffer_desc.ByteWidth / sizeof(uint32_t), 0, 0);	// 描画するインデックスの数,最初のインデックスの場所,頂点バッファから読み取る前に追加する値
-}
-
-void Geometric_Primitive::Render(Shader* shader) {
-	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();
-
-	DirectX::XMMATRIX S{ DirectX::XMMatrixScaling(param.Size.x,param.Size.y,param.Size.z) }	;				// 拡縮
-	DirectX::XMMATRIX R{ DirectX::XMMatrixRotationRollPitchYaw(DirectX::XMConvertToRadians(param.Angle.x), DirectX::XMConvertToRadians(param.Angle.y), DirectX::XMConvertToRadians(param.Angle.z)) };	// 回転
-	DirectX::XMMATRIX T{ DirectX::XMMatrixTranslation(param.Pos.x,param.Pos.y,param.Pos.z) };					// 平行移動
+	DirectX::XMMATRIX S{ DirectX::XMMatrixScaling(Parameters->Scale.x,Parameters->Scale.y,Parameters->Scale.z) };	// 拡縮
+	DirectX::XMMATRIX R{ DirectX::XMMatrixRotationRollPitchYaw(DirectX::XMConvertToRadians(Parameters->Rotate.x), DirectX::XMConvertToRadians(Parameters->Rotate.y), DirectX::XMConvertToRadians(Parameters->Rotate.z)) };	// 回転
+	DirectX::XMMATRIX T{ DirectX::XMMatrixTranslation(Parameters->Position.x,Parameters->Position.y,Parameters->Position.z) };	// 平行移動
 
 	DirectX::XMFLOAT4X4 world;
-	DirectX::XMStoreFloat4x4(&world, S * R * T);	// ワールド変換行列作成
+	XMStoreFloat4x4(&world, S * R * T);	// ワールド変換行列作成
 
-	uint32_t stride{ sizeof(Vertex) };
-	uint32_t offset{ 0 };
-
-	// 頂点バッファのバインド
-	immediate_context->IASetVertexBuffers(0, 1, vertex_buffer.GetAddressOf(), &stride, &offset);
-
-	// インデックスバッファのバインド
-	immediate_context->IASetIndexBuffer(
-		index_buffer.Get(),			// インデックスを格納したオブジェクトのポインタ
-		DXGI_FORMAT_R32_UINT,		// インデックスバッファ内のデータのフォーマット(16bitか32bitのどちらか)
-		0);							// オフセット
-
-	//プリミティブタイプ及びデータの順序に関する情報のバインド
-	immediate_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	//// 入力レイアウトオブジェクトのバインド
-	//immediate_context->IASetInputLayout(input_layout.Get());
-
-	//// シェーダのバインド
-	//immediate_context->VSSetShader(vertex_shader.Get(), nullptr, 0);
-	//immediate_context->PSSetShader(pixel_shader.Get(), nullptr, 0);
-
-	// シェーダの有効化
-	shader->Activate();
-
-	Constants data{ world,param.Color };
+	Constants data{ world,Parameters->Color };
 	// メモリからマップ不可能なメモリに作成されたサブリソースにデータをコピー
 	immediate_context->UpdateSubresource(constant_buffer.Get(),	// 宛先リソースへのポインタ
 		0,	// 宛先サブリソースを識別するインデックス
@@ -198,15 +135,14 @@ void Geometric_Primitive::Render(Shader* shader) {
 	immediate_context->DrawIndexed(buffer_desc.ByteWidth / sizeof(uint32_t), 0, 0);	// 描画するインデックスの数,最初のインデックスの場所,頂点バッファから読み取る前に追加する値
 
 	// シェーダの無効化
-	shader->Inactivate();
+	GeometricShader->Inactivate();
 }
 
 void Geometric_Primitive::imguiWindow(const char* beginname) {
-
-	float pos[3]  { param.Pos.x ,param.Pos.y ,param.Pos.z };
-	float size[3] { param.Size.x ,param.Size.y ,param.Size.z };
-	float angle[3]{ param.Angle.x,param.Angle.y,param.Angle.z };
-	float Color[4]{ param.Color.x ,param.Color.y,param.Color.z,param.Color.w };
+	float pos[3]{ Parameters->Position.x ,Parameters->Position.y ,Parameters->Position.z };
+	float size[3]{ Parameters->Scale.x ,Parameters->Scale.y ,Parameters->Scale.z };
+	float angle[3]{ Parameters->Rotate.x,Parameters->Rotate.y,Parameters->Rotate.z };
+	float Color[4]{ Parameters->Color.x ,Parameters->Color.y,Parameters->Color.z,Parameters->Color.w };
 
 	ImGui::Begin(beginname);	// 識別ID 同じIDだと一緒のウィンドウにまとめられる
 
@@ -214,7 +150,6 @@ void Geometric_Primitive::imguiWindow(const char* beginname) {
 	ImGui::SliderFloat3(u8"Size", size, 0, 5);
 	ImGui::SliderFloat3(u8"angle", angle, -360, 360);
 	ImGui::ColorEdit4(u8"Color", (float*)&Color);
-	ImGui::Checkbox(u8"WireFrame" ,&wireframe);
 
 	ImGui::End();
 	setPos(DirectX::XMFLOAT3(pos[0], pos[1], pos[2]));

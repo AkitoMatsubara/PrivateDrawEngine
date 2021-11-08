@@ -53,9 +53,6 @@ public:
 		// テクスチャ位置だけ指定するRender 課題的に(ry
 	void Render(DirectX::XMFLOAT2 TexPos, DirectX::XMFLOAT2 TexSize);
 
-	// DirectX::XMFLOAT2同士の割り算
-	DirectX::XMFLOAT2 Division(DirectX::XMFLOAT2 val1, DirectX::XMFLOAT2 val2);
-
 	// セッター
 	void setPos    (DirectX::XMFLOAT2 pos)     { param.Pos     = pos; }
 	void setSize   (DirectX::XMFLOAT2 Size)    { param.Size    = Size; }

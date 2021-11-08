@@ -25,12 +25,12 @@ StructuredBuffer<BufInType> BufferIn : register(t0);
 // アンオーダードアクセスバッファーとして作成されたバッファを使用する
 RWStructuredBuffer<BufOutType> BufferOut : register(u0);
 
-[numthreads(2, 1, 1)]   // 列、行、枚数
+[numthreads(1, 1, 1)]   // 列、行、枚数
 void main(uint3 DTid : SV_DispatchThreadID) // SV_DispatchThreadID：SV_GroupID * Numthreads と groupthreadid の合計
 {
     //BufferOut[DTid.x].i = 10;
     //BufferOut[DTid.x].i = BufferIn[DTid.x].i + (int) BufferIn[DTid.x].f;
-    BufferOut[DTid.x].i = abs(sin(Theta) * (1 + DTid.x * 4));
+    BufferOut[DTid.x].i = abs(sin(Theta) / (DTid.x + 1));
 }
 
 // http://maverickproj.web.fc2.com/d3d11_17.html

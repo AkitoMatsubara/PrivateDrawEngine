@@ -31,12 +31,12 @@ inline DirectX::XMFLOAT3 ConvertToXmfloat3(const FbxDouble3& fbxdouble3) {
 
 }
 
-inline DirectX::XMFLOAT4 ConvertToXmfloat4(const FbxDouble4& fbxdouble3) {
+inline DirectX::XMFLOAT4 ConvertToXmfloat4(const FbxDouble4& fbxdouble4) {
 	DirectX::XMFLOAT4 value;
-	value.x = static_cast<float>(fbxdouble3[0]);
-	value.y = static_cast<float>(fbxdouble3[1]);
-	value.z = static_cast<float>(fbxdouble3[2]);
-	value.w = static_cast<float>(fbxdouble3[3]);
+	value.x = static_cast<float>(fbxdouble4[0]);
+	value.y = static_cast<float>(fbxdouble4[1]);
+	value.z = static_cast<float>(fbxdouble4[2]);
+	value.w = static_cast<float>(fbxdouble4[3]);
 	return value;
 }
 
@@ -87,9 +87,10 @@ Skinned_Mesh::Skinned_Mesh(const char* fbx_filename, int cstNo, bool triangulate
 		uint64_t parent_uid = fbx_node->GetParent() ? fbx_node->GetParent()->GetUniqueID() : 0;	// 親が存在していれば番号を取得
 		int32_t type = fbx_node->GetNodeAttribute() ? fbx_node->GetNodeAttribute()->GetAttributeType() : 0;
 
-		std::stringstream debug_string;
-		debug_string << node_name << ":" << uid << ":" << parent_uid << ":" << type << "\n";
-		OutputDebugStringA(debug_string.str().c_str());
+		//// 情報アウトプット用デバッグ
+		//std::stringstream debug_string;
+		//debug_string << node_name << ":" << uid << ":" << parent_uid << ":" << type << "\n";
+		//OutputDebugStringA(debug_string.str().c_str());
 	}
 #endif
 	fbx_manager->Destroy();
@@ -102,10 +103,11 @@ Skinned_Mesh::Skinned_Mesh(const char* fbx_filename, int cstNo, bool triangulate
 	rasterizer.SetRasterizer(device);
 	CstNo = cstNo;
 	// 各種パラメータの初期化
-	param.Pos = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
-	param.Size = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
-	param.Angle = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
-	param.Color = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	Parameters = std::make_unique<Object3d>();
+	Parameters->Position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+	Parameters->Scale= DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
+	Parameters->Rotate = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+	Parameters->Color = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 void Skinned_Mesh::Render(Shader* shader, int rasterize) {
@@ -118,9 +120,9 @@ void Skinned_Mesh::Render(Shader* shader, int rasterize) {
 		const float scale_factor = 1.0f;
 		DirectX::XMMATRIX C{ XMLoadFloat4x4(&coordinate_system_transforms[CstNo]) * DirectX::XMMatrixScaling(scale_factor,scale_factor,scale_factor) };
 
-		DirectX::XMMATRIX S{DirectX::XMMatrixScaling(param.Size.x,param.Size.y,param.Size.z) };	// 拡縮
-		DirectX::XMMATRIX R{DirectX::XMMatrixRotationRollPitchYaw(DirectX::XMConvertToRadians(param.Angle.x), DirectX::XMConvertToRadians(param.Angle.y), DirectX::XMConvertToRadians(param.Angle.z)) };	// 回転
-		DirectX::XMMATRIX T{DirectX::XMMatrixTranslation(param.Pos.x,param.Pos.y,param.Pos.z) };	// 平行移動
+		DirectX::XMMATRIX S{DirectX::XMMatrixScaling(Parameters->Scale.x,Parameters->Scale.y,Parameters->Scale.z) };	// 拡縮
+		DirectX::XMMATRIX R{DirectX::XMMatrixRotationRollPitchYaw(DirectX::XMConvertToRadians(Parameters->Rotate.x), DirectX::XMConvertToRadians(Parameters->Rotate.y), DirectX::XMConvertToRadians(Parameters->Rotate.z)) };	// 回転
+		DirectX::XMMATRIX T{DirectX::XMMatrixTranslation(Parameters->Position.x,Parameters->Position.y,Parameters->Position.z) };	// 平行移動
 
 		DirectX::XMFLOAT4X4 world;
 		XMStoreFloat4x4(&world, C * S * R * T);	// ワールド変換行列作成
@@ -140,7 +142,7 @@ void Skinned_Mesh::Render(Shader* shader, int rasterize) {
 		// ラスタライザステートの設定
 		immediate_context->RSSetState(rasterizer.states[rasterize].Get());
 
-		Constants data{ world,param.Color };
+		Constants data{ world,Parameters->Color };
 		DirectX::XMStoreFloat4x4(&data.world, DirectX::XMMatrixMultiply(DirectX::XMLoadFloat4x4(&mesh.default_global_transform) , DirectX::XMLoadFloat4x4(&world)));	// グローバルのTransformとworld行列を掛けてworld座標に変換している
 
 		for (const Mesh::Subset& subset : mesh.subsets) {	// マテリアル別メッシュの数回すよ
@@ -150,7 +152,7 @@ void Skinned_Mesh::Render(Shader* shader, int rasterize) {
 				if (materials.size() > 0)	// マテリアル情報があるか確認
 				{
 					immediate_context->PSSetShaderResources(0, 1, material.srv[0].GetAddressOf());
-					XMStoreFloat4(&data.material_color, DirectX::XMVectorMultiply(DirectX::XMLoadFloat4(&param.Color),DirectX::XMLoadFloat4(&material.Kd)));	// マテリアルとカラーを合成
+					XMStoreFloat4(&data.material_color, DirectX::XMVectorMultiply(DirectX::XMLoadFloat4(&Parameters->Color),DirectX::XMLoadFloat4(&material.Kd)));	// マテリアルとカラーを合成
 				}
 			}
 			else
@@ -375,10 +377,10 @@ void Skinned_Mesh::Fetch_Materials(FbxScene* fbx_scene, std::unordered_map<uint6
 }
 
 void Skinned_Mesh::imguiWindow(const char* beginname) {
-	float pos[3]{ param.Pos.x ,param.Pos.y ,param.Pos.z };
-	float size[3]{ param.Size.x ,param.Size.y ,param.Size.z };
-	float angle[3]{ param.Angle.x,param.Angle.y,param.Angle.z };
-	float Color[4]{ param.Color.x ,param.Color.y,param.Color.z,param.Color.w };
+	float pos[3]{ Parameters->Position.x ,Parameters->Position.y ,Parameters->Position.z };
+	float size[3]{ Parameters->Scale.x ,Parameters->Scale.y ,Parameters->Scale.z };
+	float angle[3]{ Parameters->Rotate.x,Parameters->Rotate.y,Parameters->Rotate.z };
+	float Color[4]{ Parameters->Color.x ,Parameters->Color.y,Parameters->Color.z,Parameters->Color.w };
 
 	ImGui::Begin(beginname);	// 識別ID 同じIDだと一緒のウィンドウにまとめられる
 

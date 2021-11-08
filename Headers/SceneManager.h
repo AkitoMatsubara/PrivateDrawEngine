@@ -40,19 +40,13 @@ protected:
 	FLOAT ClearColor[4] = { 0.2f,0.2f,0.2f,1.0f };
 
 public:
-
 	// 関数
 private:
 protected:
+	void CreateConstantBuffer(ID3D11Buffer** ppBuffer, u_int size);
 public:
 	SceneBase() :newScene(nullptr){}
-	virtual ~SceneBase(){
-		//ステートの初期化
-		ID3D11DeviceContext* device_context = FRAMEWORK->GetDeviceContext();
-		device_context->ClearState();
-		device_context->Flush();
-
-	}
+	virtual ~SceneBase();
 
 	virtual bool Initialize() = 0;
 	virtual void Update()     = 0;

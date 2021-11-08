@@ -212,7 +212,19 @@
     <ClInclude Include="Headers\Stage.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="Headers\Object3D.h">
+    <ClInclude Include="Headers\Shot.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\Object3d.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\Enemy.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\Judge.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\ShotManager.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>
@@ -302,6 +314,18 @@
       <Filter>Sources\DataLoad\Sprite</Filter>
     </ClCompile>
     <ClCompile Include="Sources\Stage.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\Shot.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\Enemy.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\Judge.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\ShotManager.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
   </ItemGroup>

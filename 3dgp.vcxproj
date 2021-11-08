@@ -271,11 +271,13 @@
     <ClInclude Include="External\imgui\imstb_rectpack.h" />
     <ClInclude Include="External\imgui\imstb_textedit.h" />
     <ClInclude Include="External\imgui\imstb_truetype.h" />
+    <ClInclude Include="Headers\Enemy.h" />
     <ClInclude Include="Headers\framework.h" />
     <ClInclude Include="Headers\geometric_primitive.h" />
     <ClInclude Include="Headers\high_resolution_timer.h" />
+    <ClInclude Include="Headers\Judge.h" />
     <ClInclude Include="Headers\misc.h" />
-    <ClInclude Include="Headers\Object3D.h" />
+    <ClInclude Include="Headers\Object3d.h" />
     <ClInclude Include="Headers\Player.h" />
     <ClInclude Include="Headers\Rasterizer.h" />
     <ClInclude Include="Headers\Sampler.h" />
@@ -289,6 +291,8 @@
     <ClInclude Include="Headers\SceneTest_2.h" />
     <ClInclude Include="Headers\shader.h" />
     <ClInclude Include="Headers\shaderEx.h" />
+    <ClInclude Include="Headers\Shot.h" />
+    <ClInclude Include="Headers\ShotManager.h" />
     <ClInclude Include="Headers\skinned_mesh.h" />
     <ClInclude Include="Headers\sprite.h" />
     <ClInclude Include="Headers\sprite_Batch.h" />
@@ -307,12 +311,14 @@
     <ClCompile Include="External\imgui\imgui_ja_gryph_ranges.cpp" />
     <ClCompile Include="External\imgui\imgui_widgets.cpp" />
     <ClCompile Include="Sources\CSSample.cpp" />
+    <ClCompile Include="Sources\Enemy.cpp" />
     <ClCompile Include="Sources\framework.cpp" />
     <ClCompile Include="Sources\geometric_capsule.cpp" />
     <ClCompile Include="Sources\geometric_cube.cpp" />
     <ClCompile Include="Sources\geometric_cylinder.cpp" />
     <ClCompile Include="Sources\geometric_primitive.cpp" />
     <ClCompile Include="Sources\geometric_sphere.cpp" />
+    <ClCompile Include="Sources\Judge.cpp" />
     <ClCompile Include="Sources\main.cpp" />
     <ClCompile Include="Sources\Player.cpp" />
     <ClCompile Include="Sources\Rasterizer.cpp" />
@@ -329,6 +335,8 @@
     <ClCompile Include="Sources\SceneTest_2.cpp" />
     <ClCompile Include="Sources\shader.cpp" />
     <ClCompile Include="Sources\shaderEx.cpp" />
+    <ClCompile Include="Sources\Shot.cpp" />
+    <ClCompile Include="Sources\ShotManager.cpp" />
     <ClCompile Include="Sources\skinned_mesh.cpp" />
     <ClCompile Include="Sources\sprite.cpp" />
     <ClCompile Include="Sources\sprite_Batch.cpp" />

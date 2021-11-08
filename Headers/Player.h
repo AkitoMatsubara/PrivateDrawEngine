@@ -1,33 +1,37 @@
 #pragma once
+#include "Shot.h"
 #include "skinned_mesh.h"
 #include "shaderEx.h"
+#include "Object3d.h"
 
+#include "geometric_primitive.h"
 #include <memory>
 
+#include "imgui.h"
+#include "imgui_impl_dx11.h"
+#include "imgui_impl_win32.h"
 
-
+//#include <vector>
 class Player {
-	// 変数
+	// ------------------変数------------------
 private:
-	DirectX::XMFLOAT3 Position;		// ワールド位置
-	DirectX::XMFLOAT3 Vector;		// 方向
-	DirectX::XMFLOAT3 acceleration;	// 加速度
-	DirectX::XMFLOAT3 Velocity;		// 速度
-
-	DirectX::XMFLOAT3 Scale;			// 大きさ
-	DirectX::XMFLOAT3 Rotate;		// 各軸回転値
-	DirectX::XMFLOAT4 Color;			// 色
-
 	// モデル情報
 	std::unique_ptr<Skinned_Mesh> Model;
 	// デフォルトのシェーダー
-	std:: unique_ptr<ShaderEx> SkinnedShader = nullptr;
+	std::unique_ptr<ShaderEx> SkinnedShader;
 
-protected:
+	// カプセル型で当たり判定取るために可視化する
+	std::unique_ptr<Geometric_Capsule> Capcule;
+	std::unique_ptr<Geometric_Sphere> testSphere;
+
+	std::unique_ptr<Shot> Shots;
+	std::vector<std::unique_ptr<Shot>> ShotsManager;
 public:
-	// 関数
+	std::unique_ptr<Object3d> Parameters;
+
+	// ------------------関数------------------
 private:
-protected:
+	void Control(); // 制御関数
 public:
 	Player() {};
 	~Player() {};
@@ -36,20 +40,5 @@ public:
 	void Update();
 	void Render();
 
-	// セッター
-	void setPos(DirectX::XMFLOAT3 pos)     { Position = pos; }
-	void setSize(DirectX::XMFLOAT3 Size)   { Scale = Size; }
-	void setAngle(DirectX::XMFLOAT3 angle) { Rotate = angle; }
-	void setColor(DirectX::XMFLOAT4 color) { Color = color; }
-
-	void setPos(float posX, float posY, float posZ)         { Position = DirectX::XMFLOAT3(posX, posY, posZ); }
-	void setSize(float sizeX, float sizeY, float sizeZ)     { Scale = DirectX::XMFLOAT3(sizeX, sizeY, sizeZ); }
-	void setAngle(float angleX, float angleY, float angleZ) { Rotate = DirectX::XMFLOAT3(angleX, angleY, angleZ); }
-	void setColor(float r, float g, float b, float a)       { Color = DirectX::XMFLOAT4(r, g, b, a); }
-
-	// ゲッター
-	DirectX::XMFLOAT3 getPos()   { return Position; }
-	DirectX::XMFLOAT3 getSize()  { return Scale; }
-	DirectX::XMFLOAT3 getAngle() { return Rotate; }
-	DirectX::XMFLOAT4 getColor() { return Color; }
+	void ImguiPlayer();
 };

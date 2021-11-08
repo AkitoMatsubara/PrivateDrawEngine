@@ -2,7 +2,7 @@
 #include "framework.h"
 #include "geometric_primitive.h"
 
-Geometric_Cylinder::Geometric_Cylinder(u_int slices, const char* vs_cso_name, const char* ps_cso_name) :Geometric_Primitive(vs_cso_name, ps_cso_name) {
+Geometric_Cylinder::Geometric_Cylinder(u_int slices){
 	ID3D11Device* device = FRAMEWORK->GetDevice();
 	std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;

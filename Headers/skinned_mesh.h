@@ -2,11 +2,13 @@
 
 #include "Rasterizer.h"
 #include "shaderEx.h"
+#include "Object3d.h"
 
-#include "imgui.h"
-#include "imgui_impl_dx11.h"
-#include "imgui_impl_win32.h"
+//#include "imgui.h"
+//#include "imgui_impl_dx11.h"
+//#include "imgui_impl_win32.h"
 
+#include <memory>
 #include <d3d11.h>
 #include <wrl.h>
 #include <DirectXMath.h>
@@ -63,7 +65,7 @@ public:
 	std::unordered_map<uint64_t, Material>materials;
 	static Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> dummyTexture;	// fbxにマテリアルが設定されていない場合に使用する
 
-	struct Mesh{
+	struct Mesh {
 		uint64_t unique_id{ 0 };
 		std::string name;
 		// シーンのノード配列を参照するインデックス
@@ -104,14 +106,16 @@ private:
 
 	bool wireframe;	// ワイヤーフレーム表示の有無
 
-	struct PrimitivParam {
-		DirectX::XMFLOAT3 Pos;		// 描画位置
-		DirectX::XMFLOAT3 Size;		// 描画サイズ
-		DirectX::XMFLOAT3 Angle;		// 回転角度
-		DirectX::XMFLOAT4 Color;		// 加算色
-	}param;
+	//struct PrimitivParam {
+	//	DirectX::XMFLOAT3 Position;		// 描画位置
+	//	DirectX::XMFLOAT3 Scale;		// 描画サイズ
+	//	DirectX::XMFLOAT3 Rotate;		// 回転角度
+	//	DirectX::XMFLOAT4 Color;		// 加算色
+	//}Parameters;
+	std::unique_ptr<Object3d> Parameters;
 
-	DirectX::XMFLOAT4X4 coordinate_system_transforms[CST_END]={
+
+	DirectX::XMFLOAT4X4 coordinate_system_transforms[CST_END] = {
 		{-1, 0, 0, 0,
 		  0, 1, 0, 0,
 		  0, 0, 1, 0,
@@ -129,7 +133,7 @@ private:
 		  0, 1, 0, 0,
 		  0, 0, 0, 1},	// 1:左手座標系,Z-UP
 	};
-	 int CstNo;
+	int CstNo;
 
 public:
 	Skinned_Mesh(const char* fbx_filename, int cstNo = 0, const bool triangulate = false);
@@ -148,21 +152,22 @@ public:
 
 
 	// セッター
-	void setPos(DirectX::XMFLOAT3 pos) { param.Pos = pos; }
-	void setSize(DirectX::XMFLOAT3 Size) { param.Size = Size; }
-	void setAngle(DirectX::XMFLOAT3 angle) { param.Angle = angle; }
-	void setColor(DirectX::XMFLOAT4 color) { param.Color = color; }
+	void setPos(DirectX::XMFLOAT3 pos) { Parameters->Position = pos; }
+	void setSize(DirectX::XMFLOAT3 Size) { Parameters->Scale = Size; }
+	void setAngle(DirectX::XMFLOAT3 angle) { Parameters->Rotate = angle; }
+	void setColor(DirectX::XMFLOAT4 color) { Parameters->Color = color; }
 
-	void setPos(float posX, float posY, float posZ) { param.Pos = DirectX::XMFLOAT3(posX, posY, posZ); }
-	void setSize(float sizeX, float sizeY, float sizeZ) { param.Size = DirectX::XMFLOAT3(sizeX, sizeY, sizeZ); }
-	void setAngle(float angleX, float angleY, float angleZ) { param.Angle = DirectX::XMFLOAT3(angleX, angleY, angleZ); }
-	void setColor(float r, float g, float b, float a) { param.Color = DirectX::XMFLOAT4(r, g, b, a); }
+	void setPos(float posX, float posY, float posZ) { Parameters->Position = DirectX::XMFLOAT3(posX, posY, posZ); }
+	void setSize(float sizeX, float sizeY, float sizeZ) { Parameters->Scale = DirectX::XMFLOAT3(sizeX, sizeY, sizeZ); }
+	void setAngle(float angleX, float angleY, float angleZ) { Parameters->Rotate = DirectX::XMFLOAT3(angleX, angleY, angleZ); }
+	void setColor(float r, float g, float b, float a) { Parameters->Color = DirectX::XMFLOAT4(r, g, b, a); }
 
 	// ゲッター
-	DirectX::XMFLOAT3 getPos() { return param.Pos; }
-	DirectX::XMFLOAT3 getSize() { return param.Size; }
-	DirectX::XMFLOAT3 getAngle() { return param.Angle; }
-	DirectX::XMFLOAT4 getColor() { return param.Color; }
+	DirectX::XMFLOAT3 getPos() { return Parameters->Position; }
+	DirectX::XMFLOAT3 getSize() { return Parameters->Scale; }
+	DirectX::XMFLOAT3 getAngle() { return Parameters->Rotate; }
+	DirectX::XMFLOAT4 getColor() { return Parameters->Color; }
+	Object3d* getParameters() { return Parameters.get(); }
 
 private:
 	void Create_com_buffers(const char* fbx_filename);

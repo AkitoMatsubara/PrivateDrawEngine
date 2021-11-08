@@ -1,12 +1,15 @@
 #include "framework.h"
 #include "geometric_primitive.h"
 
-Geometric_Sphere::Geometric_Sphere(u_int slices, u_int stacks, const char* vs_cso_name, const char* ps_cso_name) :Geometric_Primitive(vs_cso_name, ps_cso_name) {
+Geometric_Sphere::Geometric_Sphere(u_int slices, u_int stacks) {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
 	std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;
+	static const FLOAT RADIAN = 0.5f;
+	this->radian = RADIAN;
+	this->slices = slices;
+	this->stacks = stacks;
 
-	float r = 0.5f;	// 半径
 	float degree = 2.0f * 3.14159265358989f / slices;	// 奇数*Pi/分割数=三角 偶数であれば平行四辺形になる(???)
 
 	//
@@ -18,11 +21,11 @@ Geometric_Sphere::Geometric_Sphere(u_int slices, u_int stacks, const char* vs_cs
 	// 長方形のテクスチャを球体にマッピングする場合、最上下頂点に割り当てるテクスチャマップ上の一意の点がないため、テクスチャ座標の歪みが生じることに注意
 
 	Vertex top_vertex;		// 上の頂点(上向き)
-	top_vertex.position = DirectX::XMFLOAT3(0.0f, +r, 0.0f);
+	top_vertex.position = DirectX::XMFLOAT3(0.0f, +RADIAN, 0.0f);
 	top_vertex.normal = DirectX::XMFLOAT3(0.0f, +1.0f, 0.0f);
 
 	Vertex bottom_vertex;	// 下の頂点(下向き)
-	bottom_vertex.position = DirectX::XMFLOAT3(0.0f, -r, 0.0f);
+	bottom_vertex.position = DirectX::XMFLOAT3(0.0f, -RADIAN, 0.0f);
 	bottom_vertex.normal = DirectX::XMFLOAT3(0.0f, -1.0f, 0.0f);
 
 	vertices.push_back(top_vertex);	// 上に頂点を[0]に登録
@@ -43,9 +46,9 @@ Geometric_Sphere::Geometric_Sphere(u_int slices, u_int stacks, const char* vs_cs
 			Vertex v;
 
 			// 球面からカルテシアン(直交座標系)へ
-			v.position.x = r * sinf(phi) * cosf(theta);
-			v.position.y = r * cosf(phi);
-			v.position.z = r * sinf(phi) * sinf(theta);
+			v.position.x = RADIAN * sinf(phi) * cosf(theta);
+			v.position.y = RADIAN * cosf(phi);
+			v.position.z = RADIAN * sinf(phi) * sinf(theta);
 
 			DirectX::XMVECTOR p = DirectX::XMLoadFloat3(&v.position);	// positionをvector型に
 			DirectX::XMStoreFloat3(&v.normal, DirectX::XMVector3Normalize(p));	// 法線の計算

@@ -244,7 +244,7 @@ HRESULT ShaderEx::create_cs_from_cso(ID3D11Device* device, const char* cso_name,
 }
 
 
-bool ShaderEx::Create(WCHAR* vsfilename, WCHAR* psfilename)
+bool ShaderEx::Create(const WCHAR* vsfilename, const WCHAR* psfilename)
 {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
 	ID3D11DeviceContext* device_context = FRAMEWORK->GetDeviceContext();
@@ -268,7 +268,7 @@ bool ShaderEx::Create(WCHAR* vsfilename, WCHAR* psfilename)
 	return false;
 }
 
-bool ShaderEx::Create(WCHAR* vsfilename, WCHAR* gsfilename, WCHAR* psfilename)
+bool ShaderEx::Create(const WCHAR* vsfilename, const WCHAR* gsfilename, const WCHAR* psfilename)
 {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
 	ID3D11DeviceContext* device_context = FRAMEWORK->GetDeviceContext();
@@ -297,7 +297,7 @@ bool ShaderEx::Create(WCHAR* vsfilename, WCHAR* gsfilename, WCHAR* psfilename)
 	return false;
 }
 
-bool ShaderEx::Create(WCHAR* vsfilename, WCHAR* hsfilename, WCHAR* dsfilename, WCHAR* psfilename)
+bool ShaderEx::Create(const WCHAR* vsfilename, const WCHAR* hsfilename, const WCHAR* dsfilename, const WCHAR* psfilename)
 {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
 	ID3D11DeviceContext* device_context = FRAMEWORK->GetDeviceContext();
@@ -332,7 +332,7 @@ bool ShaderEx::Create(WCHAR* vsfilename, WCHAR* hsfilename, WCHAR* dsfilename, W
 	return false;
 }
 
-bool ShaderEx::Create(WCHAR* vsfilename, WCHAR* hsfilename, WCHAR* dsfilename, WCHAR* gsfilename, WCHAR* psfilename)
+bool ShaderEx::Create(const WCHAR* vsfilename, const WCHAR* hsfilename, const WCHAR* dsfilename, const WCHAR* gsfilename, const WCHAR* psfilename)
 {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
 	ID3D11DeviceContext* device_context = FRAMEWORK->GetDeviceContext();
@@ -371,7 +371,7 @@ bool ShaderEx::Create(WCHAR* vsfilename, WCHAR* hsfilename, WCHAR* dsfilename, W
 	return false;
 }
 
-bool ShaderEx::Create(WCHAR* csfilename)
+bool ShaderEx::Create(const WCHAR* csfilename)
 {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
 	ID3D11DeviceContext* device_context = FRAMEWORK->GetDeviceContext();

@@ -2,7 +2,7 @@
 #include "framework.h"
 #include "geometric_primitive.h"
 
-Geometric_Cube::Geometric_Cube(const char* vs_cso_name, const char* ps_cso_name ) :Geometric_Primitive(vs_cso_name, ps_cso_name) {
+Geometric_Cube::Geometric_Cube(){
 	ID3D11Device* device = FRAMEWORK->GetDevice();
 
 	Vertex vertices[24]{};	// 頂点情報配列（vertices）にすべて頂点の位置・法線情報を格納する。
@@ -134,7 +134,7 @@ Geometric_Cube::Geometric_Cube(const char* vs_cso_name, const char* ps_cso_name 
 	Create_com_buffers(vertices, 24, indeces, 36);
 }
 
-Geometric_Cube::Geometric_Cube(float left, float right, float bottom, float top,float front,float back, const char* vs_cso_name, const char* ps_cso_name) :Geometric_Primitive(vs_cso_name, ps_cso_name) {
+Geometric_Cube::Geometric_Cube(float left, float right, float bottom, float top,float front,float back) {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
 
 	Vertex vertices[24]{};	// 頂点情報配列（vertices）にすべて頂点の位置・法線情報を格納する。
