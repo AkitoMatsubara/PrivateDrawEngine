@@ -292,7 +292,7 @@
     <ClInclude Include="Headers\shader.h" />
     <ClInclude Include="Headers\shaderEx.h" />
     <ClInclude Include="Headers\Shot.h" />
-    <ClInclude Include="Headers\ShotManager.h" />
+    <ClInclude Include="Headers\Singleton.h" />
     <ClInclude Include="Headers\skinned_mesh.h" />
     <ClInclude Include="Headers\sprite.h" />
     <ClInclude Include="Headers\sprite_Batch.h" />
@@ -336,7 +336,6 @@
     <ClCompile Include="Sources\shader.cpp" />
     <ClCompile Include="Sources\shaderEx.cpp" />
     <ClCompile Include="Sources\Shot.cpp" />
-    <ClCompile Include="Sources\ShotManager.cpp" />
     <ClCompile Include="Sources\skinned_mesh.cpp" />
     <ClCompile Include="Sources\sprite.cpp" />
     <ClCompile Include="Sources\sprite_Batch.cpp" />

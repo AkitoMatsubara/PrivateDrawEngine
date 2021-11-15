@@ -26,7 +26,7 @@ private:
 
 	// 内部使用メンバ関数
 	// dx,dy＝矩形の左上のスクリーン座標、dw,dh＝矩形サイズ
-	DirectX::XMFLOAT3 ConvertToNDC(DirectX::XMFLOAT3 val, D3D11_VIEWPORT viewport);
+	DirectX::SimpleMath::Vector3 ConvertToNDC(DirectX::SimpleMath::Vector3 val, D3D11_VIEWPORT viewport);
 
 public:
 	// コンストラクタ、デストラクタ
@@ -39,39 +39,39 @@ public:
 	void end();	// 頂点バッファの更新、各ステートのバインド、ドローコールを記述
 
 	// 頂点情報の生成、更新
-	void CreateVertexData(DirectX::XMFLOAT2 pos, DirectX::XMFLOAT2 size, float angle, DirectX::XMFLOAT4 color
-		, DirectX::XMFLOAT2 TexPos, DirectX::XMFLOAT2 TexSize);
+	void CreateVertexData(DirectX::SimpleMath::Vector2 pos, DirectX::SimpleMath::Vector2 size, float angle, DirectX::SimpleMath::Vector4 color
+		, DirectX::SimpleMath::Vector2 TexPos, DirectX::SimpleMath::Vector2 TexSize);
 
 	// メンバ変数でできるならいらない？と思い削除←やっぱいるわ課題的に
-	void Render(DirectX::XMFLOAT2 pos, DirectX::XMFLOAT2 size, float andle, DirectX::XMFLOAT4 color
-		, DirectX::XMFLOAT2 TexPos, DirectX::XMFLOAT2 TexSize);	// immediate(対象となるデータそのものをコード中に記したものを即値という)
+	void Render(DirectX::SimpleMath::Vector2 pos, DirectX::SimpleMath::Vector2 size, float andle, DirectX::SimpleMath::Vector4 color
+		, DirectX::SimpleMath::Vector2 TexPos, DirectX::SimpleMath::Vector2 TexSize);	// immediate(対象となるデータそのものをコード中に記したものを即値という)
 
 
 	// メンバ変数のパラメータで描画
 	void Render();	// immediate(対象となるデータそのものをコード中に記したものを即値という)
 
 		// テクスチャ位置だけ指定するRender 課題的に(ry
-	void Render(DirectX::XMFLOAT2 TexPos, DirectX::XMFLOAT2 TexSize);
+	void Render(DirectX::SimpleMath::Vector2 TexPos, DirectX::SimpleMath::Vector2 TexSize);
 
 	// セッター
-	void setPos    (DirectX::XMFLOAT2 pos)     { param.Pos     = pos; }
-	void setSize   (DirectX::XMFLOAT2 Size)    { param.Size    = Size; }
-	void setTexPos (DirectX::XMFLOAT2 texPos)  { param.TexPos  = texPos; }
-	void setTexSize(DirectX::XMFLOAT2 texSize) { param.TexSize = texSize; }
+	void setPos    (DirectX::SimpleMath::Vector2 pos)     { param.Pos     = pos; }
+	void setSize   (DirectX::SimpleMath::Vector2 Size)    { param.Size    = Size; }
+	void setTexPos (DirectX::SimpleMath::Vector2 texPos)  { param.TexPos  = texPos; }
+	void setTexSize(DirectX::SimpleMath::Vector2 texSize) { param.TexSize = texSize; }
 	void setAngle  (float angle)      { param.Angle   = angle; }
-	void setColor  (DirectX::XMFLOAT4 color)   { param.Color   = color; }
+	void setColor  (DirectX::SimpleMath::Vector4 color)   { param.Color   = color; }
 
-	void setPos    (float posX, float posY)             { param.Pos     = DirectX::XMFLOAT2(posX, posY); }
-	void setSize   (float SizeX, float SizeY)           { param.Size    = DirectX::XMFLOAT2(SizeX, SizeY); }
-	void setTexPos (float texPosX, float texPosY)       { param.TexPos  = DirectX::XMFLOAT2(texPosX, texPosY); }
-	void setTexSize(float texSizeX, float texSizeY)     { param.TexSize = DirectX::XMFLOAT2(texSizeX, texSizeY); }
-	void setColor  (float r, float g, float b, float a) { param.Color   = DirectX::XMFLOAT4(r, g, b, a); }
+	void setPos    (float posX, float posY)             { param.Pos     = DirectX::SimpleMath::Vector2(posX, posY); }
+	void setSize   (float SizeX, float SizeY)           { param.Size    = DirectX::SimpleMath::Vector2(SizeX, SizeY); }
+	void setTexPos (float texPosX, float texPosY)       { param.TexPos  = DirectX::SimpleMath::Vector2(texPosX, texPosY); }
+	void setTexSize(float texSizeX, float texSizeY)     { param.TexSize = DirectX::SimpleMath::Vector2(texSizeX, texSizeY); }
+	void setColor  (float r, float g, float b, float a) { param.Color   = DirectX::SimpleMath::Vector4(r, g, b, a); }
 
 	// ゲッター
-	DirectX::XMFLOAT2 getPos()     { return param.Pos; }
-	DirectX::XMFLOAT2 getSize()    { return param.Size; }
-	DirectX::XMFLOAT2 getTexPos()  { return param.TexPos; }
-	DirectX::XMFLOAT2 getTexSize() { return param.TexSize; }
+	DirectX::SimpleMath::Vector2 getPos()     { return param.Pos; }
+	DirectX::SimpleMath::Vector2 getSize()    { return param.Size; }
+	DirectX::SimpleMath::Vector2 getTexPos()  { return param.TexPos; }
+	DirectX::SimpleMath::Vector2 getTexSize() { return param.TexSize; }
 	float	 getAngle()   { return param.Angle; }
-	DirectX::XMFLOAT4 getColor()   { return param.Color; }
+	DirectX::SimpleMath::Vector4 getColor()   { return param.Color; }
 };

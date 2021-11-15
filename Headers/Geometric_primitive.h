@@ -1,6 +1,7 @@
 #pragma once
 #include <d3d11.h>
-#include <DirectXMath.h>
+#include <SimpleMath.h>
+
 #include <wrl.h>
 
 #include "misc.h"
@@ -11,11 +12,11 @@
 #include "imgui_impl_dx11.h"
 #include "imgui_impl_win32.h"
 
-#include <vector>
 
 
 
 class Geometric_Primitive {
+
 public:
 	std::unique_ptr<Object3d> Parameters;
 private:
@@ -29,12 +30,13 @@ private:
 
 protected:
 	struct Vertex {
-		DirectX::XMFLOAT3 position;
-		DirectX::XMFLOAT3 normal;
+		DirectX::SimpleMath::Vector3 position;
+		//DirectX::SimpleMath::Vector3 position;
+		DirectX::SimpleMath::Vector3 normal;
 	};
 	struct Constants {
-		DirectX::XMFLOAT4X4 world;
-		DirectX::XMFLOAT4 material_color;
+		DirectX::SimpleMath::Matrix world;
+		DirectX::SimpleMath::Vector4 material_color;
 	};
 
 public:
@@ -47,21 +49,21 @@ public:
 	void imguiWindow(const char* beginname = "geometric_primitive");
 
 	// セッター
-	void setPos    (DirectX::XMFLOAT3 pos)   { Parameters->Position = pos; }
-	void setSize   (DirectX::XMFLOAT3 Size)  { Parameters->Scale = Size; }
-	void setAngle  (DirectX::XMFLOAT3 angle) { Parameters->Rotate = angle; }
-	void setColor  (DirectX::XMFLOAT4 color) { Parameters->Color = color; }
+	void setPos    (DirectX::SimpleMath::Vector3 pos)   { Parameters->Position = pos; }
+	void setSize   (DirectX::SimpleMath::Vector3 Size)  { Parameters->Scale = Size; }
+	void setAngle  (DirectX::SimpleMath::Vector3 angle) { Parameters->Rotate = angle; }
+	void setColor  (DirectX::SimpleMath::Vector4 color) { Parameters->Color = color; }
 
-	void setPos   (float posX, float posY,float posZ)       { Parameters->Position   = DirectX::XMFLOAT3(posX, posY,posZ); }
-	void setSize  (float sizeX, float sizeY,float sizeZ)    { Parameters->Scale = DirectX::XMFLOAT3(sizeX, sizeY,sizeZ); }
-	void setAngle (float angleX, float angleY,float angleZ) { Parameters->Rotate = DirectX::XMFLOAT3(angleX, angleY,angleZ); }
-	void setColor (float r, float g, float b, float a)      { Parameters->Color = DirectX::XMFLOAT4(r, g, b, a); }
+	void setPos   (float posX, float posY,float posZ)       { Parameters->Position   = DirectX::SimpleMath::Vector3(posX, posY,posZ); }
+	void setSize  (float sizeX, float sizeY,float sizeZ)    { Parameters->Scale = DirectX::SimpleMath::Vector3(sizeX, sizeY,sizeZ); }
+	void setAngle (float angleX, float angleY,float angleZ) { Parameters->Rotate = DirectX::SimpleMath::Vector3(angleX, angleY,angleZ); }
+	void setColor (float r, float g, float b, float a)      { Parameters->Color = DirectX::SimpleMath::Vector4(r, g, b, a); }
 
 	// ゲッター
-	DirectX::XMFLOAT3 getPos() { return Parameters->Position; }
-	DirectX::XMFLOAT3 getSize() { return Parameters->Scale; }
-	DirectX::XMFLOAT3 getAngle() { return Parameters->Rotate; }
-	DirectX::XMFLOAT4 getColor() { return Parameters->Color; }
+	DirectX::SimpleMath::Vector3 getPos() { return Parameters->Position; }
+	DirectX::SimpleMath::Vector3 getSize() { return Parameters->Scale; }
+	DirectX::SimpleMath::Vector3 getAngle() { return Parameters->Rotate; }
+	DirectX::SimpleMath::Vector4 getColor() { return Parameters->Color; }
 
 protected:
 	void Create_com_buffers(Vertex* vertices, size_t vertex_count, uint32_t* indices, size_t index_count);

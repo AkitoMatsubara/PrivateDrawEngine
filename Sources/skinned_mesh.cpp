@@ -1,6 +1,7 @@
 #include <sstream>
 #include <functional>
 #include <filesystem>
+#include <SimpleMath.h>
 
 #include "framework.h"
 
@@ -11,8 +12,8 @@
 
 Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> Skinned_Mesh::dummyTexture;
 
-inline DirectX::XMFLOAT4X4 ConvertToXmfloat4x4(const FbxAMatrix& fbxamatrix) {
-	DirectX::XMFLOAT4X4 value;
+inline DirectX::SimpleMath::Matrix ConvertToXmfloat4x4(const FbxAMatrix& fbxamatrix) {
+	DirectX::SimpleMath::Matrix value;
 	// 2重for文 4x4だからね
 	for (int row = 0; row < 4; row++) {
 		for (int column = 0; column < 4; column++) {
@@ -22,8 +23,8 @@ inline DirectX::XMFLOAT4X4 ConvertToXmfloat4x4(const FbxAMatrix& fbxamatrix) {
 	return value;
 }
 
-inline DirectX::XMFLOAT3 ConvertToXmfloat3(const FbxDouble3& fbxdouble3) {
-	DirectX::XMFLOAT3 value;
+inline DirectX::SimpleMath::Vector3 ConvertToXmfloat3(const FbxDouble3& fbxdouble3) {
+	DirectX::SimpleMath::Vector3 value;
 	value.x = static_cast<float>(fbxdouble3[0]);
 	value.y = static_cast<float>(fbxdouble3[1]);
 	value.z = static_cast<float>(fbxdouble3[2]);
@@ -31,8 +32,8 @@ inline DirectX::XMFLOAT3 ConvertToXmfloat3(const FbxDouble3& fbxdouble3) {
 
 }
 
-inline DirectX::XMFLOAT4 ConvertToXmfloat4(const FbxDouble4& fbxdouble4) {
-	DirectX::XMFLOAT4 value;
+inline DirectX::SimpleMath::Vector4 ConvertToXmfloat4(const FbxDouble4& fbxdouble4) {
+	DirectX::SimpleMath::Vector4 value;
 	value.x = static_cast<float>(fbxdouble4[0]);
 	value.y = static_cast<float>(fbxdouble4[1]);
 	value.z = static_cast<float>(fbxdouble4[2]);
@@ -104,10 +105,10 @@ Skinned_Mesh::Skinned_Mesh(const char* fbx_filename, int cstNo, bool triangulate
 	CstNo = cstNo;
 	// 各種パラメータの初期化
 	Parameters = std::make_unique<Object3d>();
-	Parameters->Position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
-	Parameters->Scale= DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
-	Parameters->Rotate = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
-	Parameters->Color = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	Parameters->Position = DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f);
+	Parameters->Scale= DirectX::SimpleMath::Vector3(1.0f, 1.0f, 1.0f);
+	Parameters->Rotate = DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f);
+	Parameters->Color = DirectX::SimpleMath::Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 void Skinned_Mesh::Render(Shader* shader, int rasterize) {
@@ -124,7 +125,7 @@ void Skinned_Mesh::Render(Shader* shader, int rasterize) {
 		DirectX::XMMATRIX R{DirectX::XMMatrixRotationRollPitchYaw(DirectX::XMConvertToRadians(Parameters->Rotate.x), DirectX::XMConvertToRadians(Parameters->Rotate.y), DirectX::XMConvertToRadians(Parameters->Rotate.z)) };	// 回転
 		DirectX::XMMATRIX T{DirectX::XMMatrixTranslation(Parameters->Position.x,Parameters->Position.y,Parameters->Position.z) };	// 平行移動
 
-		DirectX::XMFLOAT4X4 world;
+		DirectX::SimpleMath::Matrix world;
 		XMStoreFloat4x4(&world, C * S * R * T);	// ワールド変換行列作成
 
 		uint32_t stride{ sizeof(Vertex) };	// stride:刻み幅
@@ -392,8 +393,8 @@ void Skinned_Mesh::imguiWindow(const char* beginname) {
 
 	ImGui::End();	// ウィンドウ終了
 	// パラメータ代入
-	setPos(DirectX::XMFLOAT3(pos[0], pos[1], pos[2]));
-	setSize(DirectX::XMFLOAT3(size[0], size[1], size[2]));
-	setAngle(DirectX::XMFLOAT3(angle[0], angle[1], angle[2]));
-	setColor(DirectX::XMFLOAT4(Color[0], Color[1], Color[2], Color[3]));
+	setPos(DirectX::SimpleMath::Vector3(pos[0], pos[1], pos[2]));
+	setSize(DirectX::SimpleMath::Vector3(size[0], size[1], size[2]));
+	setAngle(DirectX::SimpleMath::Vector3(angle[0], angle[1], angle[2]));
+	setColor(DirectX::SimpleMath::Vector4(Color[0], Color[1], Color[2], Color[3]));
 }

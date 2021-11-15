@@ -4,14 +4,10 @@
 #include "shaderEx.h"
 #include "Object3d.h"
 
-//#include "imgui.h"
-//#include "imgui_impl_dx11.h"
-//#include "imgui_impl_win32.h"
-
 #include <memory>
 #include <d3d11.h>
 #include <wrl.h>
-#include <DirectXMath.h>
+#include <SimpleMath.h>
 #include <vector>
 #include <string>
 #include <fbxsdk.h>
@@ -42,21 +38,21 @@ class Skinned_Mesh {
 public:
 	// 頂点構造体
 	struct Vertex {
-		DirectX::XMFLOAT3 position;
-		DirectX::XMFLOAT3 normal;
-		DirectX::XMFLOAT2 texcoord;
+		DirectX::SimpleMath::Vector3 position;
+		DirectX::SimpleMath::Vector3 normal;
+		DirectX::SimpleMath::Vector2 texcoord;
 	};
 	struct Constants {
-		DirectX::XMFLOAT4X4 world;
-		DirectX::XMFLOAT4 material_color;
+		DirectX::SimpleMath::Matrix world;
+		DirectX::SimpleMath::Vector4 material_color;
 	};
 
 	struct Material {
 		uint64_t unique_id{ 0 };
 		std::string name;
-		DirectX::XMFLOAT4 Ka{ 0.2f,0.2f,0.2f,1.0f };
-		DirectX::XMFLOAT4 Kd{ 0.8f,0.8f,0.8f,1.0f };
-		DirectX::XMFLOAT4 Ks{ 1.0f,1.0f,1.0f,1.0f };
+		DirectX::SimpleMath::Vector4 Ka{ 0.2f,0.2f,0.2f,1.0f };
+		DirectX::SimpleMath::Vector4 Kd{ 0.8f,0.8f,0.8f,1.0f };
+		DirectX::SimpleMath::Vector4 Ks{ 1.0f,1.0f,1.0f,1.0f };
 
 		std::string texture_filenames[4];
 		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srv[4];
@@ -83,7 +79,7 @@ public:
 		};
 		std::vector<Subset> subsets;
 
-		DirectX::XMFLOAT4X4 default_global_transform{
+		DirectX::SimpleMath::Matrix default_global_transform{
 			1,0,0,0,	// _11,_12,_13,_14
 			0,1,0,0,	// _21,_22,_23,_24
 			0,0,1,0,	// _31,_32,_33,_34
@@ -107,15 +103,15 @@ private:
 	bool wireframe;	// ワイヤーフレーム表示の有無
 
 	//struct PrimitivParam {
-	//	DirectX::XMFLOAT3 Position;		// 描画位置
-	//	DirectX::XMFLOAT3 Scale;		// 描画サイズ
-	//	DirectX::XMFLOAT3 Rotate;		// 回転角度
-	//	DirectX::XMFLOAT4 Color;		// 加算色
+	//	DirectX::SimpleMath::Vector3 Position;		// 描画位置
+	//	DirectX::SimpleMath::Vector3 Scale;		// 描画サイズ
+	//	DirectX::SimpleMath::Vector3 Rotate;		// 回転角度
+	//	DirectX::SimpleMath::Vector4 Color;		// 加算色
 	//}Parameters;
 	std::unique_ptr<Object3d> Parameters;
 
 
-	DirectX::XMFLOAT4X4 coordinate_system_transforms[CST_END] = {
+	DirectX::SimpleMath::Matrix coordinate_system_transforms[CST_END] = {
 		{-1, 0, 0, 0,
 		  0, 1, 0, 0,
 		  0, 0, 1, 0,
@@ -152,21 +148,21 @@ public:
 
 
 	// セッター
-	void setPos(DirectX::XMFLOAT3 pos) { Parameters->Position = pos; }
-	void setSize(DirectX::XMFLOAT3 Size) { Parameters->Scale = Size; }
-	void setAngle(DirectX::XMFLOAT3 angle) { Parameters->Rotate = angle; }
-	void setColor(DirectX::XMFLOAT4 color) { Parameters->Color = color; }
+	void setPos(DirectX::SimpleMath::Vector3 pos) { Parameters->Position = pos; }
+	void setSize(DirectX::SimpleMath::Vector3 Size) { Parameters->Scale = Size; }
+	void setAngle(DirectX::SimpleMath::Vector3 angle) { Parameters->Rotate = angle; }
+	void setColor(DirectX::SimpleMath::Vector4 color) { Parameters->Color = color; }
 
-	void setPos(float posX, float posY, float posZ) { Parameters->Position = DirectX::XMFLOAT3(posX, posY, posZ); }
-	void setSize(float sizeX, float sizeY, float sizeZ) { Parameters->Scale = DirectX::XMFLOAT3(sizeX, sizeY, sizeZ); }
-	void setAngle(float angleX, float angleY, float angleZ) { Parameters->Rotate = DirectX::XMFLOAT3(angleX, angleY, angleZ); }
-	void setColor(float r, float g, float b, float a) { Parameters->Color = DirectX::XMFLOAT4(r, g, b, a); }
+	void setPos(float posX, float posY, float posZ) { Parameters->Position = DirectX::SimpleMath::Vector3(posX, posY, posZ); }
+	void setSize(float sizeX, float sizeY, float sizeZ) { Parameters->Scale = DirectX::SimpleMath::Vector3(sizeX, sizeY, sizeZ); }
+	void setAngle(float angleX, float angleY, float angleZ) { Parameters->Rotate = DirectX::SimpleMath::Vector3(angleX, angleY, angleZ); }
+	void setColor(float r, float g, float b, float a) { Parameters->Color = DirectX::SimpleMath::Vector4(r, g, b, a); }
 
 	// ゲッター
-	DirectX::XMFLOAT3 getPos() { return Parameters->Position; }
-	DirectX::XMFLOAT3 getSize() { return Parameters->Scale; }
-	DirectX::XMFLOAT3 getAngle() { return Parameters->Rotate; }
-	DirectX::XMFLOAT4 getColor() { return Parameters->Color; }
+	DirectX::SimpleMath::Vector3 getPos() { return Parameters->Position; }
+	DirectX::SimpleMath::Vector3 getSize() { return Parameters->Scale; }
+	DirectX::SimpleMath::Vector3 getAngle() { return Parameters->Rotate; }
+	DirectX::SimpleMath::Vector4 getColor() { return Parameters->Color; }
 	Object3d* getParameters() { return Parameters.get(); }
 
 private:

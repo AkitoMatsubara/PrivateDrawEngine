@@ -33,8 +33,8 @@ bool SceneTitle::Initialize() {
 		// Geometric_primitiveオブジェクトの生成
 		{
 			grid = std::make_unique<Geometric_Cube>();
-			grid->setPos(DirectX::XMFLOAT3(0, -1, 0));
-			grid->setSize(DirectX::XMFLOAT3(10, 0.1f, 10));
+			grid->setPos(DirectX::SimpleMath::Vector3(0, -1, 0));
+			grid->setSize(DirectX::SimpleMath::Vector3(10, 0.1f, 10));
 			GeomtricShader = std::make_unique<ShaderEx>();
 			GeomtricShader->Create(L"Shaders\\geometric_primitive_vs", L"Shaders\\geometric_primitive_ps");
 		}

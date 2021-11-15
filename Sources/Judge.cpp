@@ -1,11 +1,11 @@
 #include "Judge.h"
 #include "XMFLOAT_Helper.h"
 
-bool Judge::c_b(const Object3d& capsle, const float offset, const Object3d& sphere)
+bool Judge::c_b(const Object3d& capsle, const Object3d& sphere)
 {
-	DirectX::XMFLOAT3 forward;	// カプセル上面の位置
+	DirectX::SimpleMath::Vector3 forward;	// カプセル上面の位置
 	forward = capsle.Position + (capsle.Vector * (capsle.Scale * 0.5f));	// 前方へズラせてカプセル上面として使う かけ数はサイズ的な意味合い
-	DirectX::XMFLOAT3 back;		// カプセル下面の位置
+	DirectX::SimpleMath::Vector3 back;		// カプセル下面の位置
 	back = capsle.Position - (capsle.Vector * (capsle.Scale * 0.5f));		// 後方へズラせてカプセル下面として使う かけ数はサイズ的な意味合い
 
 	float d1 = Float3Length(forward - sphere.Position);	// 前方判定
@@ -29,3 +29,7 @@ bool Judge::c_b(const Object3d& capsle, const float offset, const Object3d& sphe
 	}
 	return false;
 };
+
+void Judge::HitJudge(Player* p, Enemy* e)
+{
+}

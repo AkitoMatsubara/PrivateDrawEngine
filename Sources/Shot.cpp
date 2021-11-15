@@ -1,4 +1,8 @@
 #include "Shot.h"
+#include "Judge.h"
+#include "Player.h"
+#include "Enemy.h"
+
 #include "XMFLOAT_Helper.h"
 
 //std::unique_ptr<Skinned_Mesh> Shot::Model = std::make_unique<Skinned_Mesh>(".\\Resources\\Player\\Player.fbx");
@@ -12,28 +16,27 @@ void Shot::Initialize()
 
 	Parameters = std::make_unique<Object3d>();
 
-	Timer = 0;
+	LifeTimer = 0;
 	Exist = false;
 }
 
 void Shot::Update()
 {
 	// ‚Æ‚è‚ ‚¦‚¸‘O‚Éi‚Þ“®‚«‚ðì‚é
-	static DirectX::XMFLOAT3 vel{ 0,0,0 };
-	DirectX::XMFLOAT3 pos = Parameters->Position + Parameters->Vector * 0.1;
-	Parameters->Position = (pos);
+	static DirectX::SimpleMath::Vector3 vel{ 0,0,0 };
+	DirectX::SimpleMath::Vector3 pos = Parameters->Position + Parameters->Vector * 0.1;
+	Parameters->Position = pos;
 
-	// Ž©‘RÁ–ÅŽÀ‘•­Õ(ˆêu)
-	if (Exist) {
-		Timer += 0.1f;
-	}
-	if (Timer >= 50) {
-		Timer = 0.0f;
+	// Ž©‘RÁ–Å “K“–‚È‚Ì‚Å—vC³
+	LifeTimer += 0.1f;
+	if (LifeTimer >= 50.0f) {
+		LifeTimer = 0.0f;
 		Exist = false;
 	}
 
 	// ƒ‚ƒfƒ‹‚É•`‰æŒnƒpƒ‰ƒ[ƒ^[‚ð“n‚·
 	test->Parameters->CopyParam(Parameters.get());
+	test->Parameters->Color = { 1.0f,fmodf(LifeTimer,50.0f),1.0f,1.0f };
 	//test->Parameters->CopyParam(Model->getParameters());
 	//Model->getParameters()->CopyParam(Parameters.get());
 }
@@ -52,7 +55,53 @@ void Shot::set(const Object3d* parent)
 	Exist = true;
 }
 
-//std::unique_ptr<Shot> Shot::clone() const
-//{
-//	return std::make_unique<Shot>(*this);
-//}
+//----------------------------------------------------//
+void ShotManager::Update()
+{
+	// ‘¶Ýƒtƒ‰ƒO‚Ì—§‚Á‚Ä‚¢‚È‚¢—v‘f‚Ííœ‚·‚é
+	for (auto it = Shots.begin(); it != Shots.end();)
+	{
+		if (!it->get()->getExist())	// ‚±‚¢‚Âc‘¶Ý‚µ‚Ä‚¢‚È‚¢‚¼!?
+		{
+			it = this->Shots.erase(it);
+		}
+		else {	// ‘¶Ý‚ªŠm”F‚³‚ê‚½‚Ì‚Åˆ—‚µ‚Ü‚·
+			it->get()->Update();
+			for (auto enem = EnemyManager::getInstance().getEnemys()->begin(); enem != EnemyManager::getInstance().getEnemys()->end();++enem)
+			{
+				if(isHit(enem->get()->Parameters.get()))
+				{
+					enem->get()->setExist(false);
+				}
+			}
+			++it;	// ŽŸ‚Ö
+		}
+	}
+}
+
+void ShotManager::Render()
+{
+	for (auto it = Shots.begin(); it != Shots.end(); ++it)
+	{
+		// ’e‚Ì•`‰æ
+		it->get()->Render();
+	}
+}
+
+void ShotManager::newSet(const Object3d* initData)
+{
+	std::unique_ptr<Shot>Shots = std::make_unique<Shot>();
+	Shots->Initialize();
+	Shots->set(initData);
+	push(std::move(Shots));
+}
+
+bool ShotManager::isHit(const Object3d* Capcule)
+{
+	bool hit = false;
+	for (auto it = Shots.begin(); it != Shots.end(); ++it)
+	{
+		hit = Judge::getInstance()->c_b(*Capcule, *it->get()->Parameters);
+	}
+		return hit;
+}

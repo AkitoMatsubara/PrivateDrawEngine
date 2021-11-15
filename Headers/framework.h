@@ -49,19 +49,17 @@ private:
 	static const int BLEND_TYPE = 9;
 	Microsoft::WRL::ComPtr<ID3D11BlendState> bd_states[BLEND_TYPE];
 
-	Microsoft::WRL::ComPtr<ID3D11SamplerState>			sampler_states[3];
+	Microsoft::WRL::ComPtr<ID3D11SamplerState>	sampler_states[3];
 	std::shared_ptr<Sampler> sample;
 
 	static framework* instance;
 public:
 	CONST HWND hwnd;
 
-
 	//DepthStencilState
 	enum { DS_FALSE, DS_TRUE, DS_FALSE_WRITE, DS_TRUE_WRITE, DS_END };
 	// DlendState
 	enum { BS_NONE, BS_ALPHA, BS_ADD, BS_SUBTRACT, BS_REPLACE, BS_MULTIPLY, BS_LIGHTEN, BS_DARKEN, BS_SCREEN, BS_END };
-
 
 	// ä÷êî
 private:

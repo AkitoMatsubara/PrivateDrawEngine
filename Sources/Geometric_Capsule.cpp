@@ -1,6 +1,8 @@
 #include "framework.h"
 #include "geometric_primitive.h"
 
+#include <vector>
+
 Geometric_Capsule::Geometric_Capsule(FLOAT radian, FLOAT height, u_int slices, u_int stacks) :Geometric_Primitive() {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
 	// 基本は球生成の応用
@@ -21,13 +23,13 @@ Geometric_Capsule::Geometric_Capsule(FLOAT radian, FLOAT height, u_int slices, u
 	{
 		Vertex top_vertex;		// 上の頂点(上向き)
 		TopPos = h + radian;
-		top_vertex.position = DirectX::XMFLOAT3(0.0f, TopPos, 0.0f);
-		top_vertex.normal = DirectX::XMFLOAT3(0.0f, +1.0f, 0.0f);
+		top_vertex.position = DirectX::SimpleMath::Vector3(0.0f, TopPos, 0.0f);
+		top_vertex.normal = DirectX::SimpleMath::Vector3(0.0f, +1.0f, 0.0f);
 
 		Vertex bottom_vertex;	// 下の頂点(下向き)
 		BottomPos = -h - radian;
-		bottom_vertex.position = DirectX::XMFLOAT3(0.0f, BottomPos, 0.0f);
-		bottom_vertex.normal = DirectX::XMFLOAT3(0.0f, -1.0f, 0.0f);
+		bottom_vertex.position = DirectX::SimpleMath::Vector3(0.0f, BottomPos, 0.0f);
+		bottom_vertex.normal = DirectX::SimpleMath::Vector3(0.0f, -1.0f, 0.0f);
 
 		vertices.push_back(top_vertex);	// 上に頂点を[0]に登録
 

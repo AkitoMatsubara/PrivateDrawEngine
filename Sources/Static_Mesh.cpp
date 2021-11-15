@@ -11,9 +11,9 @@ Static_Mesh::Static_Mesh(const wchar_t* obj_filename, const char* vs_cso_name, c
 	std::vector<uint32_t> indices;
 	uint32_t current_index{ 0 };
 
-	std::vector<DirectX::XMFLOAT3>positions;
-	std::vector<DirectX::XMFLOAT3>normals;
-	std::vector<DirectX::XMFLOAT2>texcoords;
+	std::vector<DirectX::SimpleMath::Vector3>positions;
+	std::vector<DirectX::SimpleMath::Vector3>normals;
+	std::vector<DirectX::SimpleMath::Vector2>texcoords;
 	std::vector<std::wstring>mtl_filenames;
 	std::wifstream fin(obj_filename);	// 読み取り操作のできるファイルストリーム
 	wchar_t command[256];
@@ -152,21 +152,21 @@ Static_Mesh::Static_Mesh(const wchar_t* obj_filename, const char* vs_cso_name, c
 			{
 				float r, g, b;
 				fin >> r >> g >> b;
-				materials.rbegin()->Ka = { r, g, b, 1 };
+				materials.rbegin()->Ka = DirectX::SimpleMath::Vector4{ r, g, b, 1 };
 				fin.ignore(1024, L'\n');
 			}
 			else if (0 == wcscmp(command, L"Kd"))
 			{
 				float r, g, b;
 				fin >> r >> g >> b;
-				materials.rbegin()->Kd = { r, g, b, 1 };
+				materials.rbegin()->Kd = DirectX::SimpleMath::Vector4{ r, g, b, 1 };
 				fin.ignore(1024, L'\n');
 			}
 			else if (0 == wcscmp(command, L"Ks"))
 			{
 				float r, g, b;
 				fin >> r >> g >> b;
-				materials.rbegin()->Ks = { r, g, b ,1 };
+				materials.rbegin()->Ks = DirectX::SimpleMath::Vector4{ r, g, b ,1 };
 				fin.ignore(1024, L'\n');
 			}
 			else
@@ -258,10 +258,10 @@ Static_Mesh::Static_Mesh(const wchar_t* obj_filename, const char* vs_cso_name, c
 	rasterizer.SetRasterizer(device);
 
 	// 各種パラメータの初期化
-	param.Pos = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
-	param.Size = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
-	param.Angle = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
-	param.Color = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	param.Pos = DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f);
+	param.Size = DirectX::SimpleMath::Vector3(1.0f, 1.0f, 1.0f);
+	param.Angle = DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f);
+	param.Color = DirectX::SimpleMath::Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 void Static_Mesh::Create_com_buffers(ID3D11Device* device, Vertex* vertices, size_t vertex_count, uint32_t* indices, size_t index_count) {
@@ -292,7 +292,7 @@ void Static_Mesh::Create_com_buffers(ID3D11Device* device, Vertex* vertices, siz
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 }
 
-void Static_Mesh::Render(Shader* shader,const DirectX::XMFLOAT4X4& world, const DirectX::XMFLOAT4& material_color, bool WireFrame) {
+void Static_Mesh::Render(Shader* shader,const DirectX::SimpleMath::Matrix& world, const DirectX::SimpleMath::Vector4& material_color, bool WireFrame) {
 	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();
 	uint32_t stride{ sizeof(Vertex) };
 	uint32_t offset{ 0 };
@@ -357,7 +357,7 @@ void Static_Mesh::Render(Shader* shader) {
 	DirectX::XMMATRIX R{DirectX::XMMatrixRotationRollPitchYaw(DirectX::XMConvertToRadians(param.Angle.x), DirectX::XMConvertToRadians(param.Angle.y), DirectX::XMConvertToRadians(param.Angle.z)) };	// 回転
 	DirectX::XMMATRIX T{DirectX::XMMatrixTranslation(param.Pos.x,param.Pos.y,param.Pos.z) };					// 平行移動
 
-	DirectX::XMFLOAT4X4 world;
+	DirectX::SimpleMath::Matrix world;
 	DirectX::XMStoreFloat4x4(&world, S * R * T);	// ワールド変換行列作成
 
 	uint32_t stride{ sizeof(Vertex) };
@@ -454,8 +454,8 @@ void Static_Mesh::imguiWindow(const char* beginname) {
 
 	ImGui::End();	// ウィンドウ終了
 	// パラメータ代入
-	setPos  (DirectX::XMFLOAT3(pos[0], pos[1], pos[2]));
-	setSize (DirectX::XMFLOAT3(size[0], size[1], size[2]));
-	setAngle(DirectX::XMFLOAT3(angle[0], angle[1], angle[2]));
-	setColor(DirectX::XMFLOAT4(Color[0], Color[1], Color[2], Color[3]));
+	setPos  (DirectX::SimpleMath::Vector3(pos[0], pos[1], pos[2]));
+	setSize (DirectX::SimpleMath::Vector3(size[0], size[1], size[2]));
+	setAngle(DirectX::SimpleMath::Vector3(angle[0], angle[1], angle[2]));
+	setColor(DirectX::SimpleMath::Vector4(Color[0], Color[1], Color[2], Color[3]));
 }

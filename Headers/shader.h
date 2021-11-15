@@ -1,7 +1,7 @@
 #pragma once
 
 #include <d3d11.h>
-#include <DirectXMath.h>
+#include <SimpleMath.h>
 #include <d3dcompiler.h>
 
 #include <wrl.h>
@@ -41,8 +41,8 @@ private:
 
 // 頂点フォーマット
 struct Vertex {
-	DirectX::XMFLOAT3 position;
-	DirectX::XMFLOAT3 normal;
+	DirectX::SimpleMath::Vector3 position;
+	DirectX::SimpleMath::Vector3 normal;
 	DirectX::XMFLOAT2 texcoord;	// TextuerCoordinateの略、UV座標の取得などによく使われる様子
-	DirectX::XMFLOAT4 color;
+	DirectX::SimpleMath::Vector4 color;
 };

@@ -1,5 +1,6 @@
 #include "SceneTest_2.h"
 #include "SceneTitle.h"
+#include <SimpleMath.h>
 
 bool SceneTest_2::Initialize() {
 	Microsoft::WRL::ComPtr<ID3D11Device> device = FRAMEWORK->GetDevice();	// frameworkからdeviceを取得
@@ -22,8 +23,8 @@ bool SceneTest_2::Initialize() {
 		// Geometric_primitiveオブジェクトの生成
 		{
 			grid = std::make_unique<Geometric_Cube>();
-			grid->setPos(DirectX::XMFLOAT3(0, -1, 0));
-			grid->setSize(DirectX::XMFLOAT3(10, 0.1f, 10));
+			grid->setPos(DirectX::SimpleMath::Vector3(0, -1, 0));
+			grid->setSize(DirectX::SimpleMath::Vector3(10, 0.1f, 10));
 			GeomtricShader = std::make_unique<ShaderEx>();
 			GeomtricShader->Create(L"Shaders\\geometric_primitive_vs", L"Shaders\\geometric_primitive_ps");
 		}
@@ -33,8 +34,11 @@ bool SceneTest_2::Initialize() {
 		player = std::make_unique<Player>();
 		player->Initialize();
 
-		enemy = std::make_unique<Enemy>();
-		enemy->Initialize();
+		//enemy = std::make_unique<Enemy>();
+		//enemy->Initialize();
+
+		//EnemysManager = std::make_unique<class EnemyManager>();
+		EnemyManager::getInstance().Initialize();
 
 		stage = std::make_unique<Stage>();
 		stage->Initialize();
@@ -75,17 +79,26 @@ void SceneTest_2::Update() {
 	if (GetAsyncKeyState('G') < 0) setScene(std::make_unique<SceneTitle>());
 
 	player->Update();
-	enemy->Update();
+	//enemy->Update();
 	stage->Update();
 
 	// カメラ操作
 	static float cameraSpeed = 7.0f;
+	//DirectX::SimpleMath::Vector3 EyeVec = eyePos - player->Parameters->Position;
+	DirectX::SimpleMath::Vector3 test;
+	//test = eyePos + cameraSpeed;
+	//sinf(DirectX::XMConvertToRadians(90));
 	if (GetKeyState(VK_RIGHT) < 0)  eyePos.x += cameraSpeed * elapsed_time;	// 右に
 	if (GetKeyState(VK_LEFT) < 0)   eyePos.x -= cameraSpeed * elapsed_time;	// 左に
 	if (GetKeyState(VK_UP) < 0)     eyePos.z += cameraSpeed * elapsed_time;	// 前に
 	if (GetKeyState(VK_DOWN) < 0)   eyePos.z -= cameraSpeed * elapsed_time;	// 後に
 	if (GetKeyState(VK_SPACE) < 0)  eyePos.y += cameraSpeed * elapsed_time;	// 上に
 	if (GetKeyState(VK_SHIFT) < 0)  eyePos.y -= cameraSpeed * elapsed_time;	// 下に
+
+	if (GetKeyState(VK_LBUTTON) < 0) {
+		EnemyManager::getInstance().newSet(player->Parameters.get());	// お試し右クリックで敵を生成
+	}
+	EnemyManager::getInstance().Update();
 
 	{
 		//// コンピュートシェーダーを実行する
@@ -95,9 +108,8 @@ void SceneTest_2::Update() {
 
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		static float theta = 0;
-		//theta = (theta <= 1.0f) ? theta + 0.001 : 0.0f;
-		theta += 0.001;
-		//D3D11_MAPPED_SUBRESOURCE subRes;
+		theta = (theta <= 1.0f) ? theta + 0.001f : 0.0f;	// チカチカすりゅ～！(色が)
+		//D3D11_MAPPED_SUBRESOURCE subRes;	// 別の更新方法 のはず。未完成
 		//immediate_context->Map(pBufInput.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &subRes);
 		//BUFIN_TYPE* pBufType = (BUFIN_TYPE*)subRes.pData;
 		//pBufType->f += 5;
@@ -124,13 +136,7 @@ void SceneTest_2::Update() {
 		p = reinterpret_cast<BUFOUT_TYPE*>(MappedResource.pData);	// 型変換して代入
 		immediate_context->Unmap(debugbuf, 0);	// マップ解除
 
-		// コンピュートシェーダーの結果を出力
-		for (int i = 0; i < NUM_ELEMENTS; i++)
-		{
-			printf("%d + %d = %d\n", i, NUM_ELEMENTS - 1 - i, p[i]);
-		}
-
-		player->Parameters->Color = DirectX::XMFLOAT4(p[0].i, p[1].i, p[2].i, 1.0f);
+		player->Parameters->Color = DirectX::SimpleMath::Vector4{p[1].i, p[0].i, p[2].i, 1.0f	};
 
 		hr = S_OK;
 	}
@@ -196,6 +202,7 @@ void SceneTest_2::Render() {
 			stage->Render();
 			//enemy->Render();
 			player->Render();
+			EnemyManager::getInstance().Render();
 		}
 	}
 
@@ -206,19 +213,18 @@ void SceneTest_2::Render() {
 	FRAMEWORK->Flip();
 }
 
-// コンピュートシェーダーへの入力時に使用するシェーダーリソースビューを作成する
-HRESULT SceneTest_2::CreateSRVForStructuredBuffer(UINT uElementSize, UINT uCount, VOID* pInitData, ID3D11Buffer** ppBuf, ID3D11ShaderResourceView** ppSRVOut) {
+// 構造化バッファを作成する
+HRESULT SceneTest_2::CreateStructuredBuffer(UINT uElementSize, UINT uCount, VOID* pInitData, ID3D11Buffer** ppBuf)
+{
 	ID3D11Device* pD3DDevice = FRAMEWORK->GetDevice();
 	HRESULT hr = E_FAIL;
-	*ppBuf = NULL;
-	*ppSRVOut = NULL;
 
 	// 構造化バッファーを作成する
 
 	D3D11_BUFFER_DESC BufferDesc;
 	ZeroMemory(&BufferDesc, sizeof(D3D11_BUFFER_DESC));
-	BufferDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS |		// アンオーダード アクセス リソースをバインドする
-		D3D11_BIND_SHADER_RESOURCE;								// バッファーをシェーダー ステージにバインドする
+	BufferDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS |		    // アンオーダード アクセス リソースをバインドする
+		D3D11_BIND_SHADER_RESOURCE;								    // バッファーをシェーダー ステージにバインドする
 	BufferDesc.ByteWidth = uElementSize * uCount;					// バッファサイズ
 	BufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;	// 構造化バッファーとしてリソースを作成する
 	BufferDesc.StructureByteStride = uElementSize;					// 構造化バッファーのサイズ (バイト単位)
@@ -229,15 +235,28 @@ HRESULT SceneTest_2::CreateSRVForStructuredBuffer(UINT uElementSize, UINT uCount
 		D3D11_SUBRESOURCE_DATA InitData;
 		InitData.pSysMem = pInitData;
 		hr = pD3DDevice->CreateBuffer(&BufferDesc, &InitData, ppBuf);
-		if (FAILED(hr))
-			goto EXIT;
 	}
 	// 初期値なしで領域のみ確保する
 	else
 	{
 		hr = pD3DDevice->CreateBuffer(&BufferDesc, NULL, ppBuf);
-		if (FAILED(hr))
-			goto EXIT;
+	}
+	return hr;
+}
+
+
+// コンピュートシェーダーへの入力時に使用するシェーダーリソースビューを作成する
+HRESULT SceneTest_2::CreateSRVForStructuredBuffer(UINT uElementSize, UINT uCount, VOID* pInitData, ID3D11Buffer** ppBuf, ID3D11ShaderResourceView** ppSRVOut) {
+	ID3D11Device* pD3DDevice = FRAMEWORK->GetDevice();
+	HRESULT hr = E_FAIL;
+	*ppBuf = NULL;
+	*ppSRVOut = NULL;
+
+	// 構造化バッファーを作成する
+	hr = CreateStructuredBuffer(uElementSize, uCount, pInitData, ppBuf);
+	if(FAILED(hr))
+	{
+		goto EXIT;
 	}
 
 	// 構造化バッファーからシェーダーリソースビューを作成する
@@ -268,33 +287,13 @@ HRESULT SceneTest_2::CreateUAVForStructuredBuffer(UINT uElementSize, UINT uCount
 
 	// 構造化バッファーを作成する
 
-	D3D11_BUFFER_DESC BufferDesc;
-	ZeroMemory(&BufferDesc, sizeof(D3D11_BUFFER_DESC));
-	BufferDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS |          // アンオーダード アクセス リソースをバインドする
-		D3D11_BIND_SHADER_RESOURCE;            // バッファーをシェーダー ステージにバインドする
-	BufferDesc.ByteWidth = uElementSize * uCount;                  // バッファサイズ
-	BufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;  // 構造化バッファーとしてリソースを作成する
-	BufferDesc.StructureByteStride = uElementSize;                 // 構造化バッファーのサイズ (バイト単位)
-
-	// 初期値を設定
-	if (pInitData)
+	hr = CreateStructuredBuffer(uElementSize, uCount, pInitData, ppBuf);
+	if (FAILED(hr))
 	{
-		D3D11_SUBRESOURCE_DATA InitData;
-		InitData.pSysMem = pInitData;
-		hr = pD3DDevice->CreateBuffer(&BufferDesc, &InitData, ppBuf);
-		if (FAILED(hr))
-			goto EXIT;
-	}
-	// 初期値なしで領域のみ確保する
-	else
-	{
-		hr = pD3DDevice->CreateBuffer(&BufferDesc, NULL, ppBuf);
-		if (FAILED(hr))
-			goto EXIT;
+		goto EXIT;
 	}
 
 	// 構造化バッファーからアンオーダードアクセスビューを作成する
-
 	D3D11_UNORDERED_ACCESS_VIEW_DESC UAVDesc;
 	ZeroMemory(&UAVDesc, sizeof(D3D11_UNORDERED_ACCESS_VIEW_DESC));
 	UAVDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;   // バッファーであることを指定する
@@ -379,6 +378,8 @@ void SceneTest_2::imguiUpdate() {
 	ImGui::Begin("Light");
 	ImGui::SliderFloat3("Light_Direction", light_dir, -10.0f, 10.0f);
 	ImGui::Checkbox("focus Zero", &focus_zero);
+	//ImGui::Text("Enemys: %d", EnemysManager.get()->getSize());
+	ImGui::Text("Enemys: %d", EnemyManager::getInstance().getEnemys()->size());
 
 	ImGui::PopStyleColor();	// ImGui::PushStyleColor一つにつき一つ呼び出すっぽい
 	ImGui::PopStyleColor();

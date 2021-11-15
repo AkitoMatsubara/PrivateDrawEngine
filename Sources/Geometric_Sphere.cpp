@@ -1,6 +1,8 @@
 #include "framework.h"
 #include "geometric_primitive.h"
 
+#include <vector>
+
 Geometric_Sphere::Geometric_Sphere(u_int slices, u_int stacks) {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
 	std::vector<Vertex> vertices;
@@ -21,12 +23,12 @@ Geometric_Sphere::Geometric_Sphere(u_int slices, u_int stacks) {
 	// 長方形のテクスチャを球体にマッピングする場合、最上下頂点に割り当てるテクスチャマップ上の一意の点がないため、テクスチャ座標の歪みが生じることに注意
 
 	Vertex top_vertex;		// 上の頂点(上向き)
-	top_vertex.position = DirectX::XMFLOAT3(0.0f, +RADIAN, 0.0f);
-	top_vertex.normal = DirectX::XMFLOAT3(0.0f, +1.0f, 0.0f);
+	top_vertex.position = DirectX::SimpleMath::Vector3(0.0f, +RADIAN, 0.0f);
+	top_vertex.normal = DirectX::SimpleMath::Vector3(0.0f, +1.0f, 0.0f);
 
 	Vertex bottom_vertex;	// 下の頂点(下向き)
-	bottom_vertex.position = DirectX::XMFLOAT3(0.0f, -RADIAN, 0.0f);
-	bottom_vertex.normal = DirectX::XMFLOAT3(0.0f, -1.0f, 0.0f);
+	bottom_vertex.position = DirectX::SimpleMath::Vector3(0.0f, -RADIAN, 0.0f);
+	bottom_vertex.normal = DirectX::SimpleMath::Vector3(0.0f, -1.0f, 0.0f);
 
 	vertices.push_back(top_vertex);	// 上に頂点を[0]に登録
 

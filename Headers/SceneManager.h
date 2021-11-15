@@ -18,7 +18,7 @@
 
 #include "framework.h"
 
-#include <DirectXMath.h>
+#include <SimpleMath.h>
 #include <queue>
 
 

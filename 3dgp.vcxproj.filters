@@ -224,7 +224,7 @@
     <ClInclude Include="Headers\Judge.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="Headers\ShotManager.h">
+    <ClInclude Include="Headers\Singleton.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>
@@ -323,9 +323,6 @@
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="Sources\Judge.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\ShotManager.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
   </ItemGroup>

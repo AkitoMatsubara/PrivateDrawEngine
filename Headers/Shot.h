@@ -3,8 +3,8 @@
 #include "Object3d.h"
 #include "skinned_mesh.h"
 #include "geometric_primitive.h"
-#include <memory>
 
+#include <memory>
 
 // 弾クラス
 class Shot
@@ -18,24 +18,24 @@ private:
 	// デフォルトのシェーダー
 	std::unique_ptr<ShaderEx> SkinnedShader = nullptr;
 
-	std::unique_ptr<Object3d> Parameters;
-	float Timer;	// 射出時間の保有
+	float LifeTimer = 0;	// 射出時間の保有
 	bool Exist;		// 発射済みフラグ
 public:
+	std::unique_ptr<Object3d> Parameters;
+	bool HitConfirmation;	// 当たり判定
 
 	// 関数
 private:
 public:
-	std::unique_ptr<Shot> clone()const;
 
-	Shot(){};
-	Shot(Shot&shot)
+	Shot() {};
+	Shot(Shot& shot)
 	{
 		this->Model = std::move(shot.Model);
 		this->test = std::move(shot.test);
-		this->Timer = shot.Timer;
+		this->LifeTimer = shot.LifeTimer;
 	};
-	~Shot(){};
+	~Shot() {};
 
 	void Initialize();
 	void Update();
@@ -45,3 +45,23 @@ public:
 	bool getExist() { return Exist; }
 };
 
+class ShotManager
+{
+private:
+	std::vector<std::unique_ptr<Shot>> Shots;
+
+public:
+
+	void Initialize() { Shots.clear(); }
+	void Update();	// 存在していない弾は内部で削除している
+	void Render();
+
+	// 生成、格納系
+	void newSet(const Object3d* initData);
+	void push(std::unique_ptr<Shot> shot) { Shots.emplace_back(std::move(shot)); };	// 配列に格納する
+
+	size_t getSize() { return Shots.size(); };
+	std::vector<std::unique_ptr<Shot>>* getShots() { return &Shots; }	// 格納コンテナを返す 外部から参照したいときに
+
+	bool isHit(const Object3d* Capcule);
+};

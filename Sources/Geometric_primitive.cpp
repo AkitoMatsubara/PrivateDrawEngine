@@ -57,10 +57,10 @@ Geometric_Primitive::Geometric_Primitive(const WCHAR* vs_name, const WCHAR* ps_n
 
 	// 各種パラメータの初期化
 	Parameters = std::make_unique<Object3d>();
-	Parameters->Position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
-	Parameters->Scale = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
-	Parameters->Rotate = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
-	Parameters->Color = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	Parameters->Position = DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f);
+	Parameters->Scale = DirectX::SimpleMath::Vector3(1.0f, 1.0f, 1.0f);
+	Parameters->Rotate = DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f);
+	Parameters->Color = DirectX::SimpleMath::Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 void Geometric_Primitive::Create_com_buffers(Vertex* vertices, size_t vertex_count, uint32_t* indices, size_t index_count) {
@@ -115,7 +115,7 @@ void Geometric_Primitive::Render(bool wireframe) {
 	DirectX::XMMATRIX R{ DirectX::XMMatrixRotationRollPitchYaw(DirectX::XMConvertToRadians(Parameters->Rotate.x), DirectX::XMConvertToRadians(Parameters->Rotate.y), DirectX::XMConvertToRadians(Parameters->Rotate.z)) };	// 回転
 	DirectX::XMMATRIX T{ DirectX::XMMatrixTranslation(Parameters->Position.x,Parameters->Position.y,Parameters->Position.z) };	// 平行移動
 
-	DirectX::XMFLOAT4X4 world;
+	DirectX::SimpleMath::Matrix world;
 	XMStoreFloat4x4(&world, S * R * T);	// ワールド変換行列作成
 
 	Constants data{ world,Parameters->Color };
@@ -152,8 +152,8 @@ void Geometric_Primitive::imguiWindow(const char* beginname) {
 	ImGui::ColorEdit4(u8"Color", (float*)&Color);
 
 	ImGui::End();
-	setPos(DirectX::XMFLOAT3(pos[0], pos[1], pos[2]));
-	setSize(DirectX::XMFLOAT3(size[0], size[1], size[2]));
-	setAngle(DirectX::XMFLOAT3(angle[0], angle[1], angle[2]));
-	setColor(DirectX::XMFLOAT4(Color[0], Color[1], Color[2], Color[3]));
+	setPos(DirectX::SimpleMath::Vector3(pos[0], pos[1], pos[2]));
+	setSize(DirectX::SimpleMath::Vector3(size[0], size[1], size[2]));
+	setAngle(DirectX::SimpleMath::Vector3(angle[0], angle[1], angle[2]));
+	setColor(DirectX::SimpleMath::Vector4(Color[0], Color[1], Color[2], Color[3]));
 }

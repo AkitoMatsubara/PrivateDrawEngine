@@ -2,6 +2,8 @@
 #include "framework.h"
 #include "geometric_primitive.h"
 
+#include <vector>
+
 Geometric_Cylinder::Geometric_Cylinder(u_int slices){
 	ID3D11Device* device = FRAMEWORK->GetDevice();
 	std::vector<Vertex> vertices;
@@ -28,15 +30,15 @@ Geometric_Cylinder::Geometric_Cylinder(u_int slices){
 
 	// 上面の円
 	{
-		vertex.position = DirectX::XMFLOAT3(0.0f, height * 0.5f, 0.0f);
-		vertex.normal = DirectX::XMFLOAT3(0.0f, +1.0f, 0.0f);
+		vertex.position = DirectX::SimpleMath::Vector3(0.0f, height * 0.5f, 0.0f);
+		vertex.normal = DirectX::SimpleMath::Vector3(0.0f, +1.0f, 0.0f);
 		vertices.push_back(vertex);	// 上面の中心点を作成(vertices[0])
 		for (u_int i = 0; i < slices; ++i)
 		{
 			float x = r * cosf(i * degree);		// cos(0)=1,cos(90)=0,cos(60)=0.5
 			float z = r * sinf(i * degree);		// sin(0)=0,sin(90)=1,sin(30)=0.5
 			float y = height * 0.5f;
-			vertex.position = DirectX::XMFLOAT3(x, y, z);
+			vertex.position = DirectX::SimpleMath::Vector3(x, y, z);
 			vertices.push_back(vertex);	// 各要素に順番に情報を格納していく
 		}
 		base_index = slices * 0 + 0;	// 下の説明をわかりやすくするための*0+0
@@ -54,15 +56,15 @@ Geometric_Cylinder::Geometric_Cylinder(u_int slices){
 
 	// 下面の円
 	{
-		vertex.position = DirectX::XMFLOAT3(0.0f, -height * 0.5f, 0.0f);
-		vertex.normal = DirectX::XMFLOAT3(0.0f, -1.0f, 0.0f);
+		vertex.position = DirectX::SimpleMath::Vector3(0.0f, -height * 0.5f, 0.0f);
+		vertex.normal = DirectX::SimpleMath::Vector3(0.0f, -1.0f, 0.0f);
 		vertices.push_back(vertex);	// 下面の中心点を作成(vertices[slices])
 		for (u_int i = 0; i < slices; ++i)
 		{
 			float x = r * cosf(i * degree);
 			float z = r * sinf(i * degree);
 			float y = -height * 0.5f;
-			vertex.position = DirectX::XMFLOAT3(x, y, z);
+			vertex.position = DirectX::SimpleMath::Vector3(x, y, z);
 			vertices.push_back(vertex);	// 各要素に順番に情報を格納していく
 		}
 		base_index = slices * 1 + 1;	// 上面で生成した三角形の次の番号に下面三角形を生成したいのでslices+1
@@ -85,12 +87,12 @@ Geometric_Cylinder::Geometric_Cylinder(u_int slices){
 			float x = r * cosf(i * degree);
 			float z = r * sinf(i * degree);
 			// 上の頂点
-			vertex.position = DirectX::XMFLOAT3(x, +0.5f, z);
-			vertex.normal = DirectX::XMFLOAT3(x, 0.0f, z);	// 横向きなのでxz方向を向く法線
+			vertex.position = DirectX::SimpleMath::Vector3(x, +0.5f, z);
+			vertex.normal = DirectX::SimpleMath::Vector3(x, 0.0f, z);	// 横向きなのでxz方向を向く法線
 			vertices.push_back(vertex);
 			// 下の頂点 連番で作る
-			vertex.position = DirectX::XMFLOAT3(x, -0.5f, z);
-			vertex.normal = DirectX::XMFLOAT3(x, 0.0f, z);
+			vertex.position = DirectX::SimpleMath::Vector3(x, -0.5f, z);
+			vertex.normal = DirectX::SimpleMath::Vector3(x, 0.0f, z);
 			vertices.push_back(vertex);
 		}
 		base_index = slices * 2 + 2;	// 上下面の次に生成したいので*2(上下)+1(次)+1(の次)

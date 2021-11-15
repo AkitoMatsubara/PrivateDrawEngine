@@ -16,8 +16,12 @@ void Enemy::Initialize() {
 	Parameters->Scale={1.0f,1.0f,1.0f};
 	Parameters->Color={1.0f,1.0f,1.0f,1.0f};
 
+	Exist = false;
+
 	Shots = std::make_unique<Shot>();
 	Shots->Initialize();
+
+	Capcule = std::make_unique<Geometric_Capsule>(1.0f, 1.0f, 10, 10);
 }
 
 void Enemy::Update() {
@@ -31,12 +35,18 @@ void Enemy::Update() {
 	Model->setAngle(Parameters->Rotate);
 	Model->setSize(Parameters->Scale);
 	Model->setColor(Parameters->Color);
+
+	Capcule->Parameters->CopyParam(Parameters.get());
+	Capcule->Parameters->Color = { 1.0f,1.0f,1.0f,1.0f, };
+	Capcule->Parameters->Rotate.x += 90;
+
 }
 
 void Enemy::Render() {
 	//Shots->Render();
 
 	Model->Render(SkinnedShader.get());
+	Capcule->Render(true);
 }
 
 void Enemy::Move()
@@ -84,4 +94,40 @@ void Enemy::Move()
 	//Velocity+= acceleration;
 	//Position += Velocity;
 
+}
+
+//----------------------------------------------------//
+void EnemyManager::Update()
+{
+	// ‘¶Ýƒtƒ‰ƒO‚Ì—§‚Á‚Ä‚¢‚È‚¢—v‘f‚Ííœ‚·‚é
+	for (auto it = Enemys.begin(); it != Enemys.end();)
+	{
+		if (!it->get()->getExist())
+		{
+			it = this->Enemys.erase(it);
+		}
+		else {
+			// ‘¶Ý‚µ‚Ä‚¢‚é“G‚ÌXV
+			it->get()->Update();
+			++it;	// ŽŸ‚Ö
+		}
+	}
+}
+
+void EnemyManager::Render()
+{
+	for (auto it = Enemys.begin(); it != Enemys.end(); ++it)
+	{
+		// “G‚Ì•`‰æ
+		it->get()->Render();
+	}
+}
+
+void EnemyManager::newSet(const Object3d* initData)
+{
+	std::unique_ptr<Enemy>Enemys = std::make_unique<Enemy>();
+	Enemys->Initialize();
+	Enemys->Parameters->CopyParam(initData);
+	Enemys->setExist(true);
+	push(std::move(Enemys));
 }

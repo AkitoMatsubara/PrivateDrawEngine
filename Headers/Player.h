@@ -5,13 +5,14 @@
 #include "Object3d.h"
 
 #include "geometric_primitive.h"
+
 #include <memory>
+#include <vector>
 
 #include "imgui.h"
 #include "imgui_impl_dx11.h"
 #include "imgui_impl_win32.h"
 
-//#include <vector>
 class Player {
 	// ------------------ïœêî------------------
 private:
@@ -24,8 +25,7 @@ private:
 	std::unique_ptr<Geometric_Capsule> Capcule;
 	std::unique_ptr<Geometric_Sphere> testSphere;
 
-	std::unique_ptr<Shot> Shots;
-	std::vector<std::unique_ptr<Shot>> ShotsManager;
+	std::unique_ptr<ShotManager> ShotsManager;
 public:
 	std::unique_ptr<Object3d> Parameters;
 
@@ -41,4 +41,10 @@ public:
 	void Render();
 
 	void ImguiPlayer();
+	ShotManager* getShotManager() { return ShotsManager.get(); }
+	static Player* getInstance()
+	{
+		static Player* instance;
+		return instance;
+	}
 };

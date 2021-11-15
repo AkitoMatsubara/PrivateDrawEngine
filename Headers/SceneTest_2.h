@@ -29,7 +29,7 @@ private:
 	// シーン定数バッファ
 	struct cs_constants {
 		float Theta;	// sinカーブ用
-		DirectX::XMFLOAT3 dummy;
+		DirectX::SimpleMath::Vector3 dummy;
 	};
 
 	Microsoft::WRL::ComPtr<ID3D11Buffer> pBufInput = nullptr;                      // 入力用の構造化バッファー
@@ -39,6 +39,8 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView>	pBufResultUAV = nullptr;        // 出力用の構造化バッファーから作成されるアンオーダード アクセス ビュー
 
 	BUFIN_TYPE vBufInArray[NUM_ELEMENTS];               // 入力用バッファーの配列を宣言
+
+	HRESULT CreateStructuredBuffer(UINT uElementSize, UINT uCount, VOID* pInitData, ID3D11Buffer** ppBuf);
 
 	HRESULT CreateSRVForStructuredBuffer(UINT uElementSize, UINT uCount, VOID* pInitData, ID3D11Buffer** ppBuf, ID3D11ShaderResourceView** ppSRVOut);
 	// コンピュートシェーダーからの出力時に使用するアンオーダードアクセスビューを作成する
@@ -57,9 +59,9 @@ public:
 
 	// シーン定数バッファ
 	struct scene_constants {
-		DirectX::XMFLOAT4X4 view_projection;	// VP変換行列
-		DirectX::XMFLOAT4 light_direction;	// ライトの向き
-		DirectX::XMFLOAT4 camera_position;	// カメラの位置
+		DirectX::SimpleMath::Matrix view_projection;	// VP変換行列
+		DirectX::SimpleMath::Vector4 light_direction;	// ライトの向き
+		DirectX::SimpleMath::Vector4 camera_position;	// カメラの位置
 	};
 	Microsoft::WRL::ComPtr<ID3D11Buffer> constant_buffer[8];
 
@@ -75,7 +77,8 @@ public:
 	std::unique_ptr<Player> player;
 
 	// 敵
-	std::unique_ptr<Enemy> enemy;
+	//std::unique_ptr<Enemy> enemy;
+	//std::unique_ptr<EnemyManager> EnemysManager;
 
 	// ステージ;
 	std::unique_ptr<Stage>stage;
@@ -83,7 +86,7 @@ public:
 	// 個人 ImGuiで数値を編集、格納して関数に渡す変数
 	float light_dir[3]{ 0.5f,-2.0f,1.0f };	// ライトの向かう方向
 	bool focus_zero = false;	// 焦点が(0,0,0)に向けるかどうか
-	DirectX::XMFLOAT3 eyePos = DirectX::XMFLOAT3(0.0f, 0.0f, -10.0f);	// カメラの位置
+	DirectX::SimpleMath::Vector3 eyePos = DirectX::SimpleMath::Vector3(0.0f, 0.0f, -10.0f);	// カメラの位置
 
 
 	// 関数 //
