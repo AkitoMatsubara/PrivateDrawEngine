@@ -13,6 +13,7 @@ private:
 
 	// モデル情報
 	std::unique_ptr<Skinned_Mesh> Model;
+	//std::shared_ptr<Skinned_Mesh> Model;
 	// デフォルトのシェーダー
 	std::unique_ptr<ShaderEx> SkinnedShader = nullptr;
 

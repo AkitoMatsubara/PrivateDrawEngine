@@ -1,6 +1,7 @@
 #include <sstream>
 #include <functional>
 #include <filesystem>
+#include <fstream>
 #include <SimpleMath.h>
 
 #include "framework.h"
@@ -29,7 +30,6 @@ inline DirectX::SimpleMath::Vector3 ConvertToXmfloat3(const FbxDouble3& fbxdoubl
 	value.y = static_cast<float>(fbxdouble3[1]);
 	value.z = static_cast<float>(fbxdouble3[2]);
 	return value;
-
 }
 
 inline DirectX::SimpleMath::Vector4 ConvertToXmfloat4(const FbxDouble4& fbxdouble4) {
@@ -45,24 +45,40 @@ Skinned_Mesh::Skinned_Mesh(const char* fbx_filename, int cstNo, bool triangulate
 	ID3D11Device* device = FRAMEWORK->GetDevice();
 
 	FbxManager* fbx_manager{ FbxManager::Create() };	// マネージャの生成
-	FbxScene* fbx_scene{ FbxScene::Create(fbx_manager,"") };	// sceneにfbx内ファイル内の情報を流し込む
 
-	FbxImporter* fbx_importer{ FbxImporter::Create(fbx_manager,"") };	// インポーターの生成
-	bool import_status{ false };
-	import_status = fbx_importer->Initialize(fbx_filename);
-	_ASSERT_EXPR_A(import_status, fbx_importer->GetStatus().GetErrorString());
+	// 引数ファイル名.fbx拡張子を.cerealに変換、ファイル名.cerealが存在している場合は.cerealをロード、存在しない場合には.fbxをロードする
+	// 名前でファイル有無を判断をするので、中身が違っても同名ファイルであれば新規作成はされないので手動で削除する必要がある
+	std::filesystem::path cereal_filename(fbx_filename);
+	cereal_filename.replace_extension("cereal");
 
-	import_status = fbx_importer->Import(fbx_scene);
-	_ASSERT_EXPR_A(import_status, fbx_importer->GetStatus().GetErrorString());
-
-	FbxGeometryConverter fbx_conoverter(fbx_manager);
-	if (triangulate) {
-		fbx_conoverter.Triangulate(fbx_scene, true, false);	// 四角ポリゴンを三角ポリゴンに変換 作り直しなので非常に重い
-		fbx_conoverter.RemoveBadPolygonsFromMeshes(fbx_scene);
+	//既に.cerealがあった場合はそれを読み込む
+	if (std::filesystem::exists(cereal_filename.c_str()))
+	{
+		std::ifstream ifs(cereal_filename.c_str(), std::ios::binary);
+		cereal::BinaryInputArchive deserialization(ifs);
+		deserialization(scene_view, meshes, materials);
 	}
+	// なければfbxを読みこみ、シリアライズさせる
+	else
+	{
+		FbxScene* fbx_scene{ FbxScene::Create(fbx_manager,"") };	// sceneにfbx内ファイル内の情報を流し込む
 
-	// 関数作成
-	std::function<void(FbxNode*)> traverse{ [&](FbxNode* fbx_node) {
+		FbxImporter* fbx_importer{ FbxImporter::Create(fbx_manager,"") };	// インポーターの生成
+		bool import_status{ false };
+		import_status = fbx_importer->Initialize(fbx_filename);
+		_ASSERT_EXPR_A(import_status, fbx_importer->GetStatus().GetErrorString());
+
+		import_status = fbx_importer->Import(fbx_scene);
+		_ASSERT_EXPR_A(import_status, fbx_importer->GetStatus().GetErrorString());
+
+		FbxGeometryConverter fbx_converter(fbx_manager);
+		if (triangulate) {
+			fbx_converter.Triangulate(fbx_scene, true, false);	// 四角ポリゴンを三角ポリゴンに変換 作り直しなので非常に重い
+			fbx_converter.RemoveBadPolygonsFromMeshes(fbx_scene);
+		}
+
+		// 関数作成
+		std::function<void(FbxNode*)> traverse{ [&](FbxNode* fbx_node) {
 			scene::node& node{scene_view.nodes.emplace_back()};
 			// 引数のfbx_nodeの情報をコピー
 			node.attribute = fbx_node->GetNodeAttribute() ? fbx_node->GetNodeAttribute()->GetAttributeType() : FbxNodeAttribute::EType::eUnknown;
@@ -73,29 +89,34 @@ Skinned_Mesh::Skinned_Mesh(const char* fbx_filename, int cstNo, bool triangulate
 				traverse(fbx_node->GetChild(child_index));
 			}
 		}
-	};
-	traverse(fbx_scene->GetRootNode());
+		};
+		traverse(fbx_scene->GetRootNode());
 
-	Fetch_Meshes(fbx_scene, meshes);
-	Fetch_Materials(fbx_scene, materials);
+		Fetch_Meshes(fbx_scene, meshes);
+		Fetch_Materials(fbx_scene, materials);
 
-#if 1
-	for (const scene::node& node : scene_view.nodes) {
-		FbxNode* fbx_node{ fbx_scene->FindNodeByName(node.name.c_str()) };
-		// ノードデータをデバッグとして出力ウィンドウに表示する
-		std::string node_name = fbx_node->GetName();
-		uint64_t uid = fbx_node->GetUniqueID();
-		uint64_t parent_uid = fbx_node->GetParent() ? fbx_node->GetParent()->GetUniqueID() : 0;	// 親が存在していれば番号を取得
-		int32_t type = fbx_node->GetNodeAttribute() ? fbx_node->GetNodeAttribute()->GetAttributeType() : 0;
+#if 0
+		for (const scene::node& node : scene_view.nodes) {
+			FbxNode* fbx_node{ fbx_scene->FindNodeByName(node.name.c_str()) };
+			// ノードデータをデバッグとして出力ウィンドウに表示する
+			std::string node_name = fbx_node->GetName();
+			uint64_t uid = fbx_node->GetUniqueID();
+			uint64_t parent_uid = fbx_node->GetParent() ? fbx_node->GetParent()->GetUniqueID() : 0;	// 親が存在していれば番号を取得
+			int32_t type = fbx_node->GetNodeAttribute() ? fbx_node->GetNodeAttribute()->GetAttributeType() : 0;
 
-		//// 情報アウトプット用デバッグ
-		//std::stringstream debug_string;
-		//debug_string << node_name << ":" << uid << ":" << parent_uid << ":" << type << "\n";
-		//OutputDebugStringA(debug_string.str().c_str());
-	}
+			// 情報アウトプット用デバッグ
+			std::stringstream debug_string;
+			debug_string << node_name << ":" << uid << ":" << parent_uid << ":" << type << "\n";
+			OutputDebugStringA(debug_string.str().c_str());
+		}
 #endif
-	fbx_manager->Destroy();
+		fbx_manager->Destroy();
 
+		// std::ofstream ofs(ファイル名,オープンモード)
+		std::ofstream ofs(cereal_filename.c_str(), std::ios::binary);
+		cereal::BinaryOutputArchive serialization(ofs);
+		serialization(scene_view, meshes, materials);
+	}
 	// マテリアル情報がない場合に備え予めダミーテクスチャをセット
 	make_dummy_texture(dummyTexture.GetAddressOf(), 0xFFFFFFFF, 16);
 
@@ -106,7 +127,7 @@ Skinned_Mesh::Skinned_Mesh(const char* fbx_filename, int cstNo, bool triangulate
 	// 各種パラメータの初期化
 	Parameters = std::make_unique<Object3d>();
 	Parameters->Position = DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f);
-	Parameters->Scale= DirectX::SimpleMath::Vector3(1.0f, 1.0f, 1.0f);
+	Parameters->Scale = DirectX::SimpleMath::Vector3(1.0f, 1.0f, 1.0f);
 	Parameters->Rotate = DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f);
 	Parameters->Color = DirectX::SimpleMath::Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 }
@@ -121,9 +142,9 @@ void Skinned_Mesh::Render(Shader* shader, int rasterize) {
 		const float scale_factor = 1.0f;
 		DirectX::XMMATRIX C{ XMLoadFloat4x4(&coordinate_system_transforms[CstNo]) * DirectX::XMMatrixScaling(scale_factor,scale_factor,scale_factor) };
 
-		DirectX::XMMATRIX S{DirectX::XMMatrixScaling(Parameters->Scale.x,Parameters->Scale.y,Parameters->Scale.z) };	// 拡縮
-		DirectX::XMMATRIX R{DirectX::XMMatrixRotationRollPitchYaw(DirectX::XMConvertToRadians(Parameters->Rotate.x), DirectX::XMConvertToRadians(Parameters->Rotate.y), DirectX::XMConvertToRadians(Parameters->Rotate.z)) };	// 回転
-		DirectX::XMMATRIX T{DirectX::XMMatrixTranslation(Parameters->Position.x,Parameters->Position.y,Parameters->Position.z) };	// 平行移動
+		DirectX::XMMATRIX S{ DirectX::XMMatrixScaling(Parameters->Scale.x,Parameters->Scale.y,Parameters->Scale.z) };	// 拡縮
+		DirectX::XMMATRIX R{ DirectX::XMMatrixRotationRollPitchYaw(DirectX::XMConvertToRadians(Parameters->Rotate.x), DirectX::XMConvertToRadians(Parameters->Rotate.y), DirectX::XMConvertToRadians(Parameters->Rotate.z)) };	// 回転
+		DirectX::XMMATRIX T{ DirectX::XMMatrixTranslation(Parameters->Position.x,Parameters->Position.y,Parameters->Position.z) };	// 平行移動
 
 		DirectX::SimpleMath::Matrix world;
 		XMStoreFloat4x4(&world, C * S * R * T);	// ワールド変換行列作成
@@ -144,7 +165,7 @@ void Skinned_Mesh::Render(Shader* shader, int rasterize) {
 		immediate_context->RSSetState(rasterizer.states[rasterize].Get());
 
 		Constants data{ world,Parameters->Color };
-		DirectX::XMStoreFloat4x4(&data.world, DirectX::XMMatrixMultiply(DirectX::XMLoadFloat4x4(&mesh.default_global_transform) , DirectX::XMLoadFloat4x4(&world)));	// グローバルのTransformとworld行列を掛けてworld座標に変換している
+		DirectX::XMStoreFloat4x4(&data.world, DirectX::XMMatrixMultiply(DirectX::XMLoadFloat4x4(&mesh.default_global_transform), DirectX::XMLoadFloat4x4(&world)));	// グローバルのTransformとworld行列を掛けてworld座標に変換している
 
 		for (const Mesh::Subset& subset : mesh.subsets) {	// マテリアル別メッシュの数回すよ
 			if (subset.material_unique_id != 0)	// unique_idの確認
@@ -153,15 +174,13 @@ void Skinned_Mesh::Render(Shader* shader, int rasterize) {
 				if (materials.size() > 0)	// マテリアル情報があるか確認
 				{
 					immediate_context->PSSetShaderResources(0, 1, material.srv[0].GetAddressOf());
-					XMStoreFloat4(&data.material_color, DirectX::XMVectorMultiply(DirectX::XMLoadFloat4(&Parameters->Color),DirectX::XMLoadFloat4(&material.Kd)));	// マテリアルとカラーを合成
+					XMStoreFloat4(&data.material_color, DirectX::XMVectorMultiply(DirectX::XMLoadFloat4(&Parameters->Color), DirectX::XMLoadFloat4(&material.Kd)));	// マテリアルとカラーを合成
 				}
 			}
 			else
 			{
 				immediate_context->PSSetShaderResources(0, 1, dummyTexture.GetAddressOf());	// ダミーテクスチャを使用する
-
 			}
-
 
 			immediate_context->VSSetConstantBuffers(0, 1, constant_buffer.GetAddressOf());
 			immediate_context->UpdateSubresource(constant_buffer.Get(), 0, 0, &data, 0, 0);
@@ -219,15 +238,6 @@ void Skinned_Mesh::Create_com_buffers(const char* fbx_filename) {
 			make_dummy_texture(iterator->second.srv[0].GetAddressOf(), 0xFFFFFFFF, 16);
 		}
 	}
-	//D3D11_INPUT_ELEMENT_DESC input_element_desc[]{
-	//	{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-	//	{ "NORMAL"	, 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-	//	{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-	//};
-
-	//// シェーダ作成
-	//create_vs_from_cso(vs_cso_name, vertex_shader.ReleaseAndGetAddressOf(), input_layout.ReleaseAndGetAddressOf(), input_element_desc, ARRAYSIZE(input_element_desc));
-	//create_ps_from_cso(ps_cso_name, pixel_shader.ReleaseAndGetAddressOf());
 
 	D3D11_BUFFER_DESC buffer_desc{};
 	ZeroMemory(&buffer_desc, sizeof(D3D11_BUFFER_DESC));
@@ -259,7 +269,7 @@ void Skinned_Mesh::Fetch_Meshes(FbxScene* fbx_scene, std::vector<Mesh>& meshes) 
 		for (int material_index = 0; material_index < material_count; ++material_index) {
 			const FbxSurfaceMaterial* fbx_material{ fbx_mesh->GetNode()->GetMaterial(material_index) };
 			subsets.at(material_index).material_name = fbx_material->GetName();
-			subsets.at(material_index).material_unique_id= fbx_material->GetUniqueID();
+			subsets.at(material_index).material_unique_id = fbx_material->GetUniqueID();
 		}
 		if (material_count > 0) {
 			const int polygon_count{ fbx_mesh->GetPolygonCount() };
@@ -283,11 +293,11 @@ void Skinned_Mesh::Fetch_Meshes(FbxScene* fbx_scene, std::vector<Mesh>& meshes) 
 		FbxStringList uv_names;
 		fbx_mesh->GetUVSetNames(uv_names);
 		const FbxVector4* control_points{ fbx_mesh->GetControlPoints() };
-		for (int polygon_index = 0; polygon_index < polygon_count; ++polygon_index){
+		for (int polygon_index = 0; polygon_index < polygon_count; ++polygon_index) {
 			const int mterial_index{ material_count > 0 ? fbx_mesh->GetElementMaterial()->GetIndexArray().GetAt(polygon_index) : 0 };
 			Mesh::Subset& subset{ subsets.at(mterial_index) };
 			const uint32_t offset{ subset.start_index_location + subset.index_count };
-			for (int position_in_polygon = 0; position_in_polygon < 3; ++position_in_polygon){
+			for (int position_in_polygon = 0; position_in_polygon < 3; ++position_in_polygon) {
 				const int vertex_index{ polygon_index * 3 + position_in_polygon };
 
 				Vertex vertex;
@@ -296,14 +306,14 @@ void Skinned_Mesh::Fetch_Meshes(FbxScene* fbx_scene, std::vector<Mesh>& meshes) 
 				vertex.position.y = static_cast<float>(control_points[polygon_vertex][1]);
 				vertex.position.z = static_cast<float>(control_points[polygon_vertex][2]);
 
-				if (fbx_mesh->GetElementNormalCount() > 0){
+				if (fbx_mesh->GetElementNormalCount() > 0) {
 					FbxVector4 normal;
 					fbx_mesh->GetPolygonVertexNormal(polygon_index, position_in_polygon, normal);
 					vertex.normal.x = static_cast<float>(normal[0]);
 					vertex.normal.y = static_cast<float>(normal[1]);
 					vertex.normal.z = static_cast<float>(normal[2]);
 				}
-				if (fbx_mesh->GetElementUVCount() > 0){
+				if (fbx_mesh->GetElementUVCount() > 0) {
 					FbxVector2 uv;
 					bool unmapped_uv;
 					fbx_mesh->GetPolygonVertexUV(polygon_index, position_in_polygon,
@@ -314,7 +324,7 @@ void Skinned_Mesh::Fetch_Meshes(FbxScene* fbx_scene, std::vector<Mesh>& meshes) 
 
 				mesh.vertices.at(vertex_index) = std::move(vertex);
 				//mesh.indices.at(vertex_index) = vertex_index;
-				mesh.indices.at(static_cast<size_t>(offset)+ position_in_polygon) = vertex_index;
+				mesh.indices.at(static_cast<size_t>(offset) + position_in_polygon) = vertex_index;
 				subset.index_count++;
 			}
 		}
@@ -373,7 +383,6 @@ void Skinned_Mesh::Fetch_Materials(FbxScene* fbx_scene, std::unordered_map<uint6
 			}
 			materials.emplace(material.unique_id, std::move(material));	// unique番目にmaterialを格納する
 		}
-
 	}
 }
 

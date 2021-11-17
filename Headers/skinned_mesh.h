@@ -13,15 +13,76 @@
 #include <fbxsdk.h>
 #include <unordered_map>
 
+#include <cereal/archives/binary.hpp>
+#include <cereal/types/memory.hpp>
+#include <cereal/types/string.hpp>
+#include <cereal/types/vector.hpp>
+#include <cereal/types/set.hpp>
+#include <cereal/types/unordered_map.hpp>
+
+namespace DirectX
+{
+	template <class T>
+	void serialize(T& archive, DirectX::SimpleMath::Vector2& v)
+	{
+		archive(
+			cereal::make_nvp("x", v.x),
+			cereal::make_nvp("y", v.y)
+		);
+	}
+
+	template <class T>
+	void serialize(T& archive, DirectX::SimpleMath::Vector3& v)
+	{
+		archive(
+			cereal::make_nvp("x", v.x),
+			cereal::make_nvp("y", v.y),
+			cereal::make_nvp("z", v.z)
+		);
+	}
+
+	template <class T>
+	void serialize(T& archive, DirectX::SimpleMath::Vector4& v)
+	{
+		archive(
+			cereal::make_nvp("x", v.x),
+			cereal::make_nvp("y", v.y),
+			cereal::make_nvp("z", v.z),
+			cereal::make_nvp("w", v.w)
+		);
+	}
+
+	template <class T>
+	void serialize(T& archive, DirectX::SimpleMath::Matrix& m)
+	{
+		archive(
+			cereal::make_nvp("_11", m._11), cereal::make_nvp("_12", m._12),
+			cereal::make_nvp("_13", m._13), cereal::make_nvp("_14", m._14),
+			cereal::make_nvp("_21", m._21), cereal::make_nvp("_22", m._22),
+			cereal::make_nvp("_23", m._23), cereal::make_nvp("_24", m._24),
+			cereal::make_nvp("_31", m._31), cereal::make_nvp("_32", m._32),
+			cereal::make_nvp("_33", m._33), cereal::make_nvp("_34", m._34),
+			cereal::make_nvp("_41", m._41), cereal::make_nvp("_42", m._42),
+			cereal::make_nvp("_43", m._43), cereal::make_nvp("_44", m._44)
+		);
+	}
+}
+
 struct scene {
 	struct node {
 		uint64_t unique_id{ 0 };
 		std::string name;
 		FbxNodeAttribute::EType attribute{ FbxNodeAttribute::EType::eUnknown };	// attribute:属性
 		int64_t parent_index{ -1 };
+
+		template<class T>
+		void serialize(T& archive) { archive(unique_id, name, attribute, parent_index); }
 	};
 
 	std::vector<node>nodes;
+	template<class T>
+	void serialize(T& archive) { archive(nodes); }
+
 	int64_t indexof(uint64_t unique_id)const {
 		int64_t index{ 0 };
 		for (const node& node : nodes) {
@@ -41,6 +102,9 @@ public:
 		DirectX::SimpleMath::Vector3 position;
 		DirectX::SimpleMath::Vector3 normal;
 		DirectX::SimpleMath::Vector2 texcoord;
+
+		template<class T>
+		void serialize(T& archive) { archive(position, normal, texcoord); }
 	};
 	struct Constants {
 		DirectX::SimpleMath::Matrix world;
@@ -56,12 +120,16 @@ public:
 
 		std::string texture_filenames[4];
 		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srv[4];
+
+		template<class T>
+		void serialize(T& archive) { archive(unique_id, name, Ka, Kd, Ks, texture_filenames); }
 	};
 	// <キー型,値型>オブジェクト名
 	std::unordered_map<uint64_t, Material>materials;
 	static Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> dummyTexture;	// fbxにマテリアルが設定されていない場合に使用する
 
 	struct Mesh {
+	public:
 		uint64_t unique_id{ 0 };
 		std::string name;
 		// シーンのノード配列を参照するインデックス
@@ -76,6 +144,9 @@ public:
 
 			uint32_t start_index_location{ 0 };
 			uint32_t index_count{ 0 };
+
+			template<class T>
+			void serialize(T& archive) { archive(material_unique_id, material_name, start_index_location, index_count); }
 		};
 		std::vector<Subset> subsets;
 
@@ -85,6 +156,9 @@ public:
 			0,0,1,0,	// _31,_32,_33,_34
 			0,0,0,1		// _41,_42,_43,_44
 		};
+
+		template<class T>
+		void serialize(T& archive) { archive(unique_id, name, node_index, vertices, indices, subsets, default_global_transform); }
 
 	private:
 		Microsoft::WRL::ComPtr<ID3D11Buffer> vertex_buffer;
@@ -102,14 +176,7 @@ private:
 
 	bool wireframe;	// ワイヤーフレーム表示の有無
 
-	//struct PrimitivParam {
-	//	DirectX::SimpleMath::Vector3 Position;		// 描画位置
-	//	DirectX::SimpleMath::Vector3 Scale;		// 描画サイズ
-	//	DirectX::SimpleMath::Vector3 Rotate;		// 回転角度
-	//	DirectX::SimpleMath::Vector4 Color;		// 加算色
-	//}Parameters;
 	std::unique_ptr<Object3d> Parameters;
-
 
 	DirectX::SimpleMath::Matrix coordinate_system_transforms[CST_END] = {
 		{-1, 0, 0, 0,
@@ -145,7 +212,6 @@ public:
 
 	// paramを編集するimguiウィンドウ
 	void imguiWindow(const char* beginname = "skinned_mesh");
-
 
 	// セッター
 	void setPos(DirectX::SimpleMath::Vector3 pos) { Parameters->Position = pos; }

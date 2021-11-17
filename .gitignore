@@ -33,27 +33,15 @@
 
 # コメントは `#'
 
-# 除外フォルダ
-/Resources
-/Others
-/Debug
-/Cache
-/.vs
-/x64
+# 特定のフォルダ階層以下を無視する
+# フォルダ名/
+Resources/
+External/
+Others/
+Cache/
+.vs/
+
+# 特定の拡張子を無視する
+# *拡張子
+*.exp
 *.pdb
-*.exe
-
-# 例外フォルダ
-!/Shaders/
-!/Shaders/*
-!/Sources/
-!/Sources/*
-!/External/
-!/External/*
-
-!*.cpp
-!*.h
-!*.hlsli
-!*.hlsl
-!*.cso
-!*.cod

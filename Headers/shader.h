@@ -43,6 +43,6 @@ private:
 struct Vertex {
 	DirectX::SimpleMath::Vector3 position;
 	DirectX::SimpleMath::Vector3 normal;
-	DirectX::XMFLOAT2 texcoord;	// TextuerCoordinateの略、UV座標の取得などによく使われる様子
+	DirectX::SimpleMath::Vector2 texcoord;	// TextuerCoordinateの略、UV座標の取得などによく使われる様子
 	DirectX::SimpleMath::Vector4 color;
 };
