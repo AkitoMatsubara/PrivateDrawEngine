@@ -64,8 +64,6 @@ public:
 	// ŠÖ”
 private:
 	bool initialize();
-	void update(float elapsed_time/*Elapsed seconds from last frame*/);
-	void render(float elapsed_time/*Elapsed seconds from last frame*/);
 	bool uninitialize();
 
 	bool CreateDeviceAndSwapCain();		// Device‚ÆSwapChainì¬

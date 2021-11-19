@@ -8,7 +8,6 @@ private:
 public:
 	// SpriteŒ^ ‰æ‘œ•`‰æ—p
 	std::unique_ptr<Sprite> TitleImage;
-	std::unique_ptr<sprite_Batch> sprite_batches[8];
 	std::unique_ptr<ShaderEx> SpriteShader = nullptr;
 
 

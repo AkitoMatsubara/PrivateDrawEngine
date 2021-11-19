@@ -22,7 +22,7 @@ private:
 
 	std::unique_ptr<Shot> Shots;
 
-	bool Exist;
+	bool Exist = false;
 protected:
 public:
 	std::unique_ptr<Object3d> Parameters;

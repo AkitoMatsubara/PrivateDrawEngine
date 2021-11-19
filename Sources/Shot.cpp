@@ -23,8 +23,8 @@ void Shot::Initialize()
 void Shot::Update()
 {
 	// ‚Æ‚è‚ ‚¦‚¸‘O‚Éi‚Ş“®‚«‚ğì‚é
-	static DirectX::SimpleMath::Vector3 vel{ 0,0,0 };
-	DirectX::SimpleMath::Vector3 pos = Parameters->Position + Parameters->Vector * 0.1;
+	static DirectX::SimpleMath::Vector3 vel{ 0.0f,0.0f,0.0f };
+	DirectX::SimpleMath::Vector3 pos = Parameters->Position + Parameters->Vector * 0.1f;
 	Parameters->Position = pos;
 
 	// ©‘RÁ–Å “K“–‚È‚Ì‚Å—vC³
@@ -36,7 +36,7 @@ void Shot::Update()
 
 	// ƒ‚ƒfƒ‹‚É•`‰æŒnƒpƒ‰ƒ[ƒ^[‚ğ“n‚·
 	test->Parameters->CopyParam(Parameters.get());
-	test->Parameters->Color = { 1.0f,fmodf(LifeTimer,50.0f),1.0f,1.0f };
+	test->Parameters->Color = DirectX::SimpleMath::Vector4{ 1.0f,fmodf(LifeTimer,50.0f),1.0f,1.0f };
 	//test->Parameters->CopyParam(Model->getParameters());
 	//Model->getParameters()->CopyParam(Parameters.get());
 }
@@ -72,6 +72,7 @@ void ShotManager::Update()
 				if(isHit(enem->get()->Parameters.get()))
 				{
 					enem->get()->setExist(false);
+					it->get()->setExist(false);
 				}
 			}
 			++it;	// Ÿ‚Ö
@@ -98,10 +99,12 @@ void ShotManager::newSet(const Object3d* initData)
 
 bool ShotManager::isHit(const Object3d* Capcule)
 {
-	bool hit = false;
 	for (auto it = Shots.begin(); it != Shots.end(); ++it)
 	{
-		hit = Judge::getInstance()->c_b(*Capcule, *it->get()->Parameters);
+		if(Judge::getInstance()->c_b(*Capcule, *it->get()->Parameters))
+		{
+			return true;
+		}
 	}
-		return hit;
+		return false;
 }

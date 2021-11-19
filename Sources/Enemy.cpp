@@ -41,6 +41,8 @@ void Enemy::Update() {
 	Model->setColor(Parameters->Color);
 
 	Capcule->Parameters->CopyParam(Parameters.get());
+	static const float capculeSize = 0.6f;
+	Capcule->Parameters->Scale = DirectX::SimpleMath::Vector3(capculeSize * 0.7f, capculeSize, capculeSize);
 	Capcule->Parameters->Color = DirectX::SimpleMath::Vector4{ 1.0f,1.0f,1.0f,1.0f, };
 	Capcule->Parameters->Rotate.x += 90;
 }
@@ -128,9 +130,12 @@ void EnemyManager::Render()
 
 void EnemyManager::newSet(const Object3d* initData)
 {
-	std::unique_ptr<Enemy>Enemys = std::make_unique<Enemy>();
-	Enemys->Initialize();
-	Enemys->Parameters->CopyParam(initData);
-	Enemys->setExist(true);
-	push(std::move(Enemys));
+	{
+		std::unique_ptr<Enemy>Enemys = std::make_unique<Enemy>();
+		Enemys->Initialize();
+		Enemys->Parameters->CopyParam(initData);
+		Enemys->setExist(true);
+		push(std::move(Enemys));
+		Enemys.reset();
+	}
 }

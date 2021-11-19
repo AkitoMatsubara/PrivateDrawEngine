@@ -19,10 +19,10 @@ private:
 	std::unique_ptr<ShaderEx> SkinnedShader = nullptr;
 
 	float LifeTimer = 0;	// 射出時間の保有
-	bool Exist;		// 発射済みフラグ
+	bool Exist = false;		// 発射済みフラグ
 public:
 	std::unique_ptr<Object3d> Parameters;
-	bool HitConfirmation;	// 当たり判定
+	bool HitConfirmation = false;	// 当たり判定
 
 	// 関数
 private:
@@ -42,6 +42,7 @@ public:
 	void Render();
 
 	void set(const Object3d* parent);	// オブジェクトは全てObject3dクラスを保有している前提で各種パラメータをコピー
+	void setExist(bool flg) { Exist = flg; }
 	bool getExist() { return Exist; }
 };
 

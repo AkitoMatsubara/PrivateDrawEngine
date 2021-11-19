@@ -29,8 +29,6 @@ bool SceneTest_2::Initialize() {
 			GeomtricShader->Create(L"Shaders\\geometric_primitive_vs", L"Shaders\\geometric_primitive_ps");
 		}
 
-		skinned_mesh = std::make_unique<Skinned_Mesh>(".\\Resources\\cube.003.0.fbx");	// 複数メッシュ キューブと猿
-
 		player = std::make_unique<Player>();
 		player->Initialize();
 
@@ -76,7 +74,7 @@ void SceneTest_2::Update() {
 	imguiUpdate();
 	const float elapsed_time = FRAMEWORK->GetElapsedTime();
 	// シーン切り替え
-	if (GetAsyncKeyState('G') < 0) setScene(std::make_unique<SceneTitle>());
+	if (GetAsyncKeyState('G') &1) setScene(std::make_unique<SceneTitle>());
 
 	player->Update();
 	//enemy->Update();
@@ -84,10 +82,7 @@ void SceneTest_2::Update() {
 
 	// カメラ操作
 	static float cameraSpeed = 7.0f;
-	//DirectX::SimpleMath::Vector3 EyeVec = eyePos - player->Parameters->Position;
-	DirectX::SimpleMath::Vector3 test;
-	//test = eyePos + cameraSpeed;
-	//sinf(DirectX::XMConvertToRadians(90));
+
 	if (GetKeyState(VK_RIGHT) < 0)  eyePos.x += cameraSpeed * elapsed_time;	// 右に
 	if (GetKeyState(VK_LEFT) < 0)   eyePos.x -= cameraSpeed * elapsed_time;	// 左に
 	if (GetKeyState(VK_UP) < 0)     eyePos.z += cameraSpeed * elapsed_time;	// 前に
@@ -95,7 +90,7 @@ void SceneTest_2::Update() {
 	if (GetKeyState(VK_SPACE) < 0)  eyePos.y += cameraSpeed * elapsed_time;	// 上に
 	if (GetKeyState(VK_SHIFT) < 0)  eyePos.y -= cameraSpeed * elapsed_time;	// 下に
 
-	if (GetKeyState(VK_LBUTTON) < 0) {
+	if (GetAsyncKeyState(VK_RBUTTON) &1) {
 		EnemyManager::getInstance().newSet(player->Parameters.get());	// お試し右クリックで敵を生成
 	}
 	EnemyManager::getInstance().Update();
@@ -188,19 +183,16 @@ void SceneTest_2::Render() {
 		// コンスタントバッファ更新
 		scene_constants data{};
 		XMStoreFloat4x4(&data.view_projection, V * P);	// Matrixから4x4へ変換
-		data.light_direction = { light_dir[0],light_dir[1],light_dir[2],0 };	// シェーダに渡すライトの向き
-		data.camera_position = { eyePos.x,eyePos.y,eyePos.z,0 };				// シェーダに渡すカメラの位置
+		data.light_direction = DirectX::SimpleMath::Vector4{ light_dir[0],light_dir[1],light_dir[2],0 };	// シェーダに渡すライトの向き
+		data.camera_position = DirectX::SimpleMath::Vector4{ eyePos.x,eyePos.y,eyePos.z,0 };				// シェーダに渡すカメラの位置
 		immediate_context->UpdateSubresource(constant_buffer[0].Get(), 0, 0, &data, 0, 0);
 		immediate_context->VSSetConstantBuffers(1, 1, constant_buffer[0].GetAddressOf());	// cBufferはドローコールのたびに消去されるので都度設定する必要がある
 		immediate_context->PSSetConstantBuffers(1, 1, constant_buffer[0].GetAddressOf());
 
 
 		{
-			// 3DオブジェクトRender内に移植 現状ここである必要なし？
 			grid->Render(true);
-			//skinned_mesh->Render(SkinnedShader.get());
 			stage->Render();
-			//enemy->Render();
 			player->Render();
 			EnemyManager::getInstance().Render();
 		}
@@ -211,6 +203,35 @@ void SceneTest_2::Render() {
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 #endif
 	FRAMEWORK->Flip();
+}
+
+void SceneTest_2::imguiUpdate() {
+#ifdef USE_IMGUI
+	ImGui_ImplDX11_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
+
+	ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.0f, 0.6f, 0.1f, 1.0f));	// これ一つ呼ぶとImGui::PopStyleColorを書かないといけないらしい
+	ImGui::PushStyleColor(ImGuiCol_TitleBg, ImVec4(0.0f, 0.2f, 0.0f, 1.0f));
+	ImGui::SetNextWindowPos(ImVec2(20, 300), ImGuiCond_Once);
+	ImGui::SetNextWindowSize(ImVec2(300, 330), ImGuiCond_Always);
+
+	imguiSceneChanger();
+	// 2D用 内部関数で完結させてる
+	sprites->ImguiWindow();
+	// 3D用パラメータ
+	player->ImguiPlayer();
+	// ライト調整等グローバル設定
+	ImGui::Begin("Light");
+	ImGui::SliderFloat3("Light_Direction", light_dir, -10.0f, 10.0f);
+	ImGui::Checkbox("focus Zero", &focus_zero);
+	ImGui::Text("Enemys: %d", EnemyManager::getInstance().getEnemys()->size());
+
+	ImGui::PopStyleColor();	// ImGui::PushStyleColor一つにつき一つ呼び出すっぽい
+	ImGui::PopStyleColor();
+
+	ImGui::End();
+#endif
 }
 
 // 構造化バッファを作成する
@@ -244,7 +265,6 @@ HRESULT SceneTest_2::CreateStructuredBuffer(UINT uElementSize, UINT uCount, VOID
 	return hr;
 }
 
-
 // コンピュートシェーダーへの入力時に使用するシェーダーリソースビューを作成する
 HRESULT SceneTest_2::CreateSRVForStructuredBuffer(UINT uElementSize, UINT uCount, VOID* pInitData, ID3D11Buffer** ppBuf, ID3D11ShaderResourceView** ppSRVOut) {
 	ID3D11Device* pD3DDevice = FRAMEWORK->GetDevice();
@@ -254,7 +274,7 @@ HRESULT SceneTest_2::CreateSRVForStructuredBuffer(UINT uElementSize, UINT uCount
 
 	// 構造化バッファーを作成する
 	hr = CreateStructuredBuffer(uElementSize, uCount, pInitData, ppBuf);
-	if(FAILED(hr))
+	if (FAILED(hr))
 	{
 		goto EXIT;
 	}
@@ -357,33 +377,3 @@ void SceneTest_2::RunComputeShader(ID3D11ComputeShader* pComputeShader, ID3D11Sh
 	immediate_context->CSSetConstantBuffers(0, 1, ppCBNULL);
 }
 
-void SceneTest_2::imguiUpdate() {
-#ifdef USE_IMGUI
-	ImGui_ImplDX11_NewFrame();
-	ImGui_ImplWin32_NewFrame();
-	ImGui::NewFrame();
-
-	ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.0f, 0.6f, 0.1f, 1.0f));	// これ一つ呼ぶとImGui::PopStyleColorを書かないといけないらしい
-	ImGui::PushStyleColor(ImGuiCol_TitleBg, ImVec4(0.0f, 0.2f, 0.0f, 1.0f));
-	ImGui::SetNextWindowPos(ImVec2(20, 300), ImGuiCond_Once);
-	ImGui::SetNextWindowSize(ImVec2(300, 330), ImGuiCond_Always);
-
-	imguiSceneChanger();
-	// 2D用 内部関数で完結させてる
-	sprites->ImguiWindow();
-	// 3D用パラメータ
-	//skinned_mesh->imguiWindow("fbx");
-		player->ImguiPlayer();
-	// ライト調整等グローバル設定
-	ImGui::Begin("Light");
-	ImGui::SliderFloat3("Light_Direction", light_dir, -10.0f, 10.0f);
-	ImGui::Checkbox("focus Zero", &focus_zero);
-	//ImGui::Text("Enemys: %d", EnemysManager.get()->getSize());
-	ImGui::Text("Enemys: %d", EnemyManager::getInstance().getEnemys()->size());
-
-	ImGui::PopStyleColor();	// ImGui::PushStyleColor一つにつき一つ呼び出すっぽい
-	ImGui::PopStyleColor();
-
-	ImGui::End();
-#endif
-}

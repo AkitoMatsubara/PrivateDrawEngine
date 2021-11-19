@@ -41,8 +41,8 @@ void Player::Update() {
 	Capcule->Parameters->CopyParam(Parameters.get());	// Playerに付随するように位置を同期
 	DirectX::SimpleMath::Vector3 pPos = Parameters->Position;
 	Object3d* cPos = Capcule->Parameters.get();
-	static const float capculeSize = 1.0f;
-	Capcule->Parameters->Scale = DirectX::SimpleMath::Vector3(capculeSize, capculeSize, capculeSize);
+	static const float capculeSize = 0.6f;
+	Capcule->Parameters->Scale = DirectX::SimpleMath::Vector3(capculeSize*0.7f, capculeSize, capculeSize);
 	Capcule->Parameters->Color = DirectX::SimpleMath::Vector4{ 1.0f,1.0f,1.0f,1.0f, };
 	Capcule->Parameters->Rotate.x += 90;
 	testSphere->Parameters->CopyParam(Parameters.get());
@@ -79,7 +79,7 @@ void Player::ImguiPlayer()
 	// ライト調整等グローバル設定
 	ImGui::Begin("Player");
 	ImGui::SliderFloat3("SpherePos", imguiPos, -10.0f, 10.0f);
-	ImGui::Text("vector: %d", ShotsManager.get()->getSize());
+	ImGui::Text("ShotsNum: %d", ShotsManager.get()->getSize());
 
 	ImGui::PopStyleColor();	// ImGui::PushStyleColor一つにつき一つ呼び出すっぽい
 	ImGui::PopStyleColor();
@@ -129,7 +129,7 @@ void Player::Control()
 
 	static bool nowTrg = false;	// 現在のキー状況
 	static bool oldTrg = false;	// フレーム前のキー情報
-	if (GetKeyState('Z') < 0) {
+	if (GetKeyState(VK_LBUTTON) < 0) {
 		nowTrg = true;	// 今押したね？
 		if (oldTrg != nowTrg){	// 前フレームと比較、同じじゃなければ処理(要は押しっぱは反応しないように)
 			// Shotの生成

@@ -21,7 +21,7 @@ struct SpriteParam {
 	DirectX::SimpleMath::Vector2 Size;		// 描画サイズ
 	DirectX::SimpleMath::Vector2 TexPos;	// テクスチャの開始位置
 	DirectX::SimpleMath::Vector2 TexSize;	// テクスチャの使用サイズ
-	float Angle;		// 回転角度
+	float Angle = 0.0f;		// 回転角度
 	DirectX::SimpleMath::Vector4 Color;		// 加算色
 };
 
@@ -45,7 +45,7 @@ private:
 
 public:
 	// コンストラクタ、デストラクタ
-	Sprite(const wchar_t* filename, const char* vs_cso_name = "Shaders\\sprite_vs.cso", const char* ps_cso_name = "Shaders\\sprite_ps.cso");
+	Sprite(const wchar_t* filename);
 	~Sprite();	// すべてのCOMオブジェクトを解放する
 
 	// メンバ関数

@@ -110,13 +110,13 @@ Skinned_Mesh::Skinned_Mesh(const char* fbx_filename, int cstNo, bool triangulate
 			OutputDebugStringA(debug_string.str().c_str());
 		}
 #endif
-		fbx_manager->Destroy();
 
 		// std::ofstream ofs(ファイル名,オープンモード)
 		std::ofstream ofs(cereal_filename.c_str(), std::ios::binary);
 		cereal::BinaryOutputArchive serialization(ofs);
 		serialization(scene_view, meshes, materials);
 	}
+	fbx_manager->Destroy();
 	// マテリアル情報がない場合に備え予めダミーテクスチャをセット
 	make_dummy_texture(dummyTexture.GetAddressOf(), 0xFFFFFFFF, 16);
 
@@ -387,23 +387,23 @@ void Skinned_Mesh::Fetch_Materials(FbxScene* fbx_scene, std::unordered_map<uint6
 }
 
 void Skinned_Mesh::imguiWindow(const char* beginname) {
-	float pos[3]{ Parameters->Position.x ,Parameters->Position.y ,Parameters->Position.z };
-	float size[3]{ Parameters->Scale.x ,Parameters->Scale.y ,Parameters->Scale.z };
-	float angle[3]{ Parameters->Rotate.x,Parameters->Rotate.y,Parameters->Rotate.z };
-	float Color[4]{ Parameters->Color.x ,Parameters->Color.y,Parameters->Color.z,Parameters->Color.w };
+	//float pos[3]{ Parameters->Position.x ,Parameters->Position.y ,Parameters->Position.z };
+	//float size[3]{ Parameters->Scale.x ,Parameters->Scale.y ,Parameters->Scale.z };
+	//float angle[3]{ Parameters->Rotate.x,Parameters->Rotate.y,Parameters->Rotate.z };
+	//float Color[4]{ Parameters->Color.x ,Parameters->Color.y,Parameters->Color.z,Parameters->Color.w };
 
-	ImGui::Begin(beginname);	// 識別ID 同じIDだと一緒のウィンドウにまとめられる
+	//ImGui::Begin(beginname);	// 識別ID 同じIDだと一緒のウィンドウにまとめられる
 
-	ImGui::SliderFloat3(u8"Position", pos, -5, 5);
-	ImGui::SliderFloat3(u8"Size", size, 0, 5);
-	ImGui::SliderFloat3(u8"angle", angle, -360, 360);
-	ImGui::ColorEdit4(u8"Color", (float*)&Color);
-	ImGui::Checkbox(u8"WireFrame", &wireframe);
+	//ImGui::SliderFloat3(u8"Position", pos, -5, 5);
+	//ImGui::SliderFloat3(u8"Size", size, 0, 5);
+	//ImGui::SliderFloat3(u8"angle", angle, -360, 360);
+	//ImGui::ColorEdit4(u8"Color", (float*)&Color);
+	//ImGui::Checkbox(u8"WireFrame", &wireframe);
 
-	ImGui::End();	// ウィンドウ終了
-	// パラメータ代入
-	setPos(DirectX::SimpleMath::Vector3(pos[0], pos[1], pos[2]));
-	setSize(DirectX::SimpleMath::Vector3(size[0], size[1], size[2]));
-	setAngle(DirectX::SimpleMath::Vector3(angle[0], angle[1], angle[2]));
-	setColor(DirectX::SimpleMath::Vector4(Color[0], Color[1], Color[2], Color[3]));
+	//ImGui::End();	// ウィンドウ終了
+	//// パラメータ代入
+	//setPos(DirectX::SimpleMath::Vector3(pos[0], pos[1], pos[2]));
+	//setSize(DirectX::SimpleMath::Vector3(size[0], size[1], size[2]));
+	//setAngle(DirectX::SimpleMath::Vector3(angle[0], angle[1], angle[2]));
+	//setColor(DirectX::SimpleMath::Vector4(Color[0], Color[1], Color[2], Color[3]));
 }

@@ -1,7 +1,7 @@
-//#include "SceneManager.h"
 #include "SceneTitle.h"
 #include "SceneTest_2.h"
 #include "SceneLoading.h"
+
 
 bool SceneTitle::Initialize() {
 	Microsoft::WRL::ComPtr<ID3D11Device> device = FRAMEWORK->GetDevice();	// frameworkからdeviceを取得
@@ -116,8 +116,8 @@ void SceneTitle::Render() {
 		// コンスタントバッファ更新
 		scene_constants data{};
 		XMStoreFloat4x4(&data.view_projection, V * P);	// Matrixから4x4へ変換
-		data.light_direction = { light_dir[0],light_dir[1],light_dir[2],0 };	// シェーダに渡すライトの向き
-		data.camera_position = { eyePos.x,eyePos.y,eyePos.z,0 };				// シェーダに渡すカメラの位置
+		data.light_direction = DirectX::SimpleMath::Vector4{ light_dir[0],light_dir[1],light_dir[2],0 };	// シェーダに渡すライトの向き
+		data.camera_position = DirectX::SimpleMath::Vector4{ eyePos.x,eyePos.y,eyePos.z,0 };				// シェーダに渡すカメラの位置
 		immediate_context->UpdateSubresource(constant_buffer[0].Get(), 0, 0, &data, 0, 0);
 		immediate_context->VSSetConstantBuffers(1, 1, constant_buffer[0].GetAddressOf());	// cBufferはドローコールのたびに消去されるので都度設定する必要がある
 		immediate_context->PSSetConstantBuffers(1, 1, constant_buffer[0].GetAddressOf());
@@ -126,15 +126,7 @@ void SceneTitle::Render() {
 
 		{
 			// 3DオブジェクトRender内に移植 現状ここである必要なし？
-			//XMMATRIX S{ XMMatrixScaling(geometric_primitive[0]->getSize().x,geometric_primitive[0]->getSize().y,geometric_primitive[0]->getSize().z) };				// 拡縮
-			//XMMATRIX R{ XMMatrixRotationRollPitchYaw(geometric_primitive[0]->getAngle().x,geometric_primitive[0]->getAngle().y,geometric_primitive[0]->getAngle().z) };	// 回転
-			//XMMATRIX T{ XMMatrixTranslation(geometric_primitive[0]->getPos().x,geometric_primitive[0]->getPos().y,geometric_primitive[0]->getPos().z) };			// 平行移動
-			//XMFLOAT4X4 world;
-			//XMStoreFloat4x4(&world, S * R * T);	// ワールド変換行列作成
 			grid->Render(true);
-			//obj_1->Render(immediate_context.Get());
-			//obj_2->Render(immediate_context.Get());
-			//static_mesh->Render(immediate_context.Get());
 			skinned_mesh->Render(SkinnedShader.get());
 		}
 	}
@@ -143,6 +135,7 @@ void SceneTitle::Render() {
 	ImGui::Render();
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 #endif
+
 	FRAMEWORK->Flip();
 }
 

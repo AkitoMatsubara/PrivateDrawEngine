@@ -15,14 +15,14 @@ bool Judge::c_b(const Object3d& capsle, const Object3d& sphere)
 	{
 		// sphereは球でスケールは全要素同数値なのでどこでもいい
 		// なんで0.5倍したらいけたんや？わからん…
-		if (d2 < capsle.Scale.x + sphere.Scale.x * 0.5f)
+		if (d2 < (capsle.Scale.x + sphere.Scale.x * 0.5f)&& d2 < (capsle.Scale.y + sphere.Scale.y * 0.5f)&& d2 < (capsle.Scale.z + sphere.Scale.z * 0.5f))
 		{
 			return true;
 		}
 	}
 	else if (d1 <= d2)
 	{
-		if (d1 < capsle.Scale.x + sphere.Scale.x * 0.5f)
+		if (d1 < (capsle.Scale.x + sphere.Scale.x * 0.5f) && d2 < (capsle.Scale.y + sphere.Scale.y * 0.5f) && d2 < (capsle.Scale.z + sphere.Scale.z * 0.5f))
 		{
 			return true;
 		}

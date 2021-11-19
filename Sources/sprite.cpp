@@ -21,22 +21,11 @@ Vertex vertices[]
 
 
 // 頂点バッファオブジェクトの生成
-Sprite::Sprite(const wchar_t* filename, const char* vs_cso_name ,const char* ps_cso_name )
+Sprite::Sprite(const wchar_t* filename)
 {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
 	HRESULT hr{ S_OK };
 
-	//// 画像ファイルのロードとSRVオブジェクトの生成
-	//ID3D11Resource* resource{};
-	//hr = CreateWICTextureFromFile(device, filename, &resource, &shader_resource_view);	// 正しく読み込まれればリソースとSRVが生成される
-	//_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-	//resource->Release();
-	//// テクスチャ情報の取得
-	//ID3D11Texture2D* texture2d{};
-	//hr = resource->QueryInterface<ID3D11Texture2D>(&texture2d);	// 特定のインターフェイスをサポートしているかを判別する
-	//_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-	//texture2d->GetDesc(&texture2d_desc);
-	//texture2d->Release();
 
 	// テクスチャのロード(上記処理をモジュール化)
 	load_texture_from_file(filename, shader_resource_view.GetAddressOf(), &texture2d_desc);
@@ -57,59 +46,6 @@ Sprite::Sprite(const wchar_t* filename, const char* vs_cso_name ,const char* ps_
 
 	hr = device->CreateBuffer(&buffer_desc, &subresource_data, vertex_buffer.GetAddressOf());		// 作成するバッファ情報、作成するバッファの初期化情報、作成したバッファを保存するポインタ
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));	// _ASSERT_EXPR：第一引数条件が満たされなければ第二引数のメッセージを表示する
-
-
-	//// 入力レイアウトオブジェクトの生成
-	//D3D11_INPUT_ELEMENT_DESC input_element_desc[]
-	//{
-	//	{
-	//	"POSITION",						// セマンティクス名	HLSL側のシグネチャ(型や変数名の組み合わせの事？)の名前と一致させることで送信した頂点情報を受信することができる
-	//	0,								// セマンティクス番号 同名でも識別できるように番号を割り当てる。番号を変更することでHLSLで別の情報だと認識できる
-	//	DXGI_FORMAT_R32G32B32_FLOAT,	// フォーマット	R23G23B23は実質float3
-	//	0,								// 入力スロット番号	入寮レイアウトをどの入力スロットに対して反映されるかを指定する
-	//	D3D11_APPEND_ALIGNED_ELEMENT,	// 要素から先頭までのオフセット値	各データの配列先頭が何バイト離れているか。
-	//									// D3D11_APPEND_ALIGNED_ELEMENTを指定でオフセット値を自動計算 手計算ならフォーマットサイズを加算していく
-	//	D3D11_INPUT_PER_VERTEX_DATA,	// 入力データの種類	頂点データとインスタンスデータの２種類
-	//	0								// 繰り返し回数(頂点データの時は０)	上記でインスタンスデータを設定した場合に意味を持つ
-	//	},
-	//	{"COLOR"   ,0,DXGI_FORMAT_R32G32B32A32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0},
-	//	{"TEXCOORD",0,DXGI_FORMAT_R32G32_FLOAT		,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0},
-	//};
-
-	// 頂点シェーダーオブジェクトの生成
-	//FILE* fp{};
-	//fopen_s(&fp, vs_cso_name, "rb");	// ファイルポインタ、ファイル名、rb：読み取り専用のバイナリモード
-	//_ASSERT_EXPR_A(fp, L"_VS.CSO File not found.");
-	//fseek(fp, 0, SEEK_END);	// ファイルポインタ、移動バイト数、ファイルの先頭(_SET)、現在位置(_CUR)、終端(_END)
-	//long vs_cso_sz{ ftell(fp) };	// ファイルの読み書き位置を取得
-	//fseek(fp, 0, SEEK_SET);
-	//std::unique_ptr<unsigned char[]>vs_cso_data{ std::make_unique<unsigned char[]>(vs_cso_sz) };	// unique_ptrにmake_uniqueで実体生成
-	//fread(vs_cso_data.get(), vs_cso_sz, 1, fp);	// 読み込みデータの格納先、読み込みデータのバイト長さ、読み込みデータの数、ファイルポインタ
-	//fclose(fp);
-	//hr = device->CreateVertexShader(vs_cso_data.get(), vs_cso_sz, nullptr, &vertex_shader);	// シェーダのポインター、シェーダーサイズ、dynamic linkageで使うポインタ、作成したバッファを保存するポインタ
-	//_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-	////	引数：IL(入力レイアウト)の構成情報、ILの要素数、VSのポインタ、VSのサイズ、作成したILを保存するポインタ
-	//hr = device->CreateInputLayout(input_element_desc, _countof(input_element_desc), vs_cso_data.get(), vs_cso_sz, &input_layout);
-	//_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-
-
-	//// 頂点シェーダーオブジェクトの生成
-	//create_vs_from_cso(vs_cso_name, &vertex_shader, &input_layout, input_element_desc, _countof(input_element_desc));
-
-	// ピクセルシェーダオブジェクトの生成
-	//fopen_s(&fp, ps_cso_name, "rb");	// ファイルポインタ、ファイル名、rb：読み取り専用のバイナリモード
-	//_ASSERT_EXPR_A(fp, L"_PS.CSO File not found.");
-	//fseek(fp, 0, SEEK_END);	// ファイルポインタ、移動バイト数、ファイルの先頭(_SET)、現在位置(_CUR)、終端(_END)
-	//long ps_cso_sz{ ftell(fp) };	// ファイルの読み書き位置を取得
-	//fseek(fp, 0, SEEK_SET);
-	//std::unique_ptr<unsigned char[]>ps_cso_data{ std::make_unique<unsigned char[]>(ps_cso_sz) };	// unique_ptrにmake_uniqueで実体生成
-	//fread(ps_cso_data.get(), ps_cso_sz, 1, fp);	// 読み込みデータの格納先、読み込みデータのバイト長さ、読み込みデータの数、ファイルポインタ
-	//fclose(fp);
-	//hr = device->CreatePixelShader(ps_cso_data.get(), ps_cso_sz, nullptr, &pixel_shader);	// シェーダのポインター、シェーダーサイズ、dynamic linkageで使うポインタ、作成したバッファを保存するポインタ
-	//_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-
-	//// ピクセルシェーダオブジェクトの生成
-	//create_ps_from_cso(ps_cso_name, &pixel_shader);
 
 	// ラスタライザオブジェクトの生成
 	D3D11_RASTERIZER_DESC rasterizer_desc{};
@@ -142,25 +78,19 @@ Sprite::Sprite(const wchar_t* filename, const char* vs_cso_name ,const char* ps_
 
 
 	param.Pos =DirectX::SimpleMath::Vector2(0.0f, 0.0f);
-	param.Size    =DirectX::SimpleMath::Vector2(texture2d_desc.Width, texture2d_desc.Height);
+	param.Size = DirectX::SimpleMath::Vector2(static_cast<float>(texture2d_desc.Width), static_cast<float>(texture2d_desc.Height));
 	param.TexPos  =DirectX::SimpleMath::Vector2(0.0f, 0.0f);
-	param.TexSize =DirectX::SimpleMath::Vector2(texture2d_desc.Width, texture2d_desc.Height);
+	param.TexSize = DirectX::SimpleMath::Vector2(static_cast<float>(texture2d_desc.Width), static_cast<float>(texture2d_desc.Height));
 	param.Angle   = 0.0f;
 	param.Color   =DirectX::SimpleMath::Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 Sprite::~Sprite() {
-	//vertex_shader->Release();
-	//pixel_shader->Release();
-	//input_layout->Release();
-	//vertex_buffer->Release();
-	//shader_resource_view->Release();
-
 	rerease_all_textures();
 }
 
 
-void Sprite::CreateVertexData(Shader* shader,DirectX::SimpleMath::Vector2 pos,DirectX::SimpleMath::Vector2 size, float angle, 
+void Sprite::CreateVertexData(Shader* shader,DirectX::SimpleMath::Vector2 pos,DirectX::SimpleMath::Vector2 size, float angle,
 	DirectX::SimpleMath::Vector4 color,DirectX::SimpleMath::Vector2 TexPos,DirectX::SimpleMath::Vector2 TexSize) {
 	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();
 	// スクリーン(ビューポート)のサイズを取得する
@@ -262,19 +192,13 @@ void Sprite::CreateVertexData(Shader* shader,DirectX::SimpleMath::Vector2 pos,Di
 		1,								// 頂点バッファの数
 		vertex_buffer.GetAddressOf(),	// 頂点バッファの配列
 		&stride,						// １頂点のサイズの配列
-		&offset);						// 頂点バッファの開始位置をずらすオフセットの配列
+		&offset);				// 頂点バッファの開始位置をずらすオフセットの配列
 
 	//プリミティブタイプ及びデータの順序に関する情報のバインド
 	immediate_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);	// プリミティブの形状を指定できる？ 今回は連続三角形に変更
 
 	// シェーダの有効化
 	shader->Activate();
-	//// 入力レイアウトオブジェクトのバインド
-	//immediate_context->IASetInputLayout(input_layout.Get());	// 入力レイアウトの設定
-
-	//// シェーダのバインド
-	//immediate_context->VSSetShader(vertex_shader.Get(), nullptr, 0);
-	//immediate_context->PSSetShader(pixel_shader.Get(), nullptr, 0);
 
 	// ラスタライザステートの設定
 	immediate_context->RSSetState(rasterizer_states[0].Get());
