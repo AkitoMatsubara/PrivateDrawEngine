@@ -2,7 +2,7 @@
 #include "shader.h"
 #include <d3d11.h>
 #include <SimpleMath.h>
-#include <iostream>
+#include "shaderEx.h"
 
 #include <wrl.h>
 
@@ -35,14 +35,10 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>	shader_resource_view;
 	Microsoft::WRL::ComPtr<ID3D11RasterizerState>		rasterizer_states[3];	// 0:片面塗りつぶし,1:片面ワイヤーフレーム,2:両面ワイヤーフレーム
 
+
 	D3D11_TEXTURE2D_DESC	texture2d_desc;
 
 	SpriteParam param;
-
-
-	// 内部使用メンバ関数
-	DirectX::SimpleMath::Vector3 ConvertToNDC(DirectX::SimpleMath::Vector3 val, D3D11_VIEWPORT viewport);
-
 public:
 	// コンストラクタ、デストラクタ
 	Sprite(const wchar_t* filename);
@@ -97,18 +93,30 @@ public:
 	DirectX::SimpleMath::Vector4 getColor  () { return param.Color;}
 };
 
-// render内で使う頂点回転用関数 sprite_Batchでも使用するのでclass Sprite外ヘッダーに記述
-inline void rotate(DirectX::SimpleMath::Vector3& pos, DirectX::SimpleMath::Vector2 center, float angle) {
-	pos.x -= center.x;	// 一度中心点分ずらす
-	pos.y -= center.y;
+namespace SpriteMath
+{
+	// render内で使う頂点回転用関数 sprite_Batchでも使用するのでclass Sprite外ヘッダーに記述
+	inline void rotate(DirectX::SimpleMath::Vector3& pos, DirectX::SimpleMath::Vector2 center, float angle) {
+		pos.x -= center.x;	// 一度中心点分ずらす
+		pos.y -= center.y;
 
-	float cos{ cosf(DirectX::XMConvertToRadians(angle)) };	// DegreeなのでRadianに変換
-	float sin{ sinf(DirectX::XMConvertToRadians(angle)) };
-	float tx{ pos.x };	// 回転前の頂点座標
-	float ty{ pos.y };
-	pos.x = tx * cos - sin * ty;	// 回転の公式
-	pos.y = tx * sin + cos * ty;
+		float cos{ cosf(DirectX::XMConvertToRadians(angle)) };	// DegreeなのでRadianに変換
+		float sin{ sinf(DirectX::XMConvertToRadians(angle)) };
+		float tx{ pos.x };	// 回転前の頂点座標
+		float ty{ pos.y };
+		pos.x = tx * cos - sin * ty;	// 回転の公式
+		pos.y = tx * sin + cos * ty;
 
-	pos.x += center.x;	// ずらした分戻す
-	pos.y += center.y;
+		pos.x += center.x;	// ずらした分戻す
+		pos.y += center.y;
 	}
+
+	// スクリーン座標系からNDC(正規化デバイス座標)への座標変換を行う
+	// 矩形の左上のスクリーン座標と矩形サイズを渡す
+	inline DirectX::SimpleMath::Vector3 ConvertToNDC(DirectX::SimpleMath::Vector3 pos, D3D11_VIEWPORT viewport) {
+		pos.x = (pos.x * 2 / viewport.Width) - 1.0f;	// x値を２倍、その後スクリーンサイズで割って１を引くと正規化される
+		pos.y = 1.0f - (pos.y * 2.0f / viewport.Height);	// y値を２倍、スクリーンサイズで割ったもので１を引くと正規化	xと違うのはおそらく左手右手座標系の関係
+		// 今回はsprite(画像)なのでz値は変更する必要なし
+		return pos;
+	}
+}

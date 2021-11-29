@@ -33,7 +33,7 @@ public:
 		DirectX::SimpleMath::Vector4 Kd{ 0.8f,0.8f,0.8f,1.0f };	// ディヒューズ
 		DirectX::SimpleMath::Vector4 Ks{ 1.0f,1.0f,1.0f,1.0f };	// スペキュラ
 		static const int TEXTURE_NUM = 2;
-		std::wstring texture_filenames[TEXTURE_NUM];								// [0]:色テクスチャ [1]法線マップとして使用
+		std::wstring texture_filenames[TEXTURE_NUM];										// [0]:色テクスチャ [1]法線マップとして使用
 		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> shader_resource_view[TEXTURE_NUM];	// [0]:色テクスチャ [1]法線マップとして使用
 	};
 	struct Constants {

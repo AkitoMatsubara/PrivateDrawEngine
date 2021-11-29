@@ -1,6 +1,7 @@
 #include "Player.h"
 #include "Judge.h"
 #include "XMFLOAT_Helper.h"
+#include  "framework.h"
 
 static float imguiPos[3] = { 0.0f };
 
@@ -18,8 +19,6 @@ void Player::Initialize() {
 	Parameters->Scale        = DirectX::SimpleMath::Vector3{ 1.0f,1.0f,1.0f };
 	Parameters->Color        = DirectX::SimpleMath::Vector4{ 1.0f,1.0f,1.0f,1.0f };
 
-	//Shots = std::make_unique<Shot>();
-	//Shots->Initialize();
 	ShotsManager = std::make_unique<ShotManager>();
 	ShotsManager->Initialize();
 
@@ -32,7 +31,6 @@ void Player::Update() {
 
 	// 弾の更新
 	ShotsManager->Update();
-	//Shots->Update();
 
 	// モデルに描画系パラメーターを渡す
 	Model->getParameters()->CopyParam(Parameters.get());
@@ -51,7 +49,6 @@ void Player::Update() {
 
 	// 当たったら青、当たってなかったら白にする
 	if (ShotsManager->isHit(Parameters.get()))
-	//if (Judge::getInstance()->c_b(*Parameters, *testSphere->Parameters))
 	{
 		testSphere->Parameters->Color = DirectX::SimpleMath::Vector4{ 0.0f,1.0f,1.0f,1.0f };
 	}
@@ -90,11 +87,12 @@ void Player::ImguiPlayer()
 
 void Player::Control()
 {
-	static float speed = 0.01f;
+	static float MOVE_SPEED = 0.05f;
+	static float ROTATE = DirectX::XMConvertToRadians(100);
 	Parameters->Acceleration = DirectX::SimpleMath::Vector3{ 0.0f, 0.0f, 0.0f };
-	Parameters->Velocity = DirectX::SimpleMath::Vector3{ .0f, 0.0f, 0.0f };	// 入力中だけ動かすために毎フレーム初期化 完成とかつけ始めるといらない
+	Parameters->Velocity = DirectX::SimpleMath::Vector3{ 0.0f, 0.0f, 0.0f };	// 入力中だけ動かすために毎フレーム初期化 完成とかつけ始めるといらない
 
-	// x軸回転追加、ジンバルロック発生？要修正 と思ったけどy軸回転しか使わん気するから修正不必要では？これ
+	// 回転追加、ジンバルロック発生？要修正 と思ったけどy軸回転しか使わん気するから修正不必要では？これ
 	Parameters->Vector.x = sinf(DirectX::XMConvertToRadians(Parameters->Rotate.y));
 	Parameters->Vector.y = sinf(-DirectX::XMConvertToRadians(Parameters->Rotate.x));
 	Parameters->Vector.z = cosf(DirectX::XMConvertToRadians(Parameters->Rotate.y));
@@ -105,44 +103,33 @@ void Player::Control()
 	//--------------------------------------------------------
 	//前進処理
 	if (GetKeyState('W') < 0) {
-		Parameters->Position += Parameters->Vector * speed;
+		Parameters->Velocity += Parameters->Vector * MOVE_SPEED;
 	}
 	//後退処理
 	if (GetKeyState('S') < 0) {
-		Parameters->Position -= Parameters->Vector * speed;
+		Parameters->Velocity -= Parameters->Vector * MOVE_SPEED;
 	}
+	Parameters->Position += Parameters->Velocity;
 	//回転処理
 	{
 		if (GetKeyState('D') < 0) {
-			Parameters->Rotate.y += DirectX::XMConvertToRadians(40);
+			Parameters->Rotate.y += ROTATE;
 		}
-		if (GetKeyState('A') < 0) {
-			Parameters->Rotate.y -= DirectX::XMConvertToRadians(40);
+		if (GetKeyState('A') < 0) {;
+			Parameters->Rotate.y -= ROTATE;
 		}
-		if (GetKeyState('Q') < 0) {
-			Parameters->Rotate.x += DirectX::XMConvertToRadians(40);
-		}
-		if (GetKeyState('E') < 0) {
-			Parameters->Rotate.x -= DirectX::XMConvertToRadians(40);
-		}
+		//if (GetKeyState('Q') < 0) {
+		//	Parameters->Rotate.x += ROTATE;
+		//}
+		//if (GetKeyState('E') < 0) {
+		//	Parameters->Rotate.x -= ROTATE;
+		//}
 	}
 
-	static bool nowTrg = false;	// 現在のキー状況
-	static bool oldTrg = false;	// フレーム前のキー情報
-	if (GetKeyState(VK_LBUTTON) < 0) {
-		nowTrg = true;	// 今押したね？
-		if (oldTrg != nowTrg){	// 前フレームと比較、同じじゃなければ処理(要は押しっぱは反応しないように)
-			// Shotの生成
-			ShotsManager->newSet(Parameters.get());
-		}
-		oldTrg = nowTrg;	// 今のキー情報を保存
+	if (GetAsyncKeyState(VK_LBUTTON) & 1) {
+		// Shotの生成
+		ShotsManager->newSet(Parameters.get());
 	}
-	else{
-		// 押していないのでそもそもフラグは立ちません
-		nowTrg = false;
-		oldTrg = false;
-	}
-
 	//--------------------------------------------------------
 
 	//Velocity+= acceleration;

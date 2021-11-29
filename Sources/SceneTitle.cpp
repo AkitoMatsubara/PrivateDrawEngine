@@ -2,7 +2,6 @@
 #include "SceneTest_2.h"
 #include "SceneLoading.h"
 
-
 bool SceneTitle::Initialize() {
 	Microsoft::WRL::ComPtr<ID3D11Device> device = FRAMEWORK->GetDevice();	// frameworkからdeviceを取得
 // シーンコンスタントバッファの設定
@@ -48,7 +47,9 @@ bool SceneTitle::Initialize() {
 		//skinned_mesh = make_unique<Skinned_Mesh>(".\\Resources\\cube.003.1.fbx", Skinned_Mesh::CST_RIGHT_Z, true);	// 3角形化されていない複数メッシュ キューブ
 		SkinnedShader = std::make_unique<ShaderEx>();
 		SkinnedShader->Create(L"Shaders\\skinned_mesh_vs", L"Shaders\\skinned_mesh_ps");
-}
+
+		camera = std::make_unique<Camera>();
+	}
 	return true;
 }
 
@@ -69,6 +70,10 @@ void SceneTitle::Update() {
 	if (GetKeyState('S') < 0)  eyePos.z -= speed * elapsed_time;	// 後ろに
 	if (GetKeyState(VK_SPACE) < 0)  eyePos.y += speed * elapsed_time;	// 上に
 	if (GetKeyState(VK_SHIFT) < 0)  eyePos.y -= speed * elapsed_time;	// 下に
+
+	// 透視投影行列の作成
+	camera->Set(eyePos, DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f), DirectX::XMFLOAT3(0, 1, 0));
+	camera->SetProjection(DirectX::XMConvertToRadians(30), camera->GetWidth() / camera->GetHeight(), camera->GetNear(), camera->GetFar());
 }
 
 void SceneTitle::Render() {
@@ -93,29 +98,11 @@ void SceneTitle::Render() {
 	}
 	// 3Dオブジェクトの描画設定
 	{
-		D3D11_VIEWPORT viewport;
-		UINT num_viewports{ 1 };
-		immediate_context->RSGetViewports(&num_viewports, &viewport);	// ラスタライザステージにバインドされたviewportの配列を取得
-
-		float aspect_ratio{ viewport.Width / viewport.Height };	// アスペクト比
-		// 透視投影行列の作成
-		DirectX::XMMATRIX P{DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(30),aspect_ratio,0.1f,100.0f) };	// 視野角,縦横比,近くのZ,遠くのZ
-
-		DirectX::XMVECTOR eye{DirectX::XMVectorSet(eyePos.x,eyePos.y,eyePos.z,1.0f) };
-		DirectX::XMVECTOR focus;
-		if (!focus_zero) {
-			focus = {DirectX::XMVectorSet(eyePos.x,eyePos.y,eyePos.z + 1,1.0f) };	// カメラ位置の前
-		}
-		else {
-			focus = {DirectX::XMVectorSet(0.0f,0.0f,0.0f,1.0f) };
-		}
-		DirectX::XMVECTOR up{DirectX::XMVectorSet(0.0f,1.0f,0.0f,0.0f) };
-		// ViewMatrixの作成(LH = LeftHand(左手座標系))
-		DirectX::XMMATRIX V{DirectX::XMMatrixLookAtLH(eye, focus, up) };	// カメラ座標、焦点、カメラの上方向
+		camera->Activate();
 
 		// コンスタントバッファ更新
 		scene_constants data{};
-		XMStoreFloat4x4(&data.view_projection, V * P);	// Matrixから4x4へ変換
+		XMStoreFloat4x4(&data.view_projection, camera->GetView() * camera->GetProjection());	// Matrixから4x4へ変換
 		data.light_direction = DirectX::SimpleMath::Vector4{ light_dir[0],light_dir[1],light_dir[2],0 };	// シェーダに渡すライトの向き
 		data.camera_position = DirectX::SimpleMath::Vector4{ eyePos.x,eyePos.y,eyePos.z,0 };				// シェーダに渡すカメラの位置
 		immediate_context->UpdateSubresource(constant_buffer[0].Get(), 0, 0, &data, 0, 0);
@@ -132,11 +119,11 @@ void SceneTitle::Render() {
 	}
 
 #ifdef USE_IMGUI
-	ImGui::Render();
-	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-#endif
-
+	//	ImGui::Render();
+	//	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+#else
 	FRAMEWORK->Flip();
+#endif
 }
 
 void SceneTitle::imguiUpdate() {

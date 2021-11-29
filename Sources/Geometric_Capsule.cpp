@@ -4,7 +4,6 @@
 #include <vector>
 
 Geometric_Capsule::Geometric_Capsule(FLOAT radian, FLOAT height, u_int slices, u_int stacks) :Geometric_Primitive() {
-	ID3D11Device* device = FRAMEWORK->GetDevice();
 	// 基本は球生成の応用
 	std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;
@@ -17,7 +16,7 @@ Geometric_Capsule::Geometric_Capsule(FLOAT radian, FLOAT height, u_int slices, u
 	Height = height;
 
 	float h = height * 0.5f;	// 円柱の高さ(の半分)
-	float degree = 2.0f * 3.141592653589793f / slices;	// 2 * Pi = 360° これを分割数で割ることによって一つの三角形の角度が求まる
+	//float degree = 2.0f * 3.141592653589793f / slices;	// 2 * Pi = 360° これを分割数で割ることによって一つの三角形の角度が求まる
 
 	// 球部分
 	{

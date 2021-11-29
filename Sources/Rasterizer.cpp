@@ -1,4 +1,5 @@
 #include <d3d11.h>
+#include <assert.h>
 #include "framework.h"
 #include "Rasterizer.h"
 

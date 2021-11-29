@@ -3,8 +3,6 @@
 #include "geometric_primitive.h"
 
 Geometric_Cube::Geometric_Cube(){
-	ID3D11Device* device = FRAMEWORK->GetDevice();
-
 	Vertex vertices[24]{};	// 頂点情報配列（vertices）にすべて頂点の位置・法線情報を格納する。
 							// サイズが1.0の正立方体データを作成する（重心を原点にする）。正立方体のコントロールポイント数は 8 個、
 							// 1つのコントロールポイントの位置には法線の向き(x,y,z)が違う頂点が3個あるので頂点情報の総数は 8頂点x3軸=24個
@@ -135,8 +133,6 @@ Geometric_Cube::Geometric_Cube(){
 }
 
 Geometric_Cube::Geometric_Cube(float left, float right, float bottom, float top,float front,float back) {
-	ID3D11Device* device = FRAMEWORK->GetDevice();
-
 	Vertex vertices[24]{};	// 頂点情報配列（vertices）にすべて頂点の位置・法線情報を格納する。
 							// サイズが1.0の正立方体データを作成する（重心を原点にする）。正立方体のコントロールポイント数は 8 個、
 							// 1つのコントロールポイントの位置には法線の向き(x,y,z)が違う頂点が3個あるので頂点情報の総数は 8頂点x3軸=24個

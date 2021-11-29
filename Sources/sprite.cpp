@@ -110,36 +110,21 @@ void Sprite::CreateVertexData(Shader* shader,DirectX::SimpleMath::Vector2 pos,Di
 	DirectX::SimpleMath::Vector3 left_bottom { pos.x         ,pos.y + size.y ,0 };	// 左下
 	DirectX::SimpleMath::Vector3 right_bottom{ pos.x + size.x,pos.y + size.y ,0 };	// 右下
 
-	//// 回転を実装 簡単に関数を実装する方法、ラムダ式というらしい
-	//auto rotate = [](DirectX::SimpleMath::Vector3& pos,DirectX::SimpleMath::Vector2 center, float angle) {
-	//	pos.x -= center.x;	// 一度中心点分ずらす
-	//	pos.y -= center.y;
-
-	//	float cos{ cosf(XMConvertToRadians(angle)) };	// DegreeなのでRadianに変換
-	//	float sin{ sinf(XMConvertToRadians(angle)) };
-	//	float tx{ pos.x };	// 回転前の頂点座標
-	//	float ty{ pos.y };
-	//	pos.x = tx * cos - sin * ty;	// 回転の公式
-	//	pos.y = tx * sin + cos * ty;
-
-	//	pos.x += center.x;	// ずらした分戻す
-	//	pos.y += center.y;
-	//};
-
 	// 回転の中心を矩形の中心点に
 	DirectX::SimpleMath::Vector2 center{ 0,0 };
 	center.x = pos.x + size.x * 0.5f;	// 位置-(大きさ/2)で頂点位置から半サイズ分動く=半分になる
 	center.y = pos.y + size.y * 0.5f;
-	rotate(left_top, center, angle);
-	rotate(left_bottom, center, angle);
-	rotate(right_top, center, angle);
-	rotate(right_bottom, center, angle);
+	// 頂点回転
+	SpriteMath::rotate(left_top, center, angle);
+	SpriteMath::rotate(left_bottom, center, angle);
+	SpriteMath::rotate(right_top, center, angle);
+	SpriteMath::rotate(right_bottom, center, angle);
 
 	// スクリーン座標系からNDC(正規化デバイス座標)への座標変換を行う
-	left_top     = ConvertToNDC(left_top    , viewport);	// 頂点位置、スクリーンの大きさ
-	left_bottom  = ConvertToNDC(left_bottom , viewport);
-	right_top    = ConvertToNDC(right_top   , viewport);
-	right_bottom = ConvertToNDC(right_bottom, viewport);
+	left_top     = SpriteMath::ConvertToNDC(left_top    , viewport);	// 頂点位置、スクリーンの大きさ
+	left_bottom  = SpriteMath::ConvertToNDC(left_bottom , viewport);
+	right_top    = SpriteMath::ConvertToNDC(right_top   , viewport);
+	right_bottom = SpriteMath::ConvertToNDC(right_bottom, viewport);
 
 	DirectX::SimpleMath::Vector2 TexLeft_top    { (TexPos.x)             / texture2d_desc.Width , (TexPos.y)				/ texture2d_desc.Height };
 	DirectX::SimpleMath::Vector2 TexRight_top   { (TexPos.x + TexSize.x) / texture2d_desc.Width , (TexPos.y)				/ texture2d_desc.Height };
@@ -218,23 +203,6 @@ void Sprite::Render(Shader* shader) {
 
 void Sprite::Render(Shader* shader,DirectX::SimpleMath::Vector2 Pos,DirectX::SimpleMath::Vector2 Size) {
 	CreateVertexData(shader, Pos, Size, param.Angle, param.Color, param.TexPos, param.TexSize);
-}
-
-//void Sprite::Text_Out(ID3D11DeviceContext* immediate_context, std::string s,DirectX::SimpleMath::Vector2 pos,DirectX::SimpleMath::Vector2 size,DirectX::SimpleMath::Vector4 color) {
-//	DirectX::SimpleMath::Vector2 TexPos(static_cast<float>(texture2d_desc.Width / 16), static_cast<float>(texture2d_desc.Height / 16));
-//	float carriage = 0;
-//	for (const char c : s) {
-//		Render(immediate_context,DirectX::SimpleMath::Vector2(pos.x + carriage, pos.y), size, 0, color,
-//			DirectX::SimpleMath::Vector2(TexPos.x * (c & 0x0F), TexPos.y * (c >> 4)), TexPos);
-//		carriage += size.x;
-//	}
-//}
-
-DirectX::SimpleMath::Vector3 Sprite::ConvertToNDC(DirectX::SimpleMath::Vector3 pos, D3D11_VIEWPORT viewport) {
-	pos.x = (pos.x * 2 / viewport.Width) - 1.0f;	// x値を２倍、その後スクリーンサイズで割って１を引くと正規化される
-	pos.y = 1.0f - (pos.y * 2.0f / viewport.Height);	// y値を２倍、スクリーンサイズで割ったもので１を引くと正規化	xと違うのはおそらく左手右手座標系の関係
-	// 今回はsprite(画像)なのでz値は変更する必要なし
-	return pos;
 }
 
 void Sprite::ImguiWindow() {

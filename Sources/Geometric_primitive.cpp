@@ -1,23 +1,24 @@
 #include "framework.h"
 #include "geometric_primitive.h"
-#include "shader.h"
 #include "misc.h"
 
 #include "imgui.h"
 #include "imgui_impl_dx11.h"
 #include "imgui_impl_win32.h"
-
-#include <vector>
+std::unique_ptr<ShaderEx> Geometric_Primitive::GeometricShader = nullptr;
 
 Geometric_Primitive::Geometric_Primitive(const WCHAR* vs_name, const WCHAR* ps_name) {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
 
 	HRESULT hr{ S_OK };
 
-	// シェーダ作成
-	GeometricShader = std::make_unique<ShaderEx>();
-	GeometricShader->Create(vs_name, ps_name);
-
+	// シェーダ作成 基本デバッグくらいにしか使わないと思ってるので一つのシェーダ固定前提に作成、staticで一度だけロードするように
+	if (!GeometricShader)
+	{
+		GeometricShader = std::make_unique<ShaderEx>();
+		GeometricShader->Create(vs_name, ps_name);
+	}
+	//GeometricShader = std::make_unique<ShaderEx>();
 	// コンスタントバッファ作成
 	D3D11_BUFFER_DESC buffer_desc{};
 	buffer_desc.ByteWidth = sizeof(Constants);
@@ -102,10 +103,10 @@ void Geometric_Primitive::Render(bool wireframe) {
 
 	// インデックスバッファのバインド
 	immediate_context->IASetIndexBuffer(index_buffer.Get(),		// インデックスを格納したオブジェクトのポインタ
-		DXGI_FORMAT_R32_UINT,		// インデックスバッファ内のデータのフォーマット(16bitか32bitのどちらか)
-		0);							// オフセット
+		DXGI_FORMAT_R32_UINT,	// インデックスバッファ内のデータのフォーマット(16bitか32bitのどちらか)
+		0);				// オフセット
 
-	//プリミティブタイプ及びデータの順序に関する情報のバインド
+//プリミティブタイプ及びデータの順序に関する情報のバインド
 	immediate_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// シェーダの有効化

@@ -11,7 +11,7 @@
 #include "texture.h"
 #include "skinned_mesh.h"
 
-Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> Skinned_Mesh::dummyTexture;
+Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> Skinned_Mesh::dummyTexture = nullptr;
 
 inline DirectX::SimpleMath::Matrix ConvertToXmfloat4x4(const FbxAMatrix& fbxamatrix) {
 	DirectX::SimpleMath::Matrix value;
@@ -95,7 +95,7 @@ Skinned_Mesh::Skinned_Mesh(const char* fbx_filename, int cstNo, bool triangulate
 		Fetch_Meshes(fbx_scene, meshes);
 		Fetch_Materials(fbx_scene, materials);
 
-#if 0
+#if 0	// デバッグウィンドウに出力
 		for (const scene::node& node : scene_view.nodes) {
 			FbxNode* fbx_node{ fbx_scene->FindNodeByName(node.name.c_str()) };
 			// ノードデータをデバッグとして出力ウィンドウに表示する
@@ -117,9 +117,10 @@ Skinned_Mesh::Skinned_Mesh(const char* fbx_filename, int cstNo, bool triangulate
 		serialization(scene_view, meshes, materials);
 	}
 	fbx_manager->Destroy();
-	// マテリアル情報がない場合に備え予めダミーテクスチャをセット
-	make_dummy_texture(dummyTexture.GetAddressOf(), 0xFFFFFFFF, 16);
 
+	// マテリアル情報がない場合に備え予めダミーテクスチャをセット
+	// 静的宣言なので一回だけ 中身がnullじゃなかったら作成、それ以外は作らない
+	if (dummyTexture) { make_dummy_texture(dummyTexture.GetAddressOf(), 0xFFFFFFFF, 16); }
 	Create_com_buffers(fbx_filename);
 
 	rasterizer.SetRasterizer(device);
@@ -154,10 +155,6 @@ void Skinned_Mesh::Render(Shader* shader, int rasterize) {
 		immediate_context->IASetVertexBuffers(0, 1, mesh.vertex_buffer.GetAddressOf(), &stride, &offset);
 		immediate_context->IASetIndexBuffer(mesh.index_buffer.Get(), DXGI_FORMAT_R32_UINT, 0);
 		immediate_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		//immediate_context->IASetInputLayout(input_layout.Get());
-
-		//immediate_context->VSSetShader(vertex_shader.Get(), nullptr, 0);
-		//immediate_context->PSSetShader(pixel_shader.Get(), nullptr, 0);
 
 		// シェーダの設定
 		shader->Activate();

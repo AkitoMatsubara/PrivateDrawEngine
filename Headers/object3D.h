@@ -7,14 +7,19 @@ class Object3d
 	// 変数
 private:
 public:
-	DirectX::SimpleMath::Vector3 Position;	    // ワールド位置
+	DirectX::SimpleMath::Vector3 Position;		// ワールド位置
 	DirectX::SimpleMath::Vector3 Vector;		// 方向	というか現状前方方向を示している
-	DirectX::SimpleMath::Vector3 Acceleration; // 加速度
-	DirectX::SimpleMath::Vector3 Velocity;	    // 速度
+	DirectX::SimpleMath::Vector3 Acceleration;	// 加速度
+	DirectX::SimpleMath::Vector3 Velocity;		// 速度
 
 	DirectX::SimpleMath::Vector3 Scale;		// 大きさ
-	DirectX::SimpleMath::Vector3 Rotate;		// 各軸回転値
+	DirectX::SimpleMath::Vector3 Rotate;	// 各軸回転値
 	DirectX::SimpleMath::Vector4 Color;		// 色
+
+	// その他 使ったり使わなかったりするやつ //
+	bool Exist;		// 存在フラグ
+	int MaxLife;	// 体力上限とか初期体力に
+	int CurLife;	// 現在の(残り)体力
 protected:
 
 // 関数

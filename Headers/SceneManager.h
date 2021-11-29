@@ -10,6 +10,8 @@
 #include "static_mesh.h"
 #include "skinned_mesh.h"
 
+#include "Camera.h"
+
 #include "Sampler.h"
 
 #include "imgui.h"

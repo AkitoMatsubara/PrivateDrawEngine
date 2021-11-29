@@ -67,7 +67,6 @@ public:
 
 	// Geometric_primitiveの変数やつ
 	std::unique_ptr< Geometric_Cube> grid;	// グリッド線もどき
-	std::unique_ptr<ShaderEx> GeomtricShader = nullptr;
 
 	// Skkined_Mesh用
 	std::unique_ptr<ShaderEx> SkinnedShader = nullptr;
@@ -75,9 +74,7 @@ public:
 	// プレイヤーオブジェクト
 	std::unique_ptr<Player> player;
 
-	// 敵
-	//std::unique_ptr<Enemy> enemy;
-	//std::unique_ptr<EnemyManager> EnemysManager;
+	// 敵は現状シングルトンにしているのでクラスから直に呼び出している
 
 	// ステージ;
 	std::unique_ptr<Stage>stage;
@@ -87,6 +84,8 @@ public:
 	bool focus_zero = false;	// 焦点が(0,0,0)に向けるかどうか
 	DirectX::SimpleMath::Vector3 eyePos = DirectX::SimpleMath::Vector3(0.0f, 0.0f, -10.0f);	// カメラの位置
 
+	// カメラ管理クラス的に実装してる 多分管理…うん…
+	std::unique_ptr<Camera> camera = nullptr;
 
 	// 関数 //
 private:

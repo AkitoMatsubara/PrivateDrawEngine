@@ -1,6 +1,9 @@
 ﻿#include "framework.h"
 #include "SceneManager.h"
 #include "SceneTitle.h"	// 初回起動シーン指定用
+#include "SceneTest_2.h"	// 初回起動シーン指定用
+
+#pragma comment(lib, "winmm.lib")	// timeGetTime()とか使うためwinmm.libを使用する
 
 /* メモリリーク検出 newとかじゃないと反応しないよ
 //======== メモリリークの検出器 =======//
@@ -19,6 +22,18 @@
 _CrtDumpMemoryLeaks();	// 呼び出し時、開放されていないポインタがあれば吐く
 */
 
+//-------------------------------------------------------------------
+// 本当はグローバルにしない方が良い
+int frameRate = 60;
+float MIN_FREAM_TIME = 1.0f / frameRate;
+float frameTime = 0;
+LARGE_INTEGER timeStart;
+LARGE_INTEGER timeEnd;
+LARGE_INTEGER timeFreq;
+// fpsを取得するなら0で初期化しないとゴミが混ざってマイナスから始まったりする(かも知れない)
+float fps = 0;
+//-------------------------------------------------------------------
+
 framework* framework::instance = nullptr;
 
 framework::framework(HWND hwnd) : hwnd(hwnd)
@@ -31,10 +46,6 @@ bool framework::initialize()
 	// デバイス・デバイスコンテキスト・スワップチェーンの作成
 	HRESULT hr{ S_OK };
 
-	UINT creat_device_flags{ 0 };
-#ifdef _DEBUG
-	creat_device_flags |= D3D11_CREATE_DEVICE_DEBUG;	// デバッグレイヤーをサポートするデバイスを作成
-#endif
 	// 各種設定
 	{
 		CreateDeviceAndSwapCain();
@@ -49,7 +60,7 @@ bool framework::initialize()
 		CreateDepthStencileState();
 
 		// RenderTargetの設定
-		immediate_context->OMSetRenderTargets(1, render_target_view.GetAddressOf(), depth_stensil_view.Get());
+		immediate_context->OMSetRenderTargets(1, render_target_view.GetAddressOf(), depth_stencil_view.Get());
 
 		// ビューポートの設定
 		CreateViewPort();
@@ -60,9 +71,7 @@ bool framework::initialize()
 	return true;
 }
 
-framework::~framework()
-{
-}
+framework::~framework() {}
 
 bool framework::uninitialize()
 {
@@ -71,7 +80,7 @@ bool framework::uninitialize()
 	//immediate_context->Release();
 	//swap_chain->Release();
 	//render_target_view->Release();
-	//depth_stensil_view->Release();
+	//depth_stencil_view->Release();
 
 	//for (auto& b : blender.states) {
 	//	b->Release();
@@ -105,7 +114,11 @@ bool framework::CreateDeviceAndSwapCain() {
 	swap_chain_desc.SampleDesc.Quality = 0;	// サンプリングの品質(精度)				未使用は0
 	swap_chain_desc.Windowed = !FULLSCREEN;	// ウィンドウモード
 
-	HRESULT hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, D3D11_CREATE_DEVICE_DEBUG,
+	UINT creat_device_flags{ 0 };
+#ifdef _DEBUG
+	creat_device_flags |= D3D11_CREATE_DEVICE_DEBUG;	// デバッグレイヤーをサポートするデバイスを作成
+#endif
+	HRESULT hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, creat_device_flags,
 		&feature_levels, 1, D3D11_SDK_VERSION, &swap_chain_desc, &swap_chain, &device, NULL, &immediate_context);	// DeviceとSwapChainの設定を同時に行う 参考→ https://yttm-work.jp/directx/directx_0012.html
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));	// _ASSERT_EXPRはおそらくメッセージ表示が可能なassert。SUCCEEDEDで成功判定、hr_traceはおそらくエラーメッセージの表示？
 
@@ -148,7 +161,7 @@ bool framework::CreateDepthStencileView() {
 	depth_stencil_view_desc.Format = textuer2d_desc.Format;
 	depth_stencil_view_desc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 	depth_stencil_view_desc.Texture2D.MipSlice = 0;	// 最初に使用するミップマップのレベルを指定
-	hr = device->CreateDepthStencilView(depth_stencil_buffer.Get(), &depth_stencil_view_desc, &depth_stensil_view);
+	hr = device->CreateDepthStencilView(depth_stencil_buffer.Get(), &depth_stencil_view_desc, &depth_stencil_view);
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 
 	return true;
@@ -341,20 +354,12 @@ bool framework::CreateViewPort() {
 
 // レンダーターゲットの初期化
 void framework::Clear(FLOAT c[4]) {
-	immediate_context->OMSetRenderTargets(1, render_target_view.GetAddressOf(), depth_stensil_view.Get());
+	immediate_context->OMSetRenderTargets(1, render_target_view.GetAddressOf(), depth_stencil_view.Get());
 
 	immediate_context->ClearRenderTargetView(render_target_view.Get(), c);	// クリア対象のView、クリアする色
-	immediate_context->ClearDepthStencilView(depth_stensil_view.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	immediate_context->ClearDepthStencilView(depth_stencil_view.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 	immediate_context->OMSetDepthStencilState(depth_stencil_state[DS_TRUE].Get(), 1);	// バインドする深度ステンシルステート、参照値？
 }
-
-//void framework::Clear(XMFLOAT4 color) {
-//	FLOAT c[4] = { color.x,color.y,color.z,color.w };
-//	immediate_context->OMSetRenderTargets(1, render_target_view.GetAddressOf(), depth_stensil_view.Get());
-//	immediate_context->ClearRenderTargetView(render_target_view.Get(), c);	// クリア対象のView、クリアする色
-//	immediate_context->ClearDepthStencilView(depth_stensil_view.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-//	immediate_context->OMSetDepthStencilState(depth_stencil_state[DS_TRUE].Get(), 1);	// バインドする深度ステンシルステート、参照値？
-//}
 
 void framework::Flip(int n) {
 	swap_chain->Present(n, 0);	// バックバッファをフロントバッファに送信する
@@ -372,14 +377,23 @@ int framework::run() {
 #ifdef USE_IMGUI
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
-	ImGui::GetIO().Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\consola.ttf", 14.0f, nullptr, glyphRangesJapanese);
+	//ImGui::GetIO().Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\consola.ttf", 14.0f, nullptr, glyphRangesJapanese);
+	ImGui::GetIO().Fonts->AddFontFromFileTTF("Resources\\fonts\\ipag.ttf", 15.0f, nullptr, glyphRangesJapanese);
+
 	ImGui_ImplWin32_Init(hwnd);
 	ImGui_ImplDX11_Init(device.Get(), immediate_context.Get());
 	ImGui::StyleColorsDark();
 #endif
+	//[-------------------------------------------------------------------------------
+	// メインループに入る前に精度を取得しておく
+	if (QueryPerformanceFrequency(&timeFreq) == FALSE) { // この関数で0(FALSE)が帰る時はハードウェア的に未対応(よっぽど古くない限り問題なはず)
+		return static_cast<int>(msg.wParam); // 出来ないんでおわり
+	}
+	QueryPerformanceCounter(&timeStart); // 処理開始前に1度取得しておく(初回計算用)
+
+	//-------------------------------------------------------------------------------]
 	SceneManager* scenemanager = new SceneManager;
-	scenemanager->ChangeScene(std::make_unique<SceneTitle>());
-	//SceneManager::getInstance().ChangeScene(make_unique<SceneTitle>());
+	scenemanager->ChangeScene(std::make_unique<SceneTest_2>());
 
 	while (WM_QUIT != msg.message)
 	{
@@ -392,17 +406,65 @@ int framework::run() {
 		{
 			tictoc.tick();
 			calculate_frame_stats();
-			//update(tictoc.time_interval());
-			//render(tictoc.time_interval());
 			scenemanager->Update();
 			scenemanager->Render();
-			//SceneManager::getInstance().Update();
-			//SceneManager::getInstance().Render();
 
-		}
-	}
-	delete scenemanager;
+			// フレームレート関連 適当に作っちゃったのでこんなところに
+			static float AveFrameTime = 0;
+			static float sumFrameTime = 0;
+			static int cnt = 0;
 #ifdef USE_IMGUI
+			// フレームレート設定
+			ImGui::Begin(u8"フレーム");
+			if (ImGui::Button("15"))  { frameRate = 15;  AveFrameTime = 0.0f; }	ImGui::SameLine();
+			if (ImGui::Button("30"))  { frameRate = 30;  AveFrameTime = 0.0f; }	ImGui::SameLine();
+			if (ImGui::Button("60"))  { frameRate = 60;  AveFrameTime = 0.0f; }	ImGui::SameLine();
+			if (ImGui::Button("144")) { frameRate = 144; AveFrameTime = 0.0f; }	ImGui::SameLine();
+			if (ImGui::Button("240")) { frameRate = 240; AveFrameTime = 0.0f; }	ImGui::SameLine();
+			if (ImGui::Button("360")) { frameRate = 360; AveFrameTime = 0.0f; }
+			ImGui::Text(u8"(処理)フレーム上限:%d", frameRate);
+			ImGui::Text(u8"フレームレート:%.2f", fps);
+			ImGui::Text(u8"平均フレームレート:%.2f", AveFrameTime);
+			MIN_FREAM_TIME = 1.0f / static_cast<float>(frameRate);
+			ImGui::End();
+			ImGui::Render();
+			ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+#endif
+			Flip();	// ImGui用
+
+			//[-------------------------------------------------------------------------------
+			QueryPerformanceCounter(&timeEnd); // 処理終了後の現時間を取得
+			// 経過時間(秒単位) = (今の時間 - 前フレームの時間) / 周波数
+			frameTime = static_cast<float>(timeEnd.QuadPart - timeStart.QuadPart) / static_cast<float>(timeFreq.QuadPart);
+			fps = 1.0f / frameTime;	// fps算出
+			// 平均fpsのさんしゅつ
+			if (fps <= static_cast<float>(frameRate))	// たまに数値超えちゃう 要検証
+			{
+				sumFrameTime += fps;	// 加算していく
+				cnt++;	// 何回加算したか
+			}
+			if (cnt > frameRate)	// 加算数がfps上限を超えたら除算して平均算出、合計と加算回数をリセット
+			{
+				AveFrameTime = sumFrameTime / static_cast<float>(cnt);
+				sumFrameTime = 0;
+				cnt = 0;
+			}
+
+			if (frameTime < MIN_FREAM_TIME) { // 処理時間が想定時間より短かったら
+				DWORD sleepTime = static_cast<DWORD>((MIN_FREAM_TIME - frameTime) * 1000);	// ミリ秒に変換
+				timeBeginPeriod(1); // 分解能を上げる(こうしないとSleepの精度はガタガタ)
+				Sleep(sleepTime);   // 寝る
+				timeEndPeriod(1);   // 戻す
+				continue;	// 起きたのでcontinue
+			}
+			timeStart = timeEnd; // 次フレームの開始時間を現フレームの終了時間に
+		}
+		//-------------------------------------------------------------------------------]
+	}
+
+	delete scenemanager;	// 開放
+
+#ifdef USE_IMGUI	// IMGUI後片付け
 	ImGui_ImplDX11_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
@@ -416,7 +478,7 @@ int framework::run() {
 		swap_chain->SetFullscreenState(FALSE, 0);
 	}
 #endif
-	return uninitialize() ? static_cast<int>(msg.wParam) : 0;
+	return static_cast<int>(msg.wParam);
 }
 
 LRESULT CALLBACK framework::handle_message(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
@@ -465,9 +527,8 @@ void framework::calculate_frame_stats()
 		float fps = static_cast<float>(frames);
 		std::wostringstream outs;
 		outs.precision(6);
-		outs << APPLICATION_NAME << L" : FPS : " << fps << L" / " << L"Frame Time : " << 1000.0f / fps << L" (ms)";
+		outs << APPLICATION_NAME << L" : Screen FPS : " << fps << L" / " << L"Frame Time : " << 1000.0f / fps << L" (ms)";
 		SetWindowTextW(hwnd, outs.str().c_str());
-
 		frames = 0;
 		elapsed_time += 1.0f;
 	}

@@ -286,11 +286,11 @@ int __cdecl mainTest() {
 	pD3DDeviceContext->Map(debugbuf, 0, D3D11_MAP_READ, 0, &MappedResource);
 	BUFOUT_TYPE* p = reinterpret_cast<BUFOUT_TYPE*>(MappedResource.pData);
 
-	// コンピュートシェーダーの結果を出力
-	for (int i = 0; i < NUM_ELEMENTS; i++)
-	{
-		printf("%d + %d = %d\n", i, NUM_ELEMENTS - 1 - i, p[i]);
-	}
+	//// コンピュートシェーダーの結果を出力
+	//for (int i = 0; i < NUM_ELEMENTS; i++)
+	//{
+	//	printf("%d + %d = %d\n", i, NUM_ELEMENTS - 1 - i, p[i]);
+	//}
 
 	pD3DDeviceContext->Unmap(debugbuf, 0);
 	SAFE_RELEASE(debugbuf);

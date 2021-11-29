@@ -106,7 +106,6 @@ void sprite_Batch::end() {
 
 void sprite_Batch::CreateVertexData(DirectX::SimpleMath::Vector2 pos, DirectX::SimpleMath::Vector2 size, float angle, DirectX::SimpleMath::Vector4 color, DirectX::SimpleMath::Vector2 TexPos, DirectX::SimpleMath::Vector2 TexSize) {
 	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();
-
 	// スクリーン(ビューポート)のサイズを取得する
 	D3D11_VIEWPORT viewport{};
 	UINT num_viewports{ 1 };
@@ -129,16 +128,16 @@ void sprite_Batch::CreateVertexData(DirectX::SimpleMath::Vector2 pos, DirectX::S
 	center.x = pos.x + size.x * 0.5f;	// 位置-(大きさ/2)で頂点位置から半サイズ分動く=半分になる
 	center.y = pos.y + size.y * 0.5f;
 	// 頂点回転
-	rotate(left_top    , center, angle);
-	rotate(left_bottom , center, angle);
-	rotate(right_top   , center, angle);
-	rotate(right_bottom, center, angle);
+	SpriteMath::rotate(left_top    , center, angle);
+	SpriteMath::rotate(left_bottom , center, angle);
+	SpriteMath::rotate(right_top   , center, angle);
+	SpriteMath::rotate(right_bottom, center, angle);
 
 	// スクリーン座標系からNDC(正規化デバイス座標)への座標変換を行う
-	left_top     = ConvertToNDC(left_top    , viewport);	// 頂点位置、スクリーンの大きさ
-	left_bottom  = ConvertToNDC(left_bottom , viewport);
-	right_top    = ConvertToNDC(right_top   , viewport);
-	right_bottom = ConvertToNDC(right_bottom, viewport);
+	left_top     = SpriteMath::ConvertToNDC(left_top    , viewport);	// 頂点位置、スクリーンの大きさ
+	left_bottom  = SpriteMath::ConvertToNDC(left_bottom , viewport);
+	right_top    = SpriteMath::ConvertToNDC(right_top   , viewport);
+	right_bottom = SpriteMath::ConvertToNDC(right_bottom, viewport);
 
 	DirectX::SimpleMath::Vector2 TexLeft_top    { (TexPos.x)             / texture2d_desc.Width , (TexPos.y)             / texture2d_desc.Height };
 	DirectX::SimpleMath::Vector2 TexRight_top   { (TexPos.x + TexSize.x) / texture2d_desc.Width , (TexPos.y)             / texture2d_desc.Height };
@@ -146,13 +145,13 @@ void sprite_Batch::CreateVertexData(DirectX::SimpleMath::Vector2 pos, DirectX::S
 	DirectX::SimpleMath::Vector2 TexRight_bottom{ (TexPos.x + TexSize.x) / texture2d_desc.Width , (TexPos.y + TexSize.y) / texture2d_desc.Height };
 
 
-	// 計算結果で頂点バッファオブジェクトを更新する
-	//				三角形を2つ作る				//
-	/*				0	*----*1	 *4				*/
-	/*					||||/   /|				*/
-	/*					|||/   /||				*/
-	/*					||/   /|||				*/
-	/*				2	*	3*---*5				*/
+	/* 計算結果で頂点バッファオブジェクトを更新する */
+	/*				三角形を2つ作る					*/
+	/*				0	*----*1	 *4					*/
+	/*					||||/   /|					*/
+	/*					|||/   /||					*/
+	/*					||/   /|||					*/
+	/*				2	*	3*---*5					*/
 
 	vertices.push_back({ { left_top.x    ,left_top.y,	 0 }, {0,0,1}, { TexLeft_top.x,		TexLeft_top.y	 }, { color.x,color.y,color.z,color.w } });	// 左上
 	vertices.push_back({ { right_top.x   ,right_top.y,	 0 }, {0,0,1}, { TexRight_top.x,	TexRight_top.y	 }, { color.x,color.y,color.z,color.w } });	// 右上
@@ -172,11 +171,4 @@ void sprite_Batch::Render() {
 
 void sprite_Batch::Render(DirectX::SimpleMath::Vector2 Pos, DirectX::SimpleMath::Vector2 Size) {
 	CreateVertexData(Pos, Size, 0, param.Color, param.TexPos, param.TexSize);
-}
-
-DirectX::SimpleMath::Vector3 sprite_Batch::ConvertToNDC(DirectX::SimpleMath::Vector3 pos, D3D11_VIEWPORT viewport) {
-	pos.x = (pos.x * 2 / viewport.Width) - 1.0f;	// x値を２倍、その後スクリーンサイズで割って１を引くと正規化される
-	pos.y = 1.0f - (pos.y * 2.0f / viewport.Height);	// y値を２倍、スクリーンサイズで割ったもので１を引くと正規化	xと違うのはおそらく左手右手座標系の関係
-	// 今回はsprite(画像)なのでz値は変更する必要なし
-	return pos;
 }

@@ -41,7 +41,7 @@ private:
 
 	Microsoft::WRL::ComPtr<IDXGISwapChain> swap_chain;
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView>		render_target_view;
-	Microsoft::WRL::ComPtr<ID3D11DepthStencilView>		depth_stensil_view;
+	Microsoft::WRL::ComPtr<ID3D11DepthStencilView>		depth_stencil_view;
 
 	static const int DEPTH_STENCIL_TYPE = 9;
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilState>		depth_stencil_state[DEPTH_STENCIL_TYPE];
@@ -82,7 +82,6 @@ public:
 	framework& operator=(framework&&) noexcept = delete;
 
 	void Clear(FLOAT color[4]);
-	//void Clear(XMFLOAT4 color = { 0.2f,0.2f,0.2f,1.0f });
 	void Flip(int n = 0);
 
 	int run();	// ÉQÅ[ÉÄÉãÅ[Év

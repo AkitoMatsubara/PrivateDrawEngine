@@ -13,7 +13,7 @@ class Shot
 private:
 	//static std::unique_ptr<Skinned_Mesh> Model;	// staticにしたかったけど上手く行かないので一旦削除
 	std::unique_ptr<Skinned_Mesh> Model;	// そのままモデル
-	std::unique_ptr<Geometric_Sphere> test;	// テストモデル まる
+	std::unique_ptr<Geometric_Sphere> Sphere;	// テストモデル まる
 
 	// デフォルトのシェーダー
 	std::unique_ptr<ShaderEx> SkinnedShader = nullptr;
@@ -32,7 +32,7 @@ public:
 	Shot(Shot& shot)
 	{
 		this->Model = std::move(shot.Model);
-		this->test = std::move(shot.test);
+		this->Sphere = std::move(shot.Sphere);
 		this->LifeTimer = shot.LifeTimer;
 	};
 	~Shot() {};

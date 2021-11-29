@@ -16,18 +16,13 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>	shader_resource_view;
 	Microsoft::WRL::ComPtr<ID3D11RasterizerState>		rasterizer_states[3];	// 0:片面塗りつぶし,1:片面ワイヤーフレーム,2:両面ワイヤーフレーム
 
-	D3D11_TEXTURE2D_DESC				texture2d_desc;
+	D3D11_TEXTURE2D_DESC	texture2d_desc;
 
 	SpriteParam param{};
 
 	// Sprite_Batch追加変数
 	const size_t max_vertices;
 	std::vector<Vertex> vertices;
-
-	// 内部使用メンバ関数
-	// dx,dy＝矩形の左上のスクリーン座標、dw,dh＝矩形サイズ
-	DirectX::SimpleMath::Vector3 ConvertToNDC(DirectX::SimpleMath::Vector3 val, D3D11_VIEWPORT viewport);
-
 public:
 	// コンストラクタ、デストラクタ
 	sprite_Batch(const wchar_t* filename, size_t max_sprites = 1, const char* vs_cso_name = "Shaders\\sprite_vs.cso", const char* ps_cso_name = "Shaders\\sprite_ps.cso");

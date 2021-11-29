@@ -4,7 +4,6 @@
 
 #include <wrl.h>
 
-#include "misc.h"
 #include "shaderEx.h"
 #include "Object3d.h"
 
@@ -26,7 +25,8 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> constant_buffer;
 	Microsoft::WRL::ComPtr<ID3D11RasterizerState>	rasterizer_states[3];	// 0:片面塗りつぶし,1:片面ワイヤーフレーム,2:両面ワイヤーフレーム
 
-	std::unique_ptr<ShaderEx> GeometricShader;
+	static std::unique_ptr<ShaderEx> GeometricShader;
+	//std::unique_ptr<ShaderEx> GeometricShader;
 
 protected:
 	struct Vertex {

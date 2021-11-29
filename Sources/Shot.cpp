@@ -10,7 +10,7 @@
 void Shot::Initialize()
 {
 	//if(!Model)	Model = std::make_unique<Skinned_Mesh>(".\\Resources\\Player\\Player.fbx");
-	test = std::make_unique<Geometric_Sphere>();
+	Sphere = std::make_unique<Geometric_Sphere>();
 	SkinnedShader = std::make_unique<ShaderEx>();
 	SkinnedShader->Create(L"Shaders\\static_mesh_vs", L"Shaders\\static_mesh_ps");
 
@@ -23,9 +23,10 @@ void Shot::Initialize()
 void Shot::Update()
 {
 	// とりあえず前に進む動きを作る
-	static DirectX::SimpleMath::Vector3 vel{ 0.0f,0.0f,0.0f };
-	DirectX::SimpleMath::Vector3 pos = Parameters->Position + Parameters->Vector * 0.1f;
-	Parameters->Position = pos;
+	static const float MOVE_SPEED = 0.5f;
+	Parameters->Velocity = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };	// 例のごとく毎フレーム加速度リセット
+	Parameters->Velocity += Parameters->Vector * MOVE_SPEED;
+	Parameters->Position += Parameters->Velocity;
 
 	// 自然消滅 適当なので要修正
 	LifeTimer += 0.1f;
@@ -35,9 +36,9 @@ void Shot::Update()
 	}
 
 	// モデルに描画系パラメーターを渡す
-	test->Parameters->CopyParam(Parameters.get());
-	test->Parameters->Color = DirectX::SimpleMath::Vector4{ 1.0f,fmodf(LifeTimer,50.0f),1.0f,1.0f };
-	//test->Parameters->CopyParam(Model->getParameters());
+	Sphere->Parameters->CopyParam(Parameters.get());
+	Sphere->Parameters->Color = DirectX::SimpleMath::Vector4{ 1.0f,fmodf(LifeTimer,50.0f),1.0f,1.0f };
+	//Sphere->Parameters->CopyParam(Model->getParameters());
 	//Model->getParameters()->CopyParam(Parameters.get());
 }
 
@@ -45,7 +46,7 @@ void Shot::Render()
 {
 	if (Exist) {
 		//Model->Render(SkinnedShader.get());
-		test->Render();
+		Sphere->Render();
 	}
 }
 
@@ -59,23 +60,29 @@ void Shot::set(const Object3d* parent)
 void ShotManager::Update()
 {
 	// 存在フラグの立っていない要素は削除する
-	for (auto it = Shots.begin(); it != Shots.end();)
+	for (auto shots = Shots.begin(); shots != Shots.end();)
 	{
-		if (!it->get()->getExist())	// こいつ…存在していないぞ!?
+		if (!shots->get()->getExist())	// こいつ…存在していないぞ!?
 		{
-			it = this->Shots.erase(it);
+			shots = this->Shots.erase(shots);	// 存在していないところを消す
 		}
 		else {	// 存在が確認されたので処理します
-			it->get()->Update();
-			for (auto enem = EnemyManager::getInstance().getEnemys()->begin(); enem != EnemyManager::getInstance().getEnemys()->end();++enem)
+			shots->get()->Update();
+			for (auto enem = EnemyManager::getInstance().getEnemys()->begin(); enem != EnemyManager::getInstance().getEnemys()->end(); ++enem)
 			{
-				if(isHit(enem->get()->Parameters.get()))
+				// 大前提判定を取る者の存在判定 両方とも存在している且つ
+				if (shots->get()->getExist() && enem->get()->getExist())
 				{
-					enem->get()->setExist(false);
-					it->get()->setExist(false);
+					// 当たり判定、戻り値trueであれば
+					if (isHit(enem->get()->Parameters.get()))
+					{
+						enem->get()->setExist(false);
+						//shots->get()->setExist(false);	//  TODO: 存在消す処理をコメントアウトしているのはデバッグ用 一度の弾で複数体消すため
+						break;
+					}
 				}
 			}
-			++it;	// 次へ
+			++shots;	// 次へ
 		}
 	}
 }

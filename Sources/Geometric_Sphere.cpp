@@ -4,7 +4,6 @@
 #include <vector>
 
 Geometric_Sphere::Geometric_Sphere(u_int slices, u_int stacks) {
-	ID3D11Device* device = FRAMEWORK->GetDevice();
 	std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;
 	static const FLOAT RADIAN = 0.5f;
@@ -12,7 +11,7 @@ Geometric_Sphere::Geometric_Sphere(u_int slices, u_int stacks) {
 	this->slices = slices;
 	this->stacks = stacks;
 
-	float degree = 2.0f * 3.14159265358989f / slices;	// 奇数*Pi/分割数=三角 偶数であれば平行四辺形になる(???)
+	float degree = 2.0f * 3.14159265358989f / static_cast<float>(slices);	// 奇数*Pi/分割数=三角 偶数であれば平行四辺形になる(???)
 
 	//
 	// 一番上の頂点から順に頂点を計算していく．

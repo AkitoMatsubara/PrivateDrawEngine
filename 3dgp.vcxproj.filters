@@ -227,6 +227,9 @@
     <ClInclude Include="Headers\Singleton.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="Headers\Camera.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui\imgui.cpp">
@@ -323,6 +326,9 @@
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="Sources\Judge.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\Camera.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
   </ItemGroup>

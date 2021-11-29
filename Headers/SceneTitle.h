@@ -34,6 +34,8 @@ public:
 	bool focus_zero = true;	// Å“_‚ª(0,0,0)‚ÉŒü‚¯‚é‚©‚Ç‚¤‚©
 	DirectX::SimpleMath::Vector3 eyePos = DirectX::SimpleMath::Vector3(0.0f, 0.0f, -10.0f);	// ƒJƒƒ‰‚ÌˆÊ’u
 
+	std::unique_ptr<Camera> camera = nullptr;
+
 	// ŠÖ” //
 private:
 public:

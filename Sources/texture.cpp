@@ -14,8 +14,8 @@
 #include "framework.h"
 #include "texture.h"
 #include "misc.h"
-static std::map <std::wstring, Microsoft::WRL::ComPtr <ID3D11ShaderResourceView>> resources;
 
+static std::map <std::wstring, Microsoft::WRL::ComPtr <ID3D11ShaderResourceView>> resources;
 
 HRESULT load_texture_from_file(const wchar_t* filename, ID3D11ShaderResourceView** shader_resource_view, D3D11_TEXTURE2D_DESC* texture2d_desc) {
 	ID3D11Device* device = FRAMEWORK->GetDevice();

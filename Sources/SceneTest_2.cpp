@@ -14,6 +14,8 @@ bool SceneTest_2::Initialize() {
 
 	// 各種クラス設定
 	{
+		camera = std::make_unique<Camera>();
+
 		// spriteオブジェクトを生成(今回は先頭の１つだけを生成する)
 		sprites = std::make_unique<Sprite>(L".\\Resources\\screenshot.jpg");	// シェーダーはコンストラクタ内で指定しているため、別を使うには改良が必要
 		sprites->setSize(1280, 720);
@@ -25,17 +27,11 @@ bool SceneTest_2::Initialize() {
 			grid = std::make_unique<Geometric_Cube>();
 			grid->setPos(DirectX::SimpleMath::Vector3(0, -1, 0));
 			grid->setSize(DirectX::SimpleMath::Vector3(10, 0.1f, 10));
-			GeomtricShader = std::make_unique<ShaderEx>();
-			GeomtricShader->Create(L"Shaders\\geometric_primitive_vs", L"Shaders\\geometric_primitive_ps");
 		}
 
 		player = std::make_unique<Player>();
 		player->Initialize();
 
-		//enemy = std::make_unique<Enemy>();
-		//enemy->Initialize();
-
-		//EnemysManager = std::make_unique<class EnemyManager>();
 		EnemyManager::getInstance().Initialize();
 
 		stage = std::make_unique<Stage>();
@@ -65,7 +61,7 @@ bool SceneTest_2::Initialize() {
 
 		// コンピュートシェーダーからの出力時に使用するUAVを作成する
 		CreateUAVForStructuredBuffer(sizeof(BUFOUT_TYPE), NUM_ELEMENTS, NULL, pBufResult.GetAddressOf(), pBufResultUAV.GetAddressOf());
-		}
+	}
 
 	return true;
 }
@@ -74,21 +70,17 @@ void SceneTest_2::Update() {
 	imguiUpdate();
 	const float elapsed_time = FRAMEWORK->GetElapsedTime();
 	// シーン切り替え
-	if (GetAsyncKeyState('G') &1) setScene(std::make_unique<SceneTitle>());
+	if (GetAsyncKeyState('G') & 1) setScene(std::make_unique<SceneTitle>());
 
 	player->Update();
-	//enemy->Update();
 	stage->Update();
 
 	// カメラ操作
-	static float cameraSpeed = 7.0f;
+	camera->Operate();
 
-	if (GetKeyState(VK_RIGHT) < 0)  eyePos.x += cameraSpeed * elapsed_time;	// 右に
-	if (GetKeyState(VK_LEFT) < 0)   eyePos.x -= cameraSpeed * elapsed_time;	// 左に
-	if (GetKeyState(VK_UP) < 0)     eyePos.z += cameraSpeed * elapsed_time;	// 前に
-	if (GetKeyState(VK_DOWN) < 0)   eyePos.z -= cameraSpeed * elapsed_time;	// 後に
-	if (GetKeyState(VK_SPACE) < 0)  eyePos.y += cameraSpeed * elapsed_time;	// 上に
-	if (GetKeyState(VK_SHIFT) < 0)  eyePos.y -= cameraSpeed * elapsed_time;	// 下に
+	// 透視投影行列の作成
+	camera->Set((camera->GetPos() + player->Parameters->Position), player->Parameters->Position, DirectX::XMFLOAT3(0, 1, 0));
+	camera->SetProjection(DirectX::XMConvertToRadians(30), camera->GetWidth() / camera->GetHeight(), camera->GetNear(), camera->GetFar());
 
 	if (GetAsyncKeyState(VK_RBUTTON) &1) {
 		EnemyManager::getInstance().newSet(player->Parameters.get());	// お試し右クリックで敵を生成
@@ -96,14 +88,14 @@ void SceneTest_2::Update() {
 	EnemyManager::getInstance().Update();
 
 	{
-		//// コンピュートシェーダーを実行する
+		// コンピュートシェーダーを実行する
 		Microsoft::WRL::ComPtr<ID3D11DeviceContext> immediate_context = FRAMEWORK->GetDeviceContext();
 		Microsoft::WRL::ComPtr<ID3D11Device> device = FRAMEWORK->GetDevice();
 		HRESULT hr = { S_OK };
 
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		static float theta = 0;
-		theta = (theta <= 1.0f) ? theta + 0.001f : 0.0f;	// チカチカすりゅ～！(色が)
+		static float theta = 0.0f;
+		theta = (theta <= 1.0f) ? theta + 0.01f : 0.0f;	// チカチカすりゅ～！(色が)
 		//D3D11_MAPPED_SUBRESOURCE subRes;	// 別の更新方法 のはず。未完成
 		//immediate_context->Map(pBufInput.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &subRes);
 		//BUFIN_TYPE* pBufType = (BUFIN_TYPE*)subRes.pData;
@@ -130,10 +122,9 @@ void SceneTest_2::Update() {
 		ZeroMemory(&p, sizeof(BUFOUT_TYPE));
 		p = reinterpret_cast<BUFOUT_TYPE*>(MappedResource.pData);	// 型変換して代入
 		immediate_context->Unmap(debugbuf, 0);	// マップ解除
+		debugbuf->Release();	// CS受け取りポインタを解放
 
-		player->Parameters->Color = DirectX::SimpleMath::Vector4{p[1].i, p[0].i, p[2].i, 1.0f	};
-
-		hr = S_OK;
+		player->Parameters->Color = DirectX::SimpleMath::Vector4{ p[1].i, p[0].i, p[2].i, 1.0f };
 	}
 }
 
@@ -154,41 +145,22 @@ void SceneTest_2::Render() {
 
 	// 2Dオブジェクトの描画設定
 	{
-		immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(DS_TRUE), 1);	// 3Dオブジェクトの後ろに出すため一旦
+		immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(DS_TRUE), 1);		// 3Dオブジェクトの後ろに出すため一旦
 		sprites->Render(SpriteShader.get());
-		immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(DS_TRUE_WRITE), 1);			// 2Dオブジェクトとの前後関係をしっかりするため再設定
-}
+		immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(DS_TRUE_WRITE), 1);	// 2Dオブジェクトとの前後関係をしっかりするため再設定
+	}
 	// 3Dオブジェクトの描画設定
 	{
-		D3D11_VIEWPORT viewport;
-		UINT num_viewports{ 1 };
-		immediate_context->RSGetViewports(&num_viewports, &viewport);	// ラスタライザステージにバインドされたviewportの配列を取得
-
-		// 透視投影行列の作成
-		float aspect_ratio{ viewport.Width / viewport.Height };	// アスペクト比
-		DirectX::XMMATRIX P{DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(30),aspect_ratio,0.1f,100.0f) };	// 視野角,縦横比,近くのZ,遠くのZ
-
-		DirectX::XMVECTOR eye{DirectX::XMVectorSet(eyePos.x,eyePos.y,eyePos.z,1.0f) };
-		DirectX::XMVECTOR focus;
-		if (!focus_zero) {
-			focus = { DirectX::XMVectorSet(player->Parameters->Position.x,player->Parameters->Position.y,player->Parameters->Position.z,1.0f) };
-		}
-		else {
-			focus = {DirectX::XMVectorSet(0.0f,0.0f,0.0f,1.0f) };
-		}
-		DirectX::XMVECTOR up{DirectX::XMVectorSet(0.0f,1.0f,0.0f,0.0f) };
-		// ViewMatrixの作成(LH = LeftHand(左手座標系))
-		DirectX::XMMATRIX V{DirectX::XMMatrixLookAtLH(eye, focus, up) };	// カメラ座標、焦点、カメラの上方向
+		camera->Activate();
 
 		// コンスタントバッファ更新
 		scene_constants data{};
-		XMStoreFloat4x4(&data.view_projection, V * P);	// Matrixから4x4へ変換
+		XMStoreFloat4x4(&data.view_projection, camera->GetView() * camera->GetProjection());	// Matrixから4x4へ変換
 		data.light_direction = DirectX::SimpleMath::Vector4{ light_dir[0],light_dir[1],light_dir[2],0 };	// シェーダに渡すライトの向き
-		data.camera_position = DirectX::SimpleMath::Vector4{ eyePos.x,eyePos.y,eyePos.z,0 };				// シェーダに渡すカメラの位置
+		data.camera_position = DirectX::SimpleMath::Vector4{ camera->GetPos().x,camera->GetPos().y,camera->GetPos().z,0 };				// シェーダに渡すカメラの位置
 		immediate_context->UpdateSubresource(constant_buffer[0].Get(), 0, 0, &data, 0, 0);
 		immediate_context->VSSetConstantBuffers(1, 1, constant_buffer[0].GetAddressOf());	// cBufferはドローコールのたびに消去されるので都度設定する必要がある
 		immediate_context->PSSetConstantBuffers(1, 1, constant_buffer[0].GetAddressOf());
-
 
 		{
 			grid->Render(true);
@@ -199,10 +171,11 @@ void SceneTest_2::Render() {
 	}
 
 #ifdef USE_IMGUI
-	ImGui::Render();
-	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-#endif
+	//	ImGui::Render();
+	//	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+#else
 	FRAMEWORK->Flip();
+#endif
 }
 
 void SceneTest_2::imguiUpdate() {
@@ -213,8 +186,6 @@ void SceneTest_2::imguiUpdate() {
 
 	ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.0f, 0.6f, 0.1f, 1.0f));	// これ一つ呼ぶとImGui::PopStyleColorを書かないといけないらしい
 	ImGui::PushStyleColor(ImGuiCol_TitleBg, ImVec4(0.0f, 0.2f, 0.0f, 1.0f));
-	ImGui::SetNextWindowPos(ImVec2(20, 300), ImGuiCond_Once);
-	ImGui::SetNextWindowSize(ImVec2(300, 330), ImGuiCond_Always);
 
 	imguiSceneChanger();
 	// 2D用 内部関数で完結させてる
@@ -226,9 +197,9 @@ void SceneTest_2::imguiUpdate() {
 	ImGui::SliderFloat3("Light_Direction", light_dir, -10.0f, 10.0f);
 	ImGui::Checkbox("focus Zero", &focus_zero);
 	ImGui::Text("Enemys: %d", EnemyManager::getInstance().getEnemys()->size());
+	ImGui::Text("Total Objects: %d", EnemyManager::getInstance().getEnemys()->size() + player->getShotManager()->getSize());
 
-	ImGui::PopStyleColor();	// ImGui::PushStyleColor一つにつき一つ呼び出すっぽい
-	ImGui::PopStyleColor();
+	ImGui::PopStyleColor(2);	// ImGui::PushStyleColor一つにつき一つ呼び出すっぽい
 
 	ImGui::End();
 #endif
@@ -244,8 +215,8 @@ HRESULT SceneTest_2::CreateStructuredBuffer(UINT uElementSize, UINT uCount, VOID
 
 	D3D11_BUFFER_DESC BufferDesc;
 	ZeroMemory(&BufferDesc, sizeof(D3D11_BUFFER_DESC));
-	BufferDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS |		    // アンオーダード アクセス リソースをバインドする
-		D3D11_BIND_SHADER_RESOURCE;								    // バッファーをシェーダー ステージにバインドする
+	BufferDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS |			// アンオーダード アクセス リソースをバインドする
+		D3D11_BIND_SHADER_RESOURCE;				// バッファーをシェーダー ステージにバインドする
 	BufferDesc.ByteWidth = uElementSize * uCount;					// バッファサイズ
 	BufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;	// 構造化バッファーとしてリソースを作成する
 	BufferDesc.StructureByteStride = uElementSize;					// 構造化バッファーのサイズ (バイト単位)
@@ -376,4 +347,3 @@ void SceneTest_2::RunComputeShader(ID3D11ComputeShader* pComputeShader, ID3D11Sh
 	ID3D11Buffer* ppCBNULL[1] = { NULL };
 	immediate_context->CSSetConstantBuffers(0, 1, ppCBNULL);
 }
-

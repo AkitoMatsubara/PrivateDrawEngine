@@ -5,7 +5,6 @@
 #include <vector>
 
 Geometric_Cylinder::Geometric_Cylinder(u_int slices){
-	ID3D11Device* device = FRAMEWORK->GetDevice();
 	std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;
 
