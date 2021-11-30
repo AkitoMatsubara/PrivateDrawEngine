@@ -300,7 +300,7 @@
     <ClInclude Include="Headers\skinned_mesh.h" />
     <ClInclude Include="Headers\sprite.h" />
     <ClInclude Include="Headers\sprite_Batch.h" />
-    <ClInclude Include="Headers\Stage.h">
+    <ClInclude Include="Headers\Stages.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="Headers\static_mesh.h" />
@@ -344,7 +344,7 @@
     <ClCompile Include="Sources\skinned_mesh.cpp" />
     <ClCompile Include="Sources\sprite.cpp" />
     <ClCompile Include="Sources\sprite_Batch.cpp" />
-    <ClCompile Include="Sources\Stage.cpp">
+    <ClCompile Include="Sources\Stages.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="Sources\static_mesh.cpp" />

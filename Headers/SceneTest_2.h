@@ -2,8 +2,6 @@
 #include "SceneManager.h"
 
 #include "Player.h"
-#include "Enemy.h"
-#include "Stage.h"
 
 class SceneTest_2 :public SceneBase {
 
@@ -75,9 +73,6 @@ public:
 	std::unique_ptr<Player> player;
 
 	// 敵は現状シングルトンにしているのでクラスから直に呼び出している
-
-	// ステージ;
-	std::unique_ptr<Stage>stage;
 
 	// 個人 ImGuiで数値を編集、格納して関数に渡す変数
 	float light_dir[3]{ 0.5f,-2.0f,1.0f };	// ライトの向かう方向

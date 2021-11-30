@@ -1,7 +1,10 @@
 #include "SceneTest_2.h"
 #include "SceneTitle.h"
-#include <SimpleMath.h>
 
+#include "Enemy.h"
+#include "Stages.h"
+
+#include <SimpleMath.h>
 bool SceneTest_2::Initialize() {
 	Microsoft::WRL::ComPtr<ID3D11Device> device = FRAMEWORK->GetDevice();	// frameworkからdeviceを取得
 	HRESULT hr = { S_OK };
@@ -34,8 +37,7 @@ bool SceneTest_2::Initialize() {
 
 		EnemyManager::getInstance().Initialize();
 
-		stage = std::make_unique<Stage>();
-		stage->Initialize();
+		StageManager::getInstance().Initialize();
 
 		SkinnedShader = std::make_unique<ShaderEx>();
 		SkinnedShader->Create(L"Shaders\\skinned_mesh_vs", L"Shaders\\skinned_mesh_ps");
@@ -67,13 +69,12 @@ bool SceneTest_2::Initialize() {
 }
 
 void SceneTest_2::Update() {
-	imguiUpdate();
 	const float elapsed_time = FRAMEWORK->GetElapsedTime();
 	// シーン切り替え
 	if (GetAsyncKeyState('G') & 1) setScene(std::make_unique<SceneTitle>());
 
 	player->Update();
-	stage->Update();
+	StageManager::getInstance().Update();
 
 	// カメラ操作
 	camera->Operate();
@@ -82,7 +83,7 @@ void SceneTest_2::Update() {
 	camera->Set((camera->GetPos() + player->Parameters->Position), player->Parameters->Position, DirectX::XMFLOAT3(0, 1, 0));
 	camera->SetProjection(DirectX::XMConvertToRadians(30), camera->GetWidth() / camera->GetHeight(), camera->GetNear(), camera->GetFar());
 
-	if (GetAsyncKeyState(VK_RBUTTON) &1) {
+	if (GetAsyncKeyState(VK_RBUTTON) < 0) {
 		EnemyManager::getInstance().newSet(player->Parameters.get());	// お試し右クリックで敵を生成
 	}
 	EnemyManager::getInstance().Update();
@@ -126,6 +127,8 @@ void SceneTest_2::Update() {
 
 		player->Parameters->Color = DirectX::SimpleMath::Vector4{ p[1].i, p[0].i, p[2].i, 1.0f };
 	}
+	imguiUpdate();
+
 }
 
 void SceneTest_2::Render() {
@@ -164,7 +167,7 @@ void SceneTest_2::Render() {
 
 		{
 			grid->Render(true);
-			stage->Render();
+			StageManager::getInstance().Render();
 			player->Render();
 			EnemyManager::getInstance().Render();
 		}
@@ -195,9 +198,10 @@ void SceneTest_2::imguiUpdate() {
 	// ライト調整等グローバル設定
 	ImGui::Begin("Light");
 	ImGui::SliderFloat3("Light_Direction", light_dir, -10.0f, 10.0f);
-	ImGui::Checkbox("focus Zero", &focus_zero);
-	ImGui::Text("Enemys: %d", EnemyManager::getInstance().getEnemys()->size());
-	ImGui::Text("Total Objects: %d", EnemyManager::getInstance().getEnemys()->size() + player->getShotManager()->getSize());
+	ImGui::Text("Shots: %d", player->getShotManager()->getSize());
+	ImGui::Text("Enemys: %d", EnemyManager::getInstance().getSize());
+	ImGui::Text("StageParts: %d", StageManager::getInstance().getSize());
+	ImGui::Text("Total Objects: %d", EnemyManager::getInstance().getEnemys()->size() + player->getShotManager()->getSize() + StageManager::getInstance().getSize());
 
 	ImGui::PopStyleColor(2);	// ImGui::PushStyleColor一つにつき一つ呼び出すっぽい
 

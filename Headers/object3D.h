@@ -33,7 +33,7 @@ public:
 		Acceleration = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
 		Velocity     = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
 
-		Scale        = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
+		Scale        = DirectX::SimpleMath::Vector3{ 1.0f,1.0f,1.0f };
 		Rotate       = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
 		Color        = DirectX::SimpleMath::Vector4{ 0.0f,0.0f,0.0f,1.0f };
 	};
