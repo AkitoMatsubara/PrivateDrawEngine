@@ -170,6 +170,8 @@ public:
 	enum { CST_RIGHT_Y, CST_LEFT_Y, CST_RIGHT_Z, CST_LEFT_Z, CST_END };	// coordinate_system_transformsïœêîóp
 
 private:
+	DirectX::SimpleMath::Matrix world;
+
 	Microsoft::WRL::ComPtr<ID3D11Buffer> constant_buffer;
 
 	Rasterizer rasterizer;
@@ -197,7 +199,6 @@ private:
 		  0, 0, 0, 1},	// 1:ç∂éËç¿ïWån,Z-UP
 	};
 	int CstNo;
-
 public:
 	Skinned_Mesh(const char* fbx_filename, int cstNo = 0, const bool triangulate = false);
 
@@ -229,6 +230,7 @@ public:
 	DirectX::SimpleMath::Vector3 getSize() { return Parameters->Scale; }
 	DirectX::SimpleMath::Vector3 getAngle() { return Parameters->Rotate; }
 	DirectX::SimpleMath::Vector4 getColor() { return Parameters->Color; }
+	DirectX::SimpleMath::Matrix getWorld() { return world; }
 	Object3d* getParameters() { return Parameters.get(); }
 
 private:

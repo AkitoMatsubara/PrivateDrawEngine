@@ -25,7 +25,7 @@ protected:
 // 関数
 private:
 public:
-	// コンストラクタで初期化しておく
+	// コンストラクタで初期化しておく 使うのにそもそも値入ってなかったらおかしいもんねぇ？
 	Object3d()
 	{
 		Position     = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
@@ -36,9 +36,21 @@ public:
 		Scale        = DirectX::SimpleMath::Vector3{ 1.0f,1.0f,1.0f };
 		Rotate       = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
 		Color        = DirectX::SimpleMath::Vector4{ 0.0f,0.0f,0.0f,1.0f };
+
+		Exist = false;
+		MaxLife = 0;
+		CurLife = 0;
 	};
 	~Object3d() {};
 
+	// 前方ベクトルを自己の回転角度から計算
+	void calcForward()
+	{
+		Vector.x = sinf(DirectX::XMConvertToRadians(Rotate.y));
+		Vector.y = sinf(-DirectX::XMConvertToRadians(Rotate.x));
+		Vector.z = cosf(DirectX::XMConvertToRadians(Rotate.y));
+		Vector.Normalize();	// 方向ベクトルなので正規化しとく
+	}
 	//// セッター
 	//void setPos     (const DirectX::SimpleMath::Vector3& pos)   { Position     = pos; }
 	//void setVector  (const DirectX::SimpleMath::Vector3& vec)   { Vector       = vec; };

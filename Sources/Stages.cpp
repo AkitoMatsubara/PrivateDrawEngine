@@ -33,14 +33,24 @@ void StageParts::Render()
 	Model->Render(SkinnedShader.get());
 }
 
-void StageParts::setStageFbx(const char* fbx_filename, int cstNo, const bool triangulate)
+void StageParts::onObject(const DirectX::SimpleMath::Vector3& obj)
 {
-	Model = std::make_unique<Skinned_Mesh>(fbx_filename, cstNo, triangulate);
-}
+	// まずステージの三角形頂点を算出します
+	// モデル変えたらやり直す必要あるからちょっとまずいかも
+	DirectX::SimpleMath::Vector3 triangle[3];
+	triangle[0] = (Model->getWorld().Backward() * 1.0f);	// 前方の点のつもり
+	triangle[1] = (Model->getWorld().Forward() * 1.0f) + (Model->getWorld().Left() * 0.5f);	// 右方の点のつもり
+	triangle[2] = (Model->getWorld().Forward() * 1.0f) + (Model->getWorld().Right() * 0.5f);	// 左方の点のつもり
+	/*	こうなってるつもり		*/
+	/*		     *[0]			*/
+	/*		    / \				*/
+	/*		   /   \			*/
+	/*		  /     \			*/
+	/*		 /       \			*/
+	/*	  [2]*--------*[1]		*/
 
-int StageParts::getStageObj()
-{
-	return 0;
+
+
 }
 
 //---------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -48,9 +58,8 @@ StageManager::StageManager()
 {
 	if ((ROW_PARTS % 2 == 0) || (COL_PARTS % 2 == 0))	// もし奇数なら
 	{
-		_ASSERT_EXPR_A(false, "StageParts is not an odd number.");	// ステージパーツが奇数では有りませんエラー
+		_ASSERT_EXPR_A(false, "_StageParts is not an odd number._");	// ステージパーツが奇数では有りませんエラー
 	}
-
 }
 
 void StageManager::Initialize()
@@ -69,23 +78,29 @@ void StageManager::Initialize()
 	{
 		for (int j = static_cast<int>(-((ROW_PARTS - 1) * 0.5f)); j <= static_cast<int>(((ROW_PARTS - 1) * 0.5f)); j++)
 		{
-			Stages[CENTER + j + (COL_PARTS * i)]->Initialize();
+			int row = CENTER + j;		// 予め要素番号の計算を行っておく
+			int col = COL_PARTS * i;	// キャストして警告を消すためこのまま入れちゃうと可読性が下がってしまうため
+			if (row + col < 0) { _ASSERT_EXPR_A(false, "Initialize ArraySize UnderFlow"); }	// 要素番号がマイナス指定になっちゃったよエラー
+
+			Stages[row + col]->Initialize();
 			// 真ん中の要素(CENTER)に行(j)を加算し、列数(COL_PARTS)をi列分乗算して減算する
-			Stages[CENTER + j + (COL_PARTS * i)]->Parameters->Position = DirectX::SimpleMath::Vector3(j * 1.0f, -0.5f, -2.0f * i);
+			Stages[row + col]->Parameters->Position = DirectX::SimpleMath::Vector3(j * 1.0f, -0.5f, -2.0f * i);
 
 			bool inversion = false;	// 角度反転フラグ
 			inversion = (j % 2) ? true : false;	// もしも、奇数行目なら角度反転フラグをtrueにする
 			if (i % 2)inversion = !inversion;	// しかし、奇数列目なら角度反転フラグの「条件」を反転させる
 			if (inversion)	// 180°回転させる
 			{
-				Stages[CENTER + j + (COL_PARTS * i)]->Parameters->Rotate = DirectX::SimpleMath::Vector3(0.0f, 180.0f, 0.0);
-				Stages[CENTER + j + (COL_PARTS * i)]->Parameters->Color = DirectX::SimpleMath::Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+				Stages[row + col]->Parameters->Rotate = DirectX::SimpleMath::Vector3(0.0f, 180.0f, 0.0);
+				Stages[row + col]->Parameters->Color = DirectX::SimpleMath::Vector4(1.0f, 0.0f, 0.0f, 1.0f);
 			}
 			else
 			{
-				Stages[CENTER + j + (COL_PARTS * i)]->Parameters->Rotate = DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f);
-				Stages[CENTER + j + (COL_PARTS * i)]->Parameters->Color = DirectX::SimpleMath::Vector4(0.0f, 0.0f, 1.0f, 1.0f);
+				Stages[row + col]->Parameters->Rotate = DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f);
+				Stages[row + col]->Parameters->Color = DirectX::SimpleMath::Vector4(0.0f, 0.0f, 1.0f, 1.0f);
 			}
+			// 一応前方算出
+			Stages[row + col]->Parameters->calcForward();
 		}
 	}
 	// 真ん中をわかりやすく色変えてる
@@ -107,4 +122,13 @@ void StageManager::Render()
 	{
 		it->Render();
 	}
+}
+
+void StageManager::Check(const DirectX::SimpleMath::Vector3& obj)
+{
+	for (auto& it : Stages)
+	{
+		it->onObject(obj);
+	}
+
 }

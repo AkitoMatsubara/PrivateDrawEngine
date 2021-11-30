@@ -7,7 +7,7 @@
 
 #include <memory>
 #include <array>
-#include <vector>
+#include <SimpleMath.h>
 
 class Enemy;
 
@@ -32,9 +32,7 @@ public:
 	void Update();
 	void Render();
 
-	void setStageFbx(const char* fbx_filename, int cstNo = 0, const bool triangulate = false);	// SkinnedMeshのイニシャライザをそのまま呼び出し
-
-	int getStageObj();
+	void onObject(const DirectX::SimpleMath::Vector3& obj);
 };
 // ステージパーツの総管理クラス というかパーツ全部持ってる
 class StageManager
@@ -57,9 +55,9 @@ public:
 		static StageManager instance;
 		return instance;
 	}
+	// StagePartsのonObject()に渡す仲介
+	void Check(const DirectX::SimpleMath::Vector3& obj);
 
-	// 生成、格納系
-	void newSet(const Object3d* initData);
-
+	// 取得、格納系
 	size_t getSize() { return Stages.size(); };
 };

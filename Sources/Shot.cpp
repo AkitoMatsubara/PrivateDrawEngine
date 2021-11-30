@@ -108,7 +108,7 @@ bool ShotManager::isHit(const Object3d* Capcule)
 {
 	for (auto it = Shots.begin(); it != Shots.end(); ++it)
 	{
-		if(Judge::getInstance()->c_b(*Capcule, *it->get()->Parameters))
+		if (Judge::getInstance()->c_b(*Capcule, 0.5f, *it->get()->Parameters))
 		{
 			return true;
 		}

@@ -3,16 +3,17 @@
 
 #include <vector>
 
-Geometric_Capsule::Geometric_Capsule(FLOAT radian, FLOAT height, u_int slices, u_int stacks) :Geometric_Primitive() {
+Geometric_Capsule::Geometric_Capsule(FLOAT height, u_int slices, u_int stacks) :Geometric_Primitive() {
 	// 基本は球生成の応用
 	std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;
+	static const FLOAT RADIAN = 0.5f;
 
 	u_int base_index = 0;
 	u_int vertex_offset = 2;	// 上下頂点分のずれ
 
 	// 変数に数値を保存
-	Radian = radian;
+	Radian = RADIAN;
 	Height = height;
 
 	float h = height * 0.5f;	// 円柱の高さ(の半分)
@@ -21,12 +22,12 @@ Geometric_Capsule::Geometric_Capsule(FLOAT radian, FLOAT height, u_int slices, u
 	// 球部分
 	{
 		Vertex top_vertex;		// 上の頂点(上向き)
-		TopPos = h + radian;
+		TopPos = h + RADIAN;
 		top_vertex.position = DirectX::SimpleMath::Vector3(0.0f, TopPos, 0.0f);
 		top_vertex.normal = DirectX::SimpleMath::Vector3(0.0f, +1.0f, 0.0f);
 
 		Vertex bottom_vertex;	// 下の頂点(下向き)
-		BottomPos = -h - radian;
+		BottomPos = -h - RADIAN;
 		bottom_vertex.position = DirectX::SimpleMath::Vector3(0.0f, BottomPos, 0.0f);
 		bottom_vertex.normal = DirectX::SimpleMath::Vector3(0.0f, -1.0f, 0.0f);
 
@@ -49,9 +50,9 @@ Geometric_Capsule::Geometric_Capsule(FLOAT radian, FLOAT height, u_int slices, u
 					Vertex v;
 
 					// 球面からカルテシアン(直交座標系)へ
-					v.position.x = radian * sinf(phi) * cosf(theta);
-					v.position.y = (i >= stacks / 2) ? radian * cosf(phi) + -h : radian * cosf(phi) + h;	// 上半分までは上に、半分以降は下に配置する
-					v.position.z = radian * sinf(phi) * sinf(theta);
+					v.position.x = RADIAN * sinf(phi) * cosf(theta);
+					v.position.y = (i >= stacks / 2) ? RADIAN * cosf(phi) + -h : RADIAN * cosf(phi) + h;	// 上半分までは上に、半分以降は下に配置する
+					v.position.z = RADIAN * sinf(phi) * sinf(theta);
 
 					DirectX::XMVECTOR p = DirectX::XMLoadFloat3(&v.position);	// positionをvector型に
 					DirectX::XMStoreFloat3(&v.normal, DirectX::XMVector3Normalize(p));	// 法線の計算

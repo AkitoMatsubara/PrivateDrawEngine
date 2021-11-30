@@ -7,7 +7,7 @@ Geometric_Sphere::Geometric_Sphere(u_int slices, u_int stacks) {
 	std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;
 	static const FLOAT RADIAN = 0.5f;
-	this->radian = RADIAN;
+	this->Radian = RADIAN;
 	this->slices = slices;
 	this->stacks = stacks;
 

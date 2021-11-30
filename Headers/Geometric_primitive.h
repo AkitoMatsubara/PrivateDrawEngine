@@ -31,7 +31,6 @@ private:
 protected:
 	struct Vertex {
 		DirectX::SimpleMath::Vector3 position;
-		//DirectX::SimpleMath::Vector3 position;
 		DirectX::SimpleMath::Vector3 normal;
 	};
 	struct Constants {
@@ -115,7 +114,7 @@ class Geometric_Sphere :public Geometric_Primitive {
 public:
 	//  球の生成
 	// 半径
-	FLOAT radian;
+	FLOAT Radian;
 	// 何角形か
 	u_int slices;
 	// 球の滑らかさ
@@ -136,5 +135,5 @@ public:
 	// カプセルの生成
 	// slices : 何角形か
 	// stacks : 球の滑らかさ
-	Geometric_Capsule(FLOAT radian = 0.5f, FLOAT height = 1.0f, u_int slices = 20, u_int stacks = 20);
+	Geometric_Capsule(FLOAT height = 1.0f, u_int slices = 20, u_int stacks = 20);
 };

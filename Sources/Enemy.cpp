@@ -25,7 +25,7 @@ void Enemy::Initialize() {
 	Shots = std::make_unique<Shot>();
 	Shots->Initialize();
 
-	Capcule = std::make_unique<Geometric_Capsule>(1.0f, 1.0f, 10, 10);
+	Capcule = std::make_unique<Geometric_Capsule>(1.0f, 10, 10);
 }
 
 void Enemy::Update() {
@@ -41,8 +41,8 @@ void Enemy::Update() {
 	Model->setColor(Parameters->Color);
 
 	Capcule->Parameters->CopyParam(Parameters.get());
-	static const float capculeSize = 0.6f;
-	Capcule->Parameters->Scale = DirectX::SimpleMath::Vector3(capculeSize * 0.7f, capculeSize, capculeSize);
+	static const float CAPCULESIZE = 0.6f;
+	Capcule->Parameters->Scale = DirectX::SimpleMath::Vector3(CAPCULESIZE * 0.7f, CAPCULESIZE, CAPCULESIZE);
 	Capcule->Parameters->Color = DirectX::SimpleMath::Vector4{ 1.0f,1.0f,1.0f,1.0f, };
 	Capcule->Parameters->Rotate.x += 90;
 }
@@ -60,9 +60,7 @@ void Enemy::Move()
 	Parameters->Acceleration = DirectX::SimpleMath::Vector3{ 0.0f, 0.0f, 0.0f };
 	Parameters->Velocity = DirectX::SimpleMath::Vector3{ 0.0f, 0.0f, 0.0f };	// “ü—Í’†‚¾‚¯“®‚©‚·‚½‚ß‚É–ˆƒtƒŒ[ƒ€‰Šú‰» •’Ê‚¢‚ç‚È‚¢
 
-	Parameters->Vector.x = sinf(DirectX::XMConvertToRadians(Parameters->Rotate.y));
-	Parameters->Vector.z = cosf(DirectX::XMConvertToRadians(Parameters->Rotate.y));
-
+	Parameters->calcForward();
 
 
 		//--------------------------------------------------------

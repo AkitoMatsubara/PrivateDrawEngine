@@ -147,7 +147,7 @@ void Skinned_Mesh::Render(Shader* shader, int rasterize) {
 		DirectX::XMMATRIX R{ DirectX::XMMatrixRotationRollPitchYaw(DirectX::XMConvertToRadians(Parameters->Rotate.x), DirectX::XMConvertToRadians(Parameters->Rotate.y), DirectX::XMConvertToRadians(Parameters->Rotate.z)) };	// 回転
 		DirectX::XMMATRIX T{ DirectX::XMMatrixTranslation(Parameters->Position.x,Parameters->Position.y,Parameters->Position.z) };	// 平行移動
 
-		DirectX::SimpleMath::Matrix world;
+		//DirectX::SimpleMath::Matrix world;
 		XMStoreFloat4x4(&world, C * S * R * T);	// ワールド変換行列作成
 
 		uint32_t stride{ sizeof(Vertex) };	// stride:刻み幅
