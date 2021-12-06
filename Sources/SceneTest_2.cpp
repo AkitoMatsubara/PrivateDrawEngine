@@ -64,6 +64,7 @@ bool SceneTest_2::Initialize() {
 		// コンピュートシェーダーからの出力時に使用するUAVを作成する
 		CreateUAVForStructuredBuffer(sizeof(BUFOUT_TYPE), NUM_ELEMENTS, NULL, pBufResult.GetAddressOf(), pBufResultUAV.GetAddressOf());
 	}
+	camera->SetProjection(DirectX::XMConvertToRadians(30), camera->GetWidth() / camera->GetHeight(), camera->GetNear(), camera->GetFar());
 
 	return true;
 }
@@ -76,12 +77,16 @@ void SceneTest_2::Update() {
 	player->Update();
 	StageManager::getInstance().Update();
 
-	// カメラ操作
-	camera->Operate();
 
 	// 透視投影行列の作成
-	camera->Set((camera->GetPos() + player->Parameters->Position), player->Parameters->Position, DirectX::XMFLOAT3(0, 1, 0));
-	camera->SetProjection(DirectX::XMConvertToRadians(30), camera->GetWidth() / camera->GetHeight(), camera->GetNear(), camera->GetFar());
+	//camera->Set((camera->GetPos() + player->Parameters->Position), player->Parameters->Position, DirectX::XMFLOAT3(0, 1, 0));
+	camera->Set(camera->GetPos(), player->Parameters->Position, DirectX::XMFLOAT3(0, 1, 0));
+	//DirectX::SimpleMath::Vector3 pos = camera->GetPos();
+	//pos.y = 0.0f;
+	//camera->SetPos(pos);
+
+		// カメラ操作
+	camera->Operate();
 
 	if (GetAsyncKeyState(VK_RBUTTON) < 0) {
 		EnemyManager::getInstance().newSet(player->Parameters.get());	// お試し右クリックで敵を生成
@@ -127,8 +132,8 @@ void SceneTest_2::Update() {
 
 		player->Parameters->Color = DirectX::SimpleMath::Vector4{ p[1].i, p[0].i, p[2].i, 1.0f };
 	}
-	imguiUpdate();
 
+	imguiUpdate();
 }
 
 void SceneTest_2::Render() {
@@ -204,6 +209,13 @@ void SceneTest_2::imguiUpdate() {
 	ImGui::Text("Total Objects: %d", EnemyManager::getInstance().getEnemys()->size() + player->getShotManager()->getSize() + StageManager::getInstance().getSize());
 
 	ImGui::PopStyleColor(2);	// ImGui::PushStyleColor一つにつき一つ呼び出すっぽい
+
+	ImGui::End();
+	ImGui::Begin("Light");
+	DirectX::SimpleMath::Vector3 a = (camera->GetTarget() - camera->GetPos());
+	a.y = 0;
+	ImGui::Text("Length: %f", a.Length());
+
 
 	ImGui::End();
 #endif

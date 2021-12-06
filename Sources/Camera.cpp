@@ -16,11 +16,11 @@ Camera::Camera()
 		0,0,1,0,
 		0,0,0,1 };
 	Fov = DirectX::XM_PI / 6.0f;
-	Aspect = 1280.0f / 720.0f;
 	Near = 0.1f;
 	Far = 2000.0f;
 	Width = 1280.0f;
 	Height = 720.0f;
+	Aspect = Width / Height;
 	bView = false;
 }
 Camera::~Camera(){}
@@ -75,14 +75,28 @@ void Camera::Operate()
 {
 	// カメラ操作
 	static float cameraSpeed = 0.05f;
-	static float cAngle = 0.0f;
+	static float cAngle = 0.0f;	// 回転角
+	static float cDist = -10.0f;	// 距離
+	static const float MIN_DIST = 3.0f;
+	static const float MAX_DIST = 10.0f;
 	if (GetKeyState(VK_LEFT) < 0)   cAngle += DirectX::XMConvertToRadians(1);	// カメラ左回転
 	if (GetKeyState(VK_RIGHT) < 0)  cAngle -= DirectX::XMConvertToRadians(1);	// カメラ右回転
-	if (GetKeyState(VK_UP) < 0)     Position.y += cameraSpeed;	// 前に
-	if (GetKeyState(VK_DOWN) < 0)   Position.y -= cameraSpeed;	// 後に
+
 	if (GetKeyState(VK_SPACE) < 0)  Position.y += cameraSpeed;	// 上に
 	if (GetKeyState(VK_SHIFT) < 0)  Position.y -= cameraSpeed;	// 下に
-	Position.x = sinf(cAngle) * 10.0f;
-	Position.z = cosf(cAngle) * 10.0f;
+
+	DirectX::SimpleMath::Vector3 tg = Target - Position;	// 方向ベクトル
+	tg.y = 0.0f;	// yは除外
+	if (tg.Length() > MIN_DIST)	// 最小距離チェック これ以上は近づけない
+	{
+		if (GetKeyState(VK_UP) < 0)		cDist += 0.1f;	// 前に
+	}
+	if (tg.Length() < MAX_DIST) {	// 最大距離チェック これ以上は遠ざかれない
+		if (GetKeyState(VK_DOWN) < 0)   cDist -= 0.1f;	// 後に
+	}
+	tg.Normalize();	// 方向なので正規化
+
+	Position.z = cosf(cAngle) + (tg.z * cDist) + Target.z;
+	Position.x = sinf(cAngle) + (tg.x * cDist) + Target.x;
 
 }

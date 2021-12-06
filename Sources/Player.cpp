@@ -115,7 +115,6 @@ void Player::Control()
 	}
 	//âÒì]èàóù
 	{
-		// debugóp
 		if (GetKeyState('D') < 0) {
 			if (GetKeyState(VK_CONTROL) < 0) { Parameters->Velocity += Model->getWorld().Left() * MOVE_SPEED; }
 			else Parameters->Rotate.y += ROTATE;
@@ -125,12 +124,13 @@ void Player::Control()
 			if (GetKeyState(VK_CONTROL) < 0) { Parameters->Velocity += Model->getWorld().Right() * MOVE_SPEED; }
 			else Parameters->Rotate.y -= ROTATE;
 		}
-		//if (GetKeyState('Q') < 0) {
-		//	Parameters->Rotate.x += ROTATE;
-		//}
-		//if (GetKeyState('E') < 0) {
-		//	Parameters->Rotate.x -= ROTATE;
-		//}
+		// debugóp
+		if (GetKeyState('Q') < 0) {
+			Parameters->Position.y-= 0.1f;
+		}
+		if (GetKeyState('E') < 0) {
+			Parameters->Position.y += 0.1f;
+		}
 	}
 	Parameters->Position += Parameters->Velocity;
 

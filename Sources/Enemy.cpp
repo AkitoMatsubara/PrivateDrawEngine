@@ -51,7 +51,7 @@ void Enemy::Render() {
 	//Shots->Render();
 
 	Model->Render(SkinnedShader.get());
-	Capcule->Render(true);
+	//Capcule->Render(true);
 }
 
 void Enemy::Move()

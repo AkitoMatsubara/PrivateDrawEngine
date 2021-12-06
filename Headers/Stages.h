@@ -32,14 +32,14 @@ public:
 	void Update();
 	void Render();
 
-	void onObject(const DirectX::SimpleMath::Vector3& obj);
+	void onObject(const DirectX::SimpleMath::Vector3& objPos);
 };
 // ステージパーツの総管理クラス というかパーツ全部持ってる
 class StageManager
 {
 private:
-	const static int ROW_PARTS = 11;	// 行数。奇数での設定お願いします
-	const static int COL_PARTS = 11;	// 列数。奇数での設定お願いします
+	const static int ROW_PARTS = 15;	// 行数。奇数での設定お願いします
+	const static int COL_PARTS = 15;	// 列数。奇数での設定お願いします
 	const static int PARTS_SIZE = ROW_PARTS * COL_PARTS;	// 縦*横の全てのパーツ数
 
 	std::array<std::unique_ptr<StageParts>, PARTS_SIZE> Stages;	// そのままモデル

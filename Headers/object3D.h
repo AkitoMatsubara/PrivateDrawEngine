@@ -38,8 +38,8 @@ public:
 		Color        = DirectX::SimpleMath::Vector4{ 0.0f,0.0f,0.0f,1.0f };
 
 		Exist = false;
-		MaxLife = 0;
-		CurLife = 0;
+		MaxLife = 1;
+		CurLife = MaxLife;
 	};
 	~Object3d() {};
 

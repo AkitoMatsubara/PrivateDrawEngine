@@ -30,7 +30,7 @@ void Shot::Update()
 
 	// 自然消滅 適当なので要修正
 	LifeTimer += 0.1f;
-	if (LifeTimer >= 50.0f) {
+	if (LifeTimer >= 25.0f) {
 		LifeTimer = 0.0f;
 		Exist = false;
 	}
@@ -78,7 +78,7 @@ void ShotManager::Update()
 					{
 						enem->get()->setExist(false);
 						//shots->get()->setExist(false);	//  TODO: 存在消す処理をコメントアウトしているのはデバッグ用 一度の弾で複数体消すため
-						break;
+						//break;
 					}
 				}
 			}

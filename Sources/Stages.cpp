@@ -4,9 +4,7 @@
 
 #include "misc.h"	// エラー出力用
 
-StageParts::StageParts()
-{
-}
+StageParts::StageParts(){}
 
 void StageParts::Initialize()
 {
@@ -14,7 +12,9 @@ void StageParts::Initialize()
 	SkinnedShader->Create(L"Shaders\\skinned_mesh_vs", L"Shaders\\skinned_mesh_ps");
 
 	Parameters = std::make_unique<Object3d>();
-
+	Parameters->MaxLife = 5;
+	Parameters->CurLife = Parameters->MaxLife;
+	Parameters->Exist = true;
 	Model = std::make_unique<Skinned_Mesh>(".\\Resources\\Stage\\Stage.fbx", 0, false);
 }
 
@@ -30,27 +30,61 @@ void StageParts::Update()
 
 void StageParts::Render()
 {
-	Model->Render(SkinnedShader.get());
+	if (Parameters->Exist) {
+		Model->Render(SkinnedShader.get());
+	}
 }
 
-void StageParts::onObject(const DirectX::SimpleMath::Vector3& obj)
+void StageParts::onObject(const DirectX::SimpleMath::Vector3& objPos)
 {
+	const static float CHECK_DIST = 1.25f;
+	DirectX::SimpleMath::Vector3 length;
+	length = Parameters->Position - objPos;
+	length.y = 0.0f;	// y軸は無視する
+	if (length.Length() > CHECK_DIST)return;
+
 	// まずステージの三角形頂点を算出します
 	// モデル変えたらやり直す必要あるからちょっとまずいかも
+	float ofs_x = 1.0f;
+	float ofs_y = 1.0f;
 	DirectX::SimpleMath::Vector3 triangle[3];
-	triangle[0] = (Model->getWorld().Backward() * 1.0f);	// 前方の点のつもり
-	triangle[1] = (Model->getWorld().Forward() * 1.0f) + (Model->getWorld().Left() * 0.5f);	// 右方の点のつもり
-	triangle[2] = (Model->getWorld().Forward() * 1.0f) + (Model->getWorld().Right() * 0.5f);	// 左方の点のつもり
+	triangle[0] = (Model->getWorld().Backward() * ofs_x);	// 前方の点のつもり
+	triangle[1] = (Model->getWorld().Forward() * ofs_x) + (Model->getWorld().Left()  * ofs_y);	// 右方の点のつもり
+	triangle[2] = (Model->getWorld().Forward() * ofs_x) + (Model->getWorld().Right() * ofs_y);	// 左方の点のつもり
 	/*	こうなってるつもり		*/
-	/*		     *[0]			*/
-	/*		    / \				*/
-	/*		   /   \			*/
-	/*		  /     \			*/
+	/*		    [0]			前	*/
+	/*		     *			↑	*/
+	/*		    / \			↑	*/
+	/*		   /   \		↑	*/
+	/*		  /  P  \		↑	*/
 	/*		 /       \			*/
 	/*	  [2]*--------*[1]		*/
 
+	DirectX::SimpleMath::Vector3 p_0 = triangle[0] - objPos;
+	DirectX::SimpleMath::Vector3 p_1 = triangle[1] - objPos;
+	DirectX::SimpleMath::Vector3 p_2 = triangle[2] - objPos;
+	p_0.y = p_1.y = p_2.y = 0.0f;	// Y軸は使用しないので0に
 
-
+	float theta[3] = { 0 };
+	// なす角θの計算 cosθ = (dot(a,b)/a.length * b.length)
+	theta[0] = acos(p_0.Dot(p_1) / (p_0.Length() * p_1.Length()));
+	theta[1] = acos(p_1.Dot(p_2) / (p_1.Length() * p_2.Length()));
+	theta[2] = acos(p_0.Dot(p_2) / (p_0.Length() * p_2.Length()));
+	// 確認用に3点のなす角を合計
+	float sum = 0;
+	for (auto& t : theta) { sum += t; }
+	// 内包判定
+	// なす角の合計値が361°未満であれば判定
+	// なぜ未満なのかは誤差で360.001°みたいになっちゃうからその対策
+	if (sum < DirectX::XMConvertToRadians(361))
+	{		 // 内包する点であれば全て180°以下に収まるのでチェック
+		if (theta[0] <= DirectX::XMConvertToRadians(180) && theta[1] <= DirectX::XMConvertToRadians(180) && theta[2] <= DirectX::XMConvertToRadians(180))
+		{
+			Parameters->CurLife--;	// 体力減らす
+			Parameters->Color.w =static_cast<float>(Parameters->CurLife)/ static_cast<float>(Parameters->MaxLife);
+		}
+	}
+	if (Parameters->CurLife <= 0)Parameters->Exist = false;
 }
 
 //---------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -112,7 +146,10 @@ void StageManager::Update()
 {
 	for (auto& it : Stages)
 	{
+		if(it->Parameters->Exist)
+		{
 		it->Update();
+		}
 	}
 }
 
@@ -130,5 +167,5 @@ void StageManager::Check(const DirectX::SimpleMath::Vector3& obj)
 	{
 		it->onObject(obj);
 	}
-
+	//Stages[PARTS_SIZE / 2]->onObject(obj);
 }
