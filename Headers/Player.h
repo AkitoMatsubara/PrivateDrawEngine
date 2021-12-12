@@ -18,8 +18,6 @@ class Player {
 private:
 	// モデル情報
 	std::unique_ptr<Skinned_Mesh> Model;
-	// デフォルトのシェーダー
-	std::unique_ptr<ShaderEx> SkinnedShader;
 
 	// カプセル型で当たり判定取るために可視化する
 	std::unique_ptr<Geometric_Capsule> Capcule;

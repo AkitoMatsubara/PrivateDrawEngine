@@ -125,6 +125,11 @@ Skinned_Mesh::Skinned_Mesh(const char* fbx_filename, int cstNo, bool triangulate
 
 	rasterizer.SetRasterizer(device);
 	CstNo = cstNo;
+	if(!SkinnedShader)	// 一回だけ生成
+	{
+		SkinnedShader = std::make_unique<ShaderEx>();
+		SkinnedShader->Create(L"Shaders\\skinned_mesh_vs", L"Shaders\\skinned_mesh_ps");
+	}
 	// 各種パラメータの初期化
 	Parameters = std::make_unique<Object3d>();
 	Parameters->Position = DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f);

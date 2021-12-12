@@ -8,17 +8,15 @@ static float imguiPos[3] = { 0.0f };
 
 void Player::Initialize() {
 	Model = std::make_unique<Skinned_Mesh>(".\\Resources\\Player\\Player.fbx");	// 3角形化されていない複数メッシュ キューブ
-	SkinnedShader = std::make_unique<ShaderEx>();
-	SkinnedShader->Create(L"Shaders\\skinned_mesh_vs", L"Shaders\\skinned_mesh_ps");
 
 	// パラメーターの初期化
 	Parameters = std::make_unique<Object3d>();
-	Parameters->Position = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
-	Parameters->Vector = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
+	Parameters->Position     = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
+	Parameters->Vector       = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
 	Parameters->Acceleration = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
-	Parameters->Rotate = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
-	Parameters->Scale = DirectX::SimpleMath::Vector3{ 1.0f,1.0f,1.0f };
-	Parameters->Color = DirectX::SimpleMath::Vector4{ 1.0f,1.0f,1.0f,1.0f };
+	Parameters->Rotate       = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
+	Parameters->Scale        = DirectX::SimpleMath::Vector3{ 1.0f,1.0f,1.0f };
+	Parameters->Color        = DirectX::SimpleMath::Vector4{ 1.0f,1.0f,1.0f,1.0f };
 
 	ShotsManager = std::make_unique<ShotManager>();
 	ShotsManager->Initialize();
@@ -67,7 +65,7 @@ void Player::Update() {
 void Player::Render() {
 	ShotsManager->Render();
 
-	Model->Render(SkinnedShader.get());
+	Model->Render();
 	Capcule->Render(true);
 	testSphere->Render(true);
 }
@@ -137,7 +135,7 @@ void Player::Control()
 	if (GetAsyncKeyState(VK_LBUTTON) & 1) {
 		// Shotの生成
 		ShotsManager->newSet(Parameters.get());
-		StageManager::getInstance().Check(Parameters->Position);
+		StageManager::getInstance().Check(*Parameters);
 	}
 	//--------------------------------------------------------
 

@@ -1,13 +1,13 @@
 #include "Judge.h"
 #include "XMFLOAT_Helper.h"
 
-bool Judge::c_b(const Object3d& capsle, const int height,const Object3d& sphere)
+bool Judge::c_b(const Object3d& capsle, const float height,const Object3d& sphere)
 {
 	DirectX::SimpleMath::Vector3 forward;	// カプセル上面の位置
 	DirectX::SimpleMath::Vector3 back;		// カプセル下面の位置
 	static float half = 1.5f;
-	forward =	capsle.Position + (capsle.Vector * (capsle.Scale * height));	// 前方へズラせてカプセル上面として使う かけ数はサイズ的な意味合い
-	back =		capsle.Position - (capsle.Vector * (capsle.Scale * height));	// 後方へズラせてカプセル下面として使う かけ数はサイズ的な意味合い
+	forward =	capsle.Position + (capsle.Vector * (capsle.Scale * height * 0.5f));	// 前方へズラせてカプセル上面として使う かけ数はサイズ的な意味合い
+	back =		capsle.Position - (capsle.Vector * (capsle.Scale * height * 0.5f));	// 後方へズラせてカプセル下面として使う かけ数はサイズ的な意味合い
 
 	DirectX::SimpleMath::Vector3 len1 = sphere.Position - forward;
 	DirectX::SimpleMath::Vector3 len2 = sphere.Position - back;

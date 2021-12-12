@@ -4,6 +4,8 @@
 #include "Enemy.h"
 #include "Stages.h"
 
+#include "UseConputeShader.h"
+
 #include <SimpleMath.h>
 bool SceneTest_2::Initialize() {
 	Microsoft::WRL::ComPtr<ID3D11Device> device = FRAMEWORK->GetDevice();	// frameworkからdeviceを取得
@@ -59,11 +61,12 @@ bool SceneTest_2::Initialize() {
 		}
 
 		// コンピュートシェーダーへの入力時に使用するSRVを作成する
-		CreateSRVForStructuredBuffer(sizeof(BUFIN_TYPE), NUM_ELEMENTS, &vBufInArray[0], pBufInput.GetAddressOf(), pBufInputSRV.GetAddressOf());
+		UseConputeShader::CreateSRVForStructuredBuffer(sizeof(BUFIN_TYPE), NUM_ELEMENTS, &vBufInArray[0], pBufInput.GetAddressOf(), pBufInputSRV.GetAddressOf());
 
 		// コンピュートシェーダーからの出力時に使用するUAVを作成する
-		CreateUAVForStructuredBuffer(sizeof(BUFOUT_TYPE), NUM_ELEMENTS, NULL, pBufResult.GetAddressOf(), pBufResultUAV.GetAddressOf());
+		UseConputeShader::CreateUAVForStructuredBuffer(sizeof(BUFOUT_TYPE), NUM_ELEMENTS, NULL, pBufResult.GetAddressOf(), pBufResultUAV.GetAddressOf());
 	}
+
 	camera->SetProjection(DirectX::XMConvertToRadians(30), camera->GetWidth() / camera->GetHeight(), camera->GetNear(), camera->GetFar());
 
 	return true;
@@ -115,10 +118,10 @@ void SceneTest_2::Update() {
 		immediate_context->UpdateSubresource(constant_buffer[1].Get(), 0, 0, &csData, 0, 0);
 		immediate_context->CSSetConstantBuffers(2, 1, constant_buffer[1].GetAddressOf());
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		RunComputeShader(ComputeShader->GetCS(), pBufInputSRV.Get(), pBufResultUAV.Get(), 3, 1, 1);
+		UseConputeShader::RunComputeShader(ComputeShader->GetCS(), pBufInputSRV.Get(), pBufResultUAV.Get(), 3, 1, 1);
 
 		// アンオーダードアクセスビューのバッファの内容を CPU から読み込み可能なバッファへコピーする
-		ID3D11Buffer* debugbuf = CreateAndCopyToBuffer(device.Get(), immediate_context.Get(), pBufResult.Get());
+		ID3D11Buffer* debugbuf = UseConputeShader::CreateAndCopyToBuffer(device.Get(), immediate_context.Get(), pBufResult.Get());
 
 		D3D11_MAPPED_SUBRESOURCE MappedResource = { 0 };
 		hr = immediate_context->Map(debugbuf, 0, D3D11_MAP_READ, 0, &MappedResource);	// 読み取り専用でマップ
@@ -195,171 +198,22 @@ void SceneTest_2::imguiUpdate() {
 	ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.0f, 0.6f, 0.1f, 1.0f));	// これ一つ呼ぶとImGui::PopStyleColorを書かないといけないらしい
 	ImGui::PushStyleColor(ImGuiCol_TitleBg, ImVec4(0.0f, 0.2f, 0.0f, 1.0f));
 
-	imguiSceneChanger();
+	//imguiSceneChanger();
 	// 2D用 内部関数で完結させてる
 	sprites->ImguiWindow();
 	// 3D用パラメータ
 	player->ImguiPlayer();
 	// ライト調整等グローバル設定
-	ImGui::Begin("Light");
+	ImGui::Begin("SceneImGui");
 	ImGui::SliderFloat3("Light_Direction", light_dir, -10.0f, 10.0f);
+	ImGui::Separator();
 	ImGui::Text("Shots: %d", player->getShotManager()->getSize());
 	ImGui::Text("Enemys: %d", EnemyManager::getInstance().getSize());
 	ImGui::Text("StageParts: %d", StageManager::getInstance().getSize());
+	ImGui::Separator();	// 分割線
 	ImGui::Text("Total Objects: %d", EnemyManager::getInstance().getEnemys()->size() + player->getShotManager()->getSize() + StageManager::getInstance().getSize());
 
-	ImGui::PopStyleColor(2);	// ImGui::PushStyleColor一つにつき一つ呼び出すっぽい
-
-	ImGui::End();
-	ImGui::Begin("Light");
-	DirectX::SimpleMath::Vector3 a = (camera->GetTarget() - camera->GetPos());
-	a.y = 0;
-	ImGui::Text("Length: %f", a.Length());
-
-
+	ImGui::PopStyleColor(2);	// ImGui::PushStyleColor一つにつき引数一つ増えるっぽい
 	ImGui::End();
 #endif
-}
-
-// 構造化バッファを作成する
-HRESULT SceneTest_2::CreateStructuredBuffer(UINT uElementSize, UINT uCount, VOID* pInitData, ID3D11Buffer** ppBuf)
-{
-	ID3D11Device* pD3DDevice = FRAMEWORK->GetDevice();
-	HRESULT hr = E_FAIL;
-
-	// 構造化バッファーを作成する
-
-	D3D11_BUFFER_DESC BufferDesc;
-	ZeroMemory(&BufferDesc, sizeof(D3D11_BUFFER_DESC));
-	BufferDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS |			// アンオーダード アクセス リソースをバインドする
-		D3D11_BIND_SHADER_RESOURCE;				// バッファーをシェーダー ステージにバインドする
-	BufferDesc.ByteWidth = uElementSize * uCount;					// バッファサイズ
-	BufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;	// 構造化バッファーとしてリソースを作成する
-	BufferDesc.StructureByteStride = uElementSize;					// 構造化バッファーのサイズ (バイト単位)
-
-	// 初期値を設定
-	if (pInitData)
-	{
-		D3D11_SUBRESOURCE_DATA InitData;
-		InitData.pSysMem = pInitData;
-		hr = pD3DDevice->CreateBuffer(&BufferDesc, &InitData, ppBuf);
-	}
-	// 初期値なしで領域のみ確保する
-	else
-	{
-		hr = pD3DDevice->CreateBuffer(&BufferDesc, NULL, ppBuf);
-	}
-	return hr;
-}
-
-// コンピュートシェーダーへの入力時に使用するシェーダーリソースビューを作成する
-HRESULT SceneTest_2::CreateSRVForStructuredBuffer(UINT uElementSize, UINT uCount, VOID* pInitData, ID3D11Buffer** ppBuf, ID3D11ShaderResourceView** ppSRVOut) {
-	ID3D11Device* pD3DDevice = FRAMEWORK->GetDevice();
-	HRESULT hr = E_FAIL;
-	*ppBuf = NULL;
-	*ppSRVOut = NULL;
-
-	// 構造化バッファーを作成する
-	hr = CreateStructuredBuffer(uElementSize, uCount, pInitData, ppBuf);
-	if (FAILED(hr))
-	{
-		goto EXIT;
-	}
-
-	// 構造化バッファーからシェーダーリソースビューを作成する
-
-	D3D11_SHADER_RESOURCE_VIEW_DESC SRVDesc;
-	ZeroMemory(&SRVDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
-	SRVDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFEREX;   // 拡張されたバッファーであることを指定する
-	SRVDesc.BufferEx.FirstElement = 0;
-	SRVDesc.Format = DXGI_FORMAT_UNKNOWN;
-	SRVDesc.BufferEx.NumElements = uCount;                  // リソース内の要素の数
-
-	// 構造化バッファーをもとにシェーダーリソースビューを作成する
-	hr = pD3DDevice->CreateShaderResourceView(*ppBuf, &SRVDesc, ppSRVOut);
-	if (FAILED(hr))
-		goto EXIT;
-
-	hr = S_OK;
-EXIT:
-	return hr;
-}
-
-// コンピュートシェーダーからの出力時に使用するアンオーダードアクセスビューを作成する
-HRESULT SceneTest_2::CreateUAVForStructuredBuffer(UINT uElementSize, UINT uCount, VOID* pInitData, ID3D11Buffer** ppBuf, ID3D11UnorderedAccessView** ppUAVOut) {
-	ID3D11Device* pD3DDevice = FRAMEWORK->GetDevice();
-	HRESULT hr = E_FAIL;
-	*ppBuf = NULL;
-	*ppUAVOut = NULL;
-
-	// 構造化バッファーを作成する
-
-	hr = CreateStructuredBuffer(uElementSize, uCount, pInitData, ppBuf);
-	if (FAILED(hr))
-	{
-		goto EXIT;
-	}
-
-	// 構造化バッファーからアンオーダードアクセスビューを作成する
-	D3D11_UNORDERED_ACCESS_VIEW_DESC UAVDesc;
-	ZeroMemory(&UAVDesc, sizeof(D3D11_UNORDERED_ACCESS_VIEW_DESC));
-	UAVDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;   // バッファーであることを指定する
-	UAVDesc.Buffer.FirstElement = 0;
-	UAVDesc.Format = DXGI_FORMAT_UNKNOWN;
-	UAVDesc.Buffer.NumElements = uCount;                  // リソース内の要素の数
-
-	// 構造化バッファーをもとにアンオーダード アクセス ビューを作成する
-	hr = pD3DDevice->CreateUnorderedAccessView(*ppBuf, &UAVDesc, ppUAVOut);
-	if (FAILED(hr))
-		goto EXIT;
-
-	hr = S_OK;
-EXIT:
-	return hr;
-}
-
-// アンオーダードアクセスビューのバッファの内容をCPUから読み込み可能なバッファを作成してコピーする
-ID3D11Buffer* SceneTest_2::CreateAndCopyToBuffer(ID3D11Device* pD3DDevice, ID3D11DeviceContext* pD3DDeviceContext, ID3D11Buffer* pBuffer)
-{
-	ID3D11Buffer* debugbuf = NULL;
-
-	D3D11_BUFFER_DESC BufferDesc;
-	ZeroMemory(&BufferDesc, sizeof(D3D11_BUFFER_DESC));
-	pBuffer->GetDesc(&BufferDesc);
-	BufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;  // CPU から読み込みできるように設定する
-	BufferDesc.Usage = D3D11_USAGE_STAGING;             // GPU から CPU へのデータ転送 (コピー) をサポートするリソース
-	BufferDesc.BindFlags = 0;
-	BufferDesc.MiscFlags = 0;
-	if (FAILED(pD3DDevice->CreateBuffer(&BufferDesc, NULL, &debugbuf))) return debugbuf;
-
-	pD3DDeviceContext->CopyResource(debugbuf, pBuffer);
-
-	return debugbuf;
-}
-
-void SceneTest_2::RunComputeShader(ID3D11ComputeShader* pComputeShader, ID3D11ShaderResourceView* pSrcSRV, ID3D11UnorderedAccessView* pDstUAV, UINT X, UINT Y, UINT Z) {
-	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();
-
-	immediate_context->CSSetShader(pComputeShader, NULL, 0);
-
-	// シェーダーリソースビューをコンピュートシェーダーに設定
-	immediate_context->CSSetShaderResources(0, 1, &pSrcSRV);
-
-	// アンオーダードアクセスビューをコンピュートシェーダーに設定
-	immediate_context->CSSetUnorderedAccessViews(0, 1, &pDstUAV, NULL);
-
-	// コンピュートシェーダーを実行する。スレッド数とかようわからんが
-	immediate_context->Dispatch(X, Y, Z);
-
-	// コンピュートシェーダの設定解除
-	immediate_context->CSSetShader(NULL, NULL, 0);
-
-	ID3D11UnorderedAccessView* ppUAViewNULL[1] = { NULL };
-	immediate_context->CSSetUnorderedAccessViews(0, 1, ppUAViewNULL, NULL);
-
-	ID3D11ShaderResourceView* ppSRVNULL[2] = { NULL, NULL };
-	immediate_context->CSSetShaderResources(0, 2, ppSRVNULL);
-
-	ID3D11Buffer* ppCBNULL[1] = { NULL };
-	immediate_context->CSSetConstantBuffers(0, 1, ppCBNULL);
 }

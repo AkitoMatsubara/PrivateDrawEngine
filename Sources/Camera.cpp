@@ -63,11 +63,11 @@ void Camera::Activate()
 	DirectX::XMMATRIX pm = DirectX::XMMatrixIdentity();
 	if (bView) {
 		pm = DirectX::XMMatrixPerspectiveFovLH(Fov, Aspect, Near, Far);
-		XMStoreFloat4x4(&ProjectionMatrix, pm);
+		DirectX::XMStoreFloat4x4(&ProjectionMatrix, pm);
 	}
 	else {
 		pm = DirectX::XMMatrixOrthographicLH(Width, Height, Near, Far);
-		XMStoreFloat4x4(&ProjectionMatrix, pm);
+		DirectX::XMStoreFloat4x4(&ProjectionMatrix, pm);
 	}
 }
 

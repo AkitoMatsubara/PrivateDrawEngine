@@ -53,6 +53,18 @@ private:
 	std::shared_ptr<Sampler> sample;
 
 	static framework* instance;
+	//-------------------------------------------------------------------
+	// fps算出系
+	int frameRate = 60;
+	float MIN_FREAM_TIME;
+	float frameTime;
+	LARGE_INTEGER timeStart;
+	LARGE_INTEGER timeEnd;
+	LARGE_INTEGER timeFreq;
+	// fpsを取得するなら0で初期化しないとゴミが混ざってマイナスから始まったりする(かも知れない)
+	float fps;
+	//-------------------------------------------------------------------
+
 public:
 	CONST HWND hwnd;
 

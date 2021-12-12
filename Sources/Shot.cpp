@@ -5,14 +5,14 @@
 
 #include "XMFLOAT_Helper.h"
 
-//std::unique_ptr<Skinned_Mesh> Shot::Model = std::make_unique<Skinned_Mesh>(".\\Resources\\Player\\Player.fbx");
 
 void Shot::Initialize()
 {
-	//if(!Model)	Model = std::make_unique<Skinned_Mesh>(".\\Resources\\Player\\Player.fbx");
+	if(!Model)	Model = std::make_unique<Skinned_Mesh>(".\\Resources\\Shots\\Shot.fbx");
 	Sphere = std::make_unique<Geometric_Sphere>();
+
 	SkinnedShader = std::make_unique<ShaderEx>();
-	SkinnedShader->Create(L"Shaders\\static_mesh_vs", L"Shaders\\static_mesh_ps");
+	SkinnedShader->Create(L"Shaders\\skinned_mesh_vs", L"Shaders\\skinned_mesh_ps");
 
 	Parameters = std::make_unique<Object3d>();
 
@@ -30,23 +30,23 @@ void Shot::Update()
 
 	// Ž©‘RÁ–Å “K“–‚È‚Ì‚Å—vC³
 	LifeTimer += 0.1f;
-	if (LifeTimer >= 25.0f) {
+	if (LifeTimer >= 20.0f) {
 		LifeTimer = 0.0f;
 		Exist = false;
 	}
 
 	// ƒ‚ƒfƒ‹‚É•`‰æŒnƒpƒ‰ƒ[ƒ^[‚ð“n‚·
 	Sphere->Parameters->CopyParam(Parameters.get());
-	Sphere->Parameters->Color = DirectX::SimpleMath::Vector4{ 1.0f,fmodf(LifeTimer,50.0f),1.0f,1.0f };
+	Sphere->Parameters->Color = DirectX::SimpleMath::Vector4{ 1.0f,LifeTimer/20.0f,1.0f,1.0f };
 	//Sphere->Parameters->CopyParam(Model->getParameters());
-	//Model->getParameters()->CopyParam(Parameters.get());
+	Model->getParameters()->CopyParam(Parameters.get());
 }
 
 void Shot::Render()
 {
 	if (Exist) {
-		//Model->Render(SkinnedShader.get());
-		Sphere->Render();
+		Model->Render(SkinnedShader.get());
+		//Sphere->Render();
 	}
 }
 
@@ -108,7 +108,7 @@ bool ShotManager::isHit(const Object3d* Capcule)
 {
 	for (auto it = Shots.begin(); it != Shots.end(); ++it)
 	{
-		if (Judge::getInstance()->c_b(*Capcule, 0.5f, *it->get()->Parameters))
+		if (Judge::getInstance()->c_b(*Capcule, 1.0f, *it->get()->Parameters))
 		{
 			return true;
 		}

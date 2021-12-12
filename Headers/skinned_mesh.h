@@ -179,6 +179,7 @@ private:
 	bool wireframe;	// ワイヤーフレーム表示の有無
 
 	std::unique_ptr<Object3d> Parameters;
+	static inline std::unique_ptr<ShaderEx> SkinnedShader;	// デフォルトで使用するシェーダ
 
 	DirectX::SimpleMath::Matrix coordinate_system_transforms[CST_END] = {
 		{-1, 0, 0, 0,
@@ -209,7 +210,7 @@ public:
 	// マテリアルの取り出し
 	void Fetch_Materials(FbxScene* fbx_scene, std::unordered_map<uint64_t, Material>& materials);
 
-	void Render(Shader* shader, int rasterize = 0);
+	void Render(Shader* shader = SkinnedShader.get(), int rasterize = 0);	// デフォルトでシェーダを持っているので未指定でも可
 
 	// paramを編集するimguiウィンドウ
 	void imguiWindow(const char* beginname = "skinned_mesh");

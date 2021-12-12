@@ -13,14 +13,12 @@ private:
 
 	// モデル情報
 	std::unique_ptr<Skinned_Mesh> Model;
-	//std::shared_ptr<Skinned_Mesh> Model;
-	// デフォルトのシェーダー
-	std::unique_ptr<ShaderEx> SkinnedShader = nullptr;
 
 	// 当たり判定可視化
 	std::unique_ptr<Geometric_Capsule> Capcule;
 
 	std::unique_ptr<Shot> Shots;
+	std::unique_ptr<ShotManager> ShotsManager;
 
 	bool Exist = false;
 protected:

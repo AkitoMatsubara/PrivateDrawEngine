@@ -22,17 +22,6 @@
 _CrtDumpMemoryLeaks();	// 呼び出し時、開放されていないポインタがあれば吐く
 */
 
-//-------------------------------------------------------------------
-// 本当はグローバルにしない方が良い
-int frameRate = 60;
-float MIN_FREAM_TIME = 1.0f / frameRate;
-float frameTime = 0;
-LARGE_INTEGER timeStart;
-LARGE_INTEGER timeEnd;
-LARGE_INTEGER timeFreq;
-// fpsを取得するなら0で初期化しないとゴミが混ざってマイナスから始まったりする(かも知れない)
-float fps = 0;
-//-------------------------------------------------------------------
 
 framework* framework::instance = nullptr;
 
@@ -411,8 +400,6 @@ int framework::run() {
 
 			// フレームレート関連 適当に作っちゃったのでこんなところに
 			static float AveFrameTime = 0;
-			static float sumFrameTime = 0;
-			static int cnt = 0;
 #ifdef USE_IMGUI
 			// フレームレート設定
 			ImGui::Begin(u8"フレーム");
@@ -432,34 +419,36 @@ int framework::run() {
 #endif
 			Flip();	// ImGui用
 
-			//[-------------------------------------------------------------------------------
+		//[------------------------------------------------------------------------------- fps計算
 			QueryPerformanceCounter(&timeEnd); // 処理終了後の現時間を取得
 			// 経過時間(秒単位) = (今の時間 - 前フレームの時間) / 周波数
 			frameTime = static_cast<float>(timeEnd.QuadPart - timeStart.QuadPart) / static_cast<float>(timeFreq.QuadPart);
-			fps = 1.0f / frameTime;	// fps算出
+			fps = (frameRate > (1.0f / frameTime)) ? (1.0f / frameTime) : fps;	// fps算出 なんでか数値が制限超えちゃう時がある。制度も取得してるし止めてるはずなんだが…
 			// 平均fpsのさんしゅつ
+			static float sumFrameTime = 0;	// fps合計変数
+			static int count = 0;			// fps加算回数カウンタ
 			if (fps <= static_cast<float>(frameRate))	// たまに数値超えちゃう 要検証
 			{
 				sumFrameTime += fps;	// 加算していく
-				cnt++;	// 何回加算したか
+				count++;	// 加算回数のカウント
 			}
-			if (cnt > frameRate)	// 加算数がfps上限を超えたら除算して平均算出、合計と加算回数をリセット
+			if (count > frameRate)	// 加算数がfps上限を超えたら除算して平均算出、合計と加算回数をリセット
 			{
-				AveFrameTime = sumFrameTime / static_cast<float>(cnt);
+				AveFrameTime = sumFrameTime / static_cast<float>(count);
 				sumFrameTime = 0;
-				cnt = 0;
+				count = 0;
 			}
 
 			if (frameTime < MIN_FREAM_TIME) { // 処理時間が想定時間より短かったら
-				DWORD sleepTime = static_cast<DWORD>((MIN_FREAM_TIME - frameTime) * 1000);	// ミリ秒に変換
-				timeBeginPeriod(1); // 分解能を上げる(こうしないとSleepの精度はガタガタ)
+				DWORD sleepTime = static_cast<DWORD>((MIN_FREAM_TIME - frameTime) * 1000.0f);	// ミリ秒に変換
+				timeBeginPeriod(1); // 分解能を1msに上げる(こうしないとSleepの精度はガタガタらしい)
 				Sleep(sleepTime);   // 寝る
-				timeEndPeriod(1);   // 戻す
+				timeEndPeriod(1);   // 起きたので1msを戻す
 				continue;	// 起きたのでcontinue
 			}
 			timeStart = timeEnd; // 次フレームの開始時間を現フレームの終了時間に
+			//-------------------------------------------------------------------------------]
 		}
-		//-------------------------------------------------------------------------------]
 	}
 
 	delete scenemanager;	// 開放

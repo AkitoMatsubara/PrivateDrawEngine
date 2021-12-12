@@ -275,6 +275,7 @@
     <ClInclude Include="External\imgui\imstb_textedit.h" />
     <ClInclude Include="External\imgui\imstb_truetype.h" />
     <ClInclude Include="Headers\Camera.h" />
+    <ClInclude Include="Headers\UseConputeShader.h" />
     <ClInclude Include="Headers\Enemy.h" />
     <ClInclude Include="Headers\framework.h" />
     <ClInclude Include="Headers\geometric_primitive.h" />
@@ -349,6 +350,7 @@
     </ClCompile>
     <ClCompile Include="Sources\static_mesh.cpp" />
     <ClCompile Include="Sources\texture.cpp" />
+    <ClCompile Include="Sources\UseConputeShader.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

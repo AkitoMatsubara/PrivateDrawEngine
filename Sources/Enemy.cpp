@@ -4,12 +4,6 @@
 
 void Enemy::Initialize() {
 	Model = std::make_unique<Skinned_Mesh>(".\\Resources\\Enemy\\Enemy.fbx");	// 3角形化されていない複数メッシュ キューブ
-	//if (!Model)
-	//{
-	//	Model = std::make_shared<Skinned_Mesh>(".\\Resources\\Enemy\\Enemy.fbx");	// 3角形化されていない複数メッシュ キューブ
-	//}
-	SkinnedShader = std::make_unique<ShaderEx>();
-	SkinnedShader->Create(L"Shaders\\skinned_mesh_vs", L"Shaders\\skinned_mesh_ps");
 
 	// パラメーターの初期化
 	Parameters = std::make_unique<Object3d>();
@@ -24,6 +18,8 @@ void Enemy::Initialize() {
 
 	Shots = std::make_unique<Shot>();
 	Shots->Initialize();
+	ShotsManager = std::make_unique<ShotManager>();
+	ShotsManager->Initialize();
 
 	Capcule = std::make_unique<Geometric_Capsule>(1.0f, 10, 10);
 }
@@ -32,25 +28,24 @@ void Enemy::Update() {
 
 	Move();
 
+	// 弾の更新
+	ShotsManager->Update();
 	Shots->Update();
 
 	// モデルに描画系パラメーターを渡す
-	Model->setPos(Parameters->Position);
-	Model->setAngle(Parameters->Rotate);
-	Model->setSize(Parameters->Scale);
-	Model->setColor(Parameters->Color);
-
+	Model->getParameters()->CopyParam(Parameters.get());
 	Capcule->Parameters->CopyParam(Parameters.get());
-	static const float CAPCULESIZE = 0.6f;
+	static constexpr float CAPCULESIZE = 0.6f;
 	Capcule->Parameters->Scale = DirectX::SimpleMath::Vector3(CAPCULESIZE * 0.7f, CAPCULESIZE, CAPCULESIZE);
 	Capcule->Parameters->Color = DirectX::SimpleMath::Vector4{ 1.0f,1.0f,1.0f,1.0f, };
 	Capcule->Parameters->Rotate.x += 90;
 }
 
 void Enemy::Render() {
+	ShotsManager->Render();
 	//Shots->Render();
 
-	Model->Render(SkinnedShader.get());
+	Model->Render();
 	//Capcule->Render(true);
 }
 
@@ -87,10 +82,10 @@ void Enemy::Move()
 			Parameters->Rotate.y += DirectX::XMConvertToRadians(40);
 		}
 	}
-
-	//if (GetKeyState('Z') < 0){
-	//	Shots->set(Parameters.get());
-	//}
+	if (GetAsyncKeyState('Q') & 1) {
+		// Shotの生成
+		ShotsManager->newSet(Parameters.get());
+	}
 
 	//--------------------------------------------------------
 
