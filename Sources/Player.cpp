@@ -81,7 +81,6 @@ void Player::ImguiPlayer()
 	// ライト調整等グローバル設定
 	ImGui::Begin("Player");
 	ImGui::SliderFloat3("SpherePos", imguiPos, -10.0f, 10.0f);
-
 	ImGui::PopStyleColor(2);
 
 	ImGui::End();
@@ -91,49 +90,41 @@ void Player::ImguiPlayer()
 void Player::Control()
 {
 	static float MOVE_SPEED = 0.05f;
-	static float ROTATE = DirectX::XMConvertToRadians(1);
+	static float ROTATE = DirectX::XMConvertToRadians(2);
 	Parameters->Acceleration = DirectX::SimpleMath::Vector3{ 0.0f, 0.0f, 0.0f };
 	Parameters->Velocity = DirectX::SimpleMath::Vector3{ 0.0f, 0.0f, 0.0f };	// 入力中だけ動かすために毎フレーム初期化 完成とかつけ始めるといらない
 
 	// 回転追加、ジンバルロック発生？要修正 と思ったけどy軸回転しか使わん気するから修正不必要では？これ
 	Parameters->calcForward();
 
-	// 角度制限 角度がオーバーフローしないために
-	//Parameters->Rotate.y = fmodf(Parameters->Rotate.y, 360);	// fmodf(x,y) float型でx/yの余りを返す
-	//Parameters->Orientation.y = fmodf(DirectX::XMConvertToRadians(Parameters->Orientation.y), 360);	// fmodf(x,y) float型でx/yの余りを返す
 	//--------------------------------------------------------
 	//前後処理
 	{
 		if (GetKeyState('W') < 0) {
-			//Parameters->Velocity += Parameters->Vector * MOVE_SPEED;
 			// どうやらSimpleMathは右手座標系らしくて(右手)後方＝(左手)前方となるみたい
 			// これは左右も同様なので下記のように扱うには実質逆方向を使うことになる
 			Parameters->Velocity += Model->getWorld().Backward() * MOVE_SPEED;	// 前方に移動
 		}
 		if (GetKeyState('S') < 0) {
-			Parameters->Velocity -= Parameters->Vector * MOVE_SPEED;
+			Parameters->Velocity -= Model->getWorld().Backward() * MOVE_SPEED;	// 前方に移動
 		}
 	}
 	//回転処理
 	{
 		if (GetKeyState('D') < 0) {
-			//if (GetKeyState(VK_CONTROL) < 0) { Parameters->Velocity += Model->getWorld().Left() * MOVE_SPEED; }
-			////else Parameters->Rotate.y += ROTATE;
 			Parameters->Orientation *= DirectX::SimpleMath::Quaternion::CreateFromAxisAngle(Model->getWorld().Up(), ROTATE);
 
 		}
 
 		if (GetKeyState('A') < 0) {
-			//if (GetKeyState(VK_CONTROL) < 0) { Parameters->Velocity += Model->getWorld().Right() * MOVE_SPEED; }
-			////else Parameters->Rotate.y -= ROTATE;
 			Parameters->Orientation *= DirectX::SimpleMath::Quaternion::CreateFromAxisAngle(Model->getWorld().Down(), ROTATE);
 		}
 		// debug用
 		if (GetKeyState('Q') < 0) {
-			Parameters->Position.y-= 0.1f;
+			Parameters->Position.y-= 0.01f;
 		}
 		if (GetKeyState('E') < 0) {
-			Parameters->Position.y += 0.1f;
+			Parameters->Position.y += 0.01f;
 		}
 	}
 	Parameters->Position += Parameters->Velocity;

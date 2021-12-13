@@ -51,9 +51,9 @@ public:
 		//Vector.x = sinf(DirectX::XMConvertToRadians(Rotate.y));
 		//Vector.y = sinf(-DirectX::XMConvertToRadians(Rotate.x));
 		//Vector.z = cosf(DirectX::XMConvertToRadians(Rotate.y));
-		Vector.x = sinf(DirectX::XMConvertToRadians(Orientation.y));
-		Vector.y = sinf(-DirectX::XMConvertToRadians(Orientation.x));
-		Vector.z = cosf(DirectX::XMConvertToRadians(Orientation.y));
+		Vector.y = sinf((Orientation.x));
+		Vector.x = sinf((Orientation.y));
+		Vector.z = cosf((Orientation.y));
 		Vector.Normalize();	// •ûŒüƒxƒNƒgƒ‹‚È‚Ì‚Å³‹K‰»‚µ‚Æ‚­
 	}
 

@@ -73,11 +73,9 @@ void Enemy::Move()
 	//‰ñ“]ˆ—
 	{
 		if (GetKeyState('D') < 0) {
-			//Parameters->Orientation.y -= DirectX::XMConvertToRadians(40);
 			Parameters->Orientation *= DirectX::SimpleMath::Quaternion::CreateFromAxisAngle(Model->getWorld().Up(), DirectX::XMConvertToRadians(4));
 		}
 		if (GetKeyState('A') < 0) {
-			//Parameters->Orientation.y += DirectX::XMConvertToRadians(40);
 			Parameters->Orientation *= DirectX::SimpleMath::Quaternion::CreateFromAxisAngle(Model->getWorld().Up(), DirectX::XMConvertToRadians(4));
 		}
 	}
@@ -89,6 +87,7 @@ void Enemy::Move()
 	// Target‚Ì•û‚ÉŒü‚­ˆ— “G‚Ì‹““®‚É‘g‚İ‚à‚¤‚Æv‚Á‚Ä‚é‚Ì‚Å‚Æ‚è‚ ‚¦‚¸ì‚Á‚½Ÿ‘æ
 	{
 		DirectX::SimpleMath::Vector3 d = Target.Position - Parameters->Position; // •ûŒüƒxƒNƒgƒ‹
+		if (d.Length() <= 0)return;	// Target‚Æ‚Ì‹——£‚ª0ˆÈ‰º‚Ìê‡A‚±‚ê‚æ‚èæŒTZ‚·‚é‚ÆƒGƒ‰[“f‚©‚ê‚é‚Ì‚Åi‚İ‚Ü‚¹‚ñ
 		d.Normalize();
 
 		DirectX::SimpleMath::Vector3 axis;	// ‰ñ“]²
@@ -99,10 +98,9 @@ void Enemy::Move()
 		if (fabs(angle) > 1e-8f)	// ‰ñ“]Šp‚ª”÷¬‚Èê‡‚ÍA‰ñ“]‚ğs‚í‚È‚¢
 		{
 			DirectX::SimpleMath::Quaternion q;
-			q = DirectX::SimpleMath::Quaternion::CreateFromAxisAngle(axis, angle);// ‰ñ“]²‚Å‰ñ“]Šp‰ñ‚·
+			q = DirectX::SimpleMath::Quaternion::CreateFromAxisAngle(axis, angle);// ²‚Å‰ñ“]Šp‰ñ‚·
 			if (angle < DirectX::XMConvertToRadians(100) && angle> DirectX::XMConvertToDegrees(-100)) {	// ‹–ìŠp200“xˆÈ“à‚É–Ú•W‚ª‚ ‚é‚Æ‚«‚Ì‚İŒü‚­
-				//orientation *= q;	// ˆê‹C‚ÉŒü‚­‚â‚Â
-				Parameters->Orientation = DirectX::SimpleMath::Quaternion::Slerp(Parameters->Orientation, Parameters->Orientation * q, 0.05f);// ™X‚ÉŒü‚­‚â‚Â
+				Parameters->Orientation = DirectX::SimpleMath::Quaternion::Slerp(Parameters->Orientation, Parameters->Orientation * q, 0.02f);// ™X‚ÉŒü‚­‚â‚Â
 			}
 		}
 	}
