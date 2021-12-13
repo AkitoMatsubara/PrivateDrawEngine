@@ -25,7 +25,7 @@ void Shot::Update()
 	// とりあえず前に進む動きを作る
 	static const float MOVE_SPEED = 0.5f;
 	Parameters->Velocity = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };	// 例のごとく毎フレーム加速度リセット
-	Parameters->Velocity += Parameters->Vector * MOVE_SPEED;
+	Parameters->Velocity += Model->getWorld().Backward() * MOVE_SPEED;
 	Parameters->Position += Parameters->Velocity;
 
 	// 自然消滅 適当なので要修正

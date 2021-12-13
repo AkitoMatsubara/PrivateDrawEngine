@@ -144,12 +144,16 @@ void StageManager::Initialize()
 			if (i % 2)inversion = !inversion;	// しかし、奇数列目なら角度反転フラグの「条件」を反転させる
 			if (inversion)	// 180°回転させる
 			{
-				Stages[row + col]->Parameters->Rotate = DirectX::SimpleMath::Vector3(0.0f, 180.0f, 0.0);
+				//Stages[row + col]->Parameters->Rotate = DirectX::SimpleMath::Vector3(0.0f, 180.0f, 0.0);
+				//Stages[row + col]->Parameters->Orientation.CreateFromAxisAngle(Stages[row + col]->Model->getWorld().Up(), 180.0f);
+				Stages[row + col]->Parameters->Orientation = DirectX::SimpleMath::Quaternion::CreateFromYawPitchRoll(DirectX::XMConvertToRadians(180.0f), 0.0f, 0.0);
 				Stages[row + col]->Parameters->Color = DirectX::SimpleMath::Vector4(1.0f, 0.0f, 0.0f, 1.0f);
 			}
 			else
 			{
-				Stages[row + col]->Parameters->Rotate = DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f);
+				//Stages[row + col]->Parameters->Rotate = DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f);
+				//Stages[row + col]->Parameters->Orientation.CreateFromAxisAngle(Stages[row + col]->Model->getWorld().Up(), 0.0f);
+				Stages[row + col]->Parameters->Orientation = DirectX::SimpleMath::Quaternion::CreateFromYawPitchRoll(0.0f, 0.0f, 0.0);
 				Stages[row + col]->Parameters->Color = DirectX::SimpleMath::Vector4(0.0f, 0.0f, 1.0f, 1.0f);
 			}
 			// 一応前方算出

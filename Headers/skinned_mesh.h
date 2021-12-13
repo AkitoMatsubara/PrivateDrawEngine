@@ -218,18 +218,21 @@ public:
 	// セッター
 	void setPos(DirectX::SimpleMath::Vector3 pos) { Parameters->Position = pos; }
 	void setSize(DirectX::SimpleMath::Vector3 Size) { Parameters->Scale = Size; }
-	void setAngle(DirectX::SimpleMath::Vector3 angle) { Parameters->Rotate = angle; }
+	//void setAngle(DirectX::SimpleMath::Vector3 angle) { Parameters->Rotate = angle; }
+	void setAngle(DirectX::SimpleMath::Quaternion orientation) { Parameters->Orientation = orientation; }
 	void setColor(DirectX::SimpleMath::Vector4 color) { Parameters->Color = color; }
 
 	void setPos(float posX, float posY, float posZ) { Parameters->Position = DirectX::SimpleMath::Vector3(posX, posY, posZ); }
 	void setSize(float sizeX, float sizeY, float sizeZ) { Parameters->Scale = DirectX::SimpleMath::Vector3(sizeX, sizeY, sizeZ); }
-	void setAngle(float angleX, float angleY, float angleZ) { Parameters->Rotate = DirectX::SimpleMath::Vector3(angleX, angleY, angleZ); }
+	//void setAngle(float angleX, float angleY, float angleZ) { Parameters->Rotate = DirectX::SimpleMath::Vector3(angleX, angleY, angleZ); }
+	void setAngle(float angleX, float angleY, float angleZ) { Parameters->Orientation = DirectX::SimpleMath::Quaternion(angleX, angleY, angleZ, Parameters->Orientation.w); }
 	void setColor(float r, float g, float b, float a) { Parameters->Color = DirectX::SimpleMath::Vector4(r, g, b, a); }
 
 	// ゲッター
 	DirectX::SimpleMath::Vector3 getPos() { return Parameters->Position; }
 	DirectX::SimpleMath::Vector3 getSize() { return Parameters->Scale; }
-	DirectX::SimpleMath::Vector3 getAngle() { return Parameters->Rotate; }
+	//DirectX::SimpleMath::Vector3 getAngle() { return Parameters->Rotate; }
+	DirectX::SimpleMath::Quaternion getAngle() { return Parameters->Orientation; }
 	DirectX::SimpleMath::Vector4 getColor() { return Parameters->Color; }
 	DirectX::SimpleMath::Matrix getWorld() { return world; }
 	Object3d* getParameters() { return Parameters.get(); }

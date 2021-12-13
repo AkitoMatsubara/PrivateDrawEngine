@@ -134,7 +134,8 @@ Skinned_Mesh::Skinned_Mesh(const char* fbx_filename, int cstNo, bool triangulate
 	Parameters = std::make_unique<Object3d>();
 	Parameters->Position = DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f);
 	Parameters->Scale = DirectX::SimpleMath::Vector3(1.0f, 1.0f, 1.0f);
-	Parameters->Rotate = DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f);
+	//Parameters->Rotate = DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f);
+	Parameters->Orientation = DirectX::SimpleMath::Quaternion(0.0f, 0.0f, 0.0f,1.0f);
 	Parameters->Color = DirectX::SimpleMath::Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
@@ -149,10 +150,10 @@ void Skinned_Mesh::Render(Shader* shader, int rasterize) {
 		DirectX::XMMATRIX C{ XMLoadFloat4x4(&coordinate_system_transforms[CstNo]) * DirectX::XMMatrixScaling(scale_factor,scale_factor,scale_factor) };
 
 		DirectX::XMMATRIX S{ DirectX::XMMatrixScaling(Parameters->Scale.x,Parameters->Scale.y,Parameters->Scale.z) };	// Šgk
-		DirectX::XMMATRIX R{ DirectX::XMMatrixRotationRollPitchYaw(DirectX::XMConvertToRadians(Parameters->Rotate.x), DirectX::XMConvertToRadians(Parameters->Rotate.y), DirectX::XMConvertToRadians(Parameters->Rotate.z)) };	// ‰ñ“]
+		//DirectX::XMMATRIX R{ DirectX::XMMatrixRotationRollPitchYaw(DirectX::XMConvertToRadians(Parameters->Rotate.x), DirectX::XMConvertToRadians(Parameters->Rotate.y), DirectX::XMConvertToRadians(Parameters->Rotate.z)) };	// ‰ñ“]
+		DirectX::XMMATRIX R = DirectX::XMMatrixRotationQuaternion(Parameters->Orientation);
 		DirectX::XMMATRIX T{ DirectX::XMMatrixTranslation(Parameters->Position.x,Parameters->Position.y,Parameters->Position.z) };	// •½sˆÚ“®
 
-		//DirectX::SimpleMath::Matrix world;
 		XMStoreFloat4x4(&world, C * S * R * T);	// ƒ[ƒ‹ƒh•ÏŠ·s—ñì¬
 
 		uint32_t stride{ sizeof(Vertex) };	// stride:‚İ•

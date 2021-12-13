@@ -13,7 +13,8 @@ public:
 	DirectX::SimpleMath::Vector3 Velocity;		// 速度
 
 	DirectX::SimpleMath::Vector3 Scale;		// 大きさ
-	DirectX::SimpleMath::Vector3 Rotate;	// 各軸回転値
+	//DirectX::SimpleMath::Vector3 Rotate;	// 各軸回転値
+	DirectX::SimpleMath::Quaternion Orientation;	// 各軸回転値
 	DirectX::SimpleMath::Vector4 Color;		// 色
 
 	// その他 使ったり使わなかったりするやつ //
@@ -34,7 +35,8 @@ public:
 		Velocity = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
 
 		Scale = DirectX::SimpleMath::Vector3{ 1.0f,1.0f,1.0f };
-		Rotate = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
+		//Rotate = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
+		Orientation = DirectX::SimpleMath::Quaternion{ 0,0,0,1 };
 		Color = DirectX::SimpleMath::Vector4{ 0.0f,0.0f,0.0f,1.0f };
 
 		Exist = false;
@@ -46,9 +48,12 @@ public:
 	// 前方ベクトルを自己の回転角度から計算
 	void calcForward()
 	{
-		Vector.x = sinf(DirectX::XMConvertToRadians(Rotate.y));
-		Vector.y = sinf(-DirectX::XMConvertToRadians(Rotate.x));
-		Vector.z = cosf(DirectX::XMConvertToRadians(Rotate.y));
+		//Vector.x = sinf(DirectX::XMConvertToRadians(Rotate.y));
+		//Vector.y = sinf(-DirectX::XMConvertToRadians(Rotate.x));
+		//Vector.z = cosf(DirectX::XMConvertToRadians(Rotate.y));
+		Vector.x = sinf(DirectX::XMConvertToRadians(Orientation.y));
+		Vector.y = sinf(-DirectX::XMConvertToRadians(Orientation.x));
+		Vector.z = cosf(DirectX::XMConvertToRadians(Orientation.y));
 		Vector.Normalize();	// 方向ベクトルなので正規化しとく
 	}
 
@@ -59,7 +64,8 @@ public:
 		Acceleration = src->Acceleration;
 		Velocity = src->Velocity;
 		Scale = src->Scale;
-		Rotate = src->Rotate;
+		//Rotate = src->Rotate;
+		Orientation = src->Orientation;
 		Color = src->Color;
 		Exist = src->Exist;
 		MaxLife = src->MaxLife;

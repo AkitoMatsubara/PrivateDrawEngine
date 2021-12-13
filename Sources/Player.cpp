@@ -7,14 +7,15 @@
 static float imguiPos[3] = { 0.0f };
 
 void Player::Initialize() {
-	Model = std::make_unique<Skinned_Mesh>(".\\Resources\\Player\\Player.fbx");	// 3角形化されていない複数メッシュ キューブ
+	Model = std::make_unique<Skinned_Mesh>(".\\Resources\\Player\\Player.fbx");
 
 	// パラメーターの初期化
 	Parameters = std::make_unique<Object3d>();
 	Parameters->Position     = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
 	Parameters->Vector       = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
 	Parameters->Acceleration = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
-	Parameters->Rotate       = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
+	//Parameters->Rotate       = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
+	Parameters->Orientation = DirectX::SimpleMath::Quaternion{ 0.0f,0.0f,0.0f,1.0f };
 	Parameters->Scale        = DirectX::SimpleMath::Vector3{ 1.0f,1.0f,1.0f };
 	Parameters->Color        = DirectX::SimpleMath::Vector4{ 1.0f,1.0f,1.0f,1.0f };
 
@@ -41,7 +42,8 @@ void Player::Update() {
 	static const float CAPCULESIZE = 0.7f;
 	Capcule->Parameters->Scale = DirectX::SimpleMath::Vector3(CAPCULESIZE , CAPCULESIZE, CAPCULESIZE);
 	Capcule->Parameters->Color = DirectX::SimpleMath::Vector4{ 1.0f,1.0f,1.0f,1.0f, };
-	Capcule->Parameters->Rotate.x += 90;
+	//Capcule->Parameters->Rotate.x += 90;
+	Capcule->Parameters->Orientation=DirectX::SimpleMath::Quaternion::CreateFromAxisAngle(Model->getWorld().Right(), DirectX::XMConvertToRadians(90));
 	static const float SPHERESIZE = 0.5f;
 	testSphere->Parameters->CopyParam(Parameters.get());
 	testSphere->Parameters->Scale = DirectX::SimpleMath::Vector3{ SPHERESIZE,SPHERESIZE,SPHERESIZE };
@@ -89,7 +91,7 @@ void Player::ImguiPlayer()
 void Player::Control()
 {
 	static float MOVE_SPEED = 0.05f;
-	static float ROTATE = DirectX::XMConvertToRadians(100);
+	static float ROTATE = DirectX::XMConvertToRadians(1);
 	Parameters->Acceleration = DirectX::SimpleMath::Vector3{ 0.0f, 0.0f, 0.0f };
 	Parameters->Velocity = DirectX::SimpleMath::Vector3{ 0.0f, 0.0f, 0.0f };	// 入力中だけ動かすために毎フレーム初期化 完成とかつけ始めるといらない
 
@@ -97,7 +99,8 @@ void Player::Control()
 	Parameters->calcForward();
 
 	// 角度制限 角度がオーバーフローしないために
-	Parameters->Rotate.y = fmodf(Parameters->Rotate.y, 360);	// fmodf(x,y) float型でx/yの余りを返す
+	//Parameters->Rotate.y = fmodf(Parameters->Rotate.y, 360);	// fmodf(x,y) float型でx/yの余りを返す
+	//Parameters->Orientation.y = fmodf(DirectX::XMConvertToRadians(Parameters->Orientation.y), 360);	// fmodf(x,y) float型でx/yの余りを返す
 	//--------------------------------------------------------
 	//前後処理
 	{
@@ -114,13 +117,16 @@ void Player::Control()
 	//回転処理
 	{
 		if (GetKeyState('D') < 0) {
-			if (GetKeyState(VK_CONTROL) < 0) { Parameters->Velocity += Model->getWorld().Left() * MOVE_SPEED; }
-			else Parameters->Rotate.y += ROTATE;
+			//if (GetKeyState(VK_CONTROL) < 0) { Parameters->Velocity += Model->getWorld().Left() * MOVE_SPEED; }
+			////else Parameters->Rotate.y += ROTATE;
+			Parameters->Orientation *= DirectX::SimpleMath::Quaternion::CreateFromAxisAngle(Model->getWorld().Up(), ROTATE);
+
 		}
 
 		if (GetKeyState('A') < 0) {
-			if (GetKeyState(VK_CONTROL) < 0) { Parameters->Velocity += Model->getWorld().Right() * MOVE_SPEED; }
-			else Parameters->Rotate.y -= ROTATE;
+			//if (GetKeyState(VK_CONTROL) < 0) { Parameters->Velocity += Model->getWorld().Right() * MOVE_SPEED; }
+			////else Parameters->Rotate.y -= ROTATE;
+			Parameters->Orientation *= DirectX::SimpleMath::Quaternion::CreateFromAxisAngle(Model->getWorld().Down(), ROTATE);
 		}
 		// debug用
 		if (GetKeyState('Q') < 0) {

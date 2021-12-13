@@ -91,8 +91,16 @@ void SceneTest_2::Update() {
 		// ƒJƒƒ‰‘€ì
 	camera->Operate();
 
-	if (GetAsyncKeyState(VK_RBUTTON) < 0) {
+	if (GetAsyncKeyState(VK_RBUTTON) &1) {
 		EnemyManager::getInstance().newSet(player->Parameters.get());	// ‚¨ŽŽ‚µ‰EƒNƒŠƒbƒN‚Å“G‚ð¶¬
+	}
+	{
+		for (auto it = EnemyManager::getInstance().getEnemys()->begin(); it != EnemyManager::getInstance().getEnemys()->end(); ++it)
+		{
+			// “G‚Ì•`‰æ
+			it->get()->setTarget(*player->Parameters);
+		}
+
 	}
 	EnemyManager::getInstance().Update();
 

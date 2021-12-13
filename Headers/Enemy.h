@@ -20,7 +20,7 @@ private:
 	std::unique_ptr<Shot> Shots;
 	std::unique_ptr<ShotManager> ShotsManager;
 
-	bool Exist = false;
+	Object3d Target;	// ‘_‚¤‘ŠŽè
 protected:
 public:
 	std::unique_ptr<Object3d> Parameters;
@@ -42,8 +42,10 @@ public:
 		return instance;
 	}
 
-	bool getExist() { return Exist; }
-	void setExist(const bool flg) { Exist = flg; }
+	bool getExist() { return Parameters->Exist; }
+	void setExist(const bool flg) { Parameters->Exist = flg; }
+
+	void setTarget(const Object3d &target) { Target = target; }
 };
 
 class EnemyManager
