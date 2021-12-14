@@ -11,12 +11,11 @@ class Shot
 {
 	// 変数
 private:
-	//static std::unique_ptr<Skinned_Mesh> Model;	// staticにしたかったけど上手く行かないので一旦削除
 	std::unique_ptr<Skinned_Mesh> Model;	// そのままモデル
 	std::unique_ptr<Geometric_Sphere> Sphere;	// テストモデル まる
 
 	// デフォルトのシェーダー
-	std::unique_ptr<ShaderEx> SkinnedShader = nullptr;
+	//std::unique_ptr<ShaderEx> SkinnedShader = nullptr;
 
 	float LifeTimer = 0;	// 射出時間の保有
 	bool Exist = false;		// 発射済みフラグ
@@ -52,8 +51,15 @@ private:
 	std::vector<std::unique_ptr<Shot>> Shots;
 
 public:
+	// 撃ち手が誰か
+	enum MASTER
+	{
+		PLAYER,
+		ENEMY,
+	};
+	MASTER Master;
 
-	void Initialize() { Shots.clear(); }
+	void Initialize(MASTER ms) { Shots.clear(); Master = ms; }
 	void Update();	// 存在していない弾は内部で削除している
 	void Render();
 

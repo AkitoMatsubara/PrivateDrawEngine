@@ -17,9 +17,6 @@ private:
 	// 当たり判定可視化
 	std::unique_ptr<Geometric_Capsule> Capcule;
 
-	std::unique_ptr<Shot> Shots;
-	std::unique_ptr<ShotManager> ShotsManager;
-
 	Object3d Target;	// 狙う相手
 protected:
 public:
@@ -35,6 +32,8 @@ public:
 	void Initialize();
 	void Update();
 	void Render();
+
+	void FocusTarget(float focusRange);	// ターゲット方向へ向く
 
 	static Enemy* getInstance()
 	{
@@ -52,10 +51,10 @@ class EnemyManager
 {
 private:
 	std::vector<std::unique_ptr<Enemy>> Enemys;
-
+	std::unique_ptr<ShotManager> shotsManager;	// EnemyManager内で管理したほうが良い気がした
 public:
 
-	void Initialize() { Enemys.clear(); }
+	void Initialize();
 	void Update();	// 存在していない弾は内部で削除している
 	void Render();
 
@@ -69,6 +68,7 @@ public:
 	void newSet(const Object3d* initData);
 	void push(std::unique_ptr<Enemy> enemy) { Enemys.emplace_back(std::move(enemy)); };	// 配列に格納する
 
+	ShotManager* getShotManager() { return shotsManager.get(); }
 	size_t getSize() { return Enemys.size(); };
 	std::vector<std::unique_ptr<Enemy>>* getEnemys() { return &Enemys; }	// 格納コンテナを返す 外部から参照したいときに
 };

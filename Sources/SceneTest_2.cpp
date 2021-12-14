@@ -215,11 +215,13 @@ void SceneTest_2::imguiUpdate() {
 	ImGui::Begin("SceneImGui");
 	ImGui::SliderFloat3("Light_Direction", light_dir, -10.0f, 10.0f);
 	ImGui::Separator();
-	ImGui::Text("Shots: %d", player->getShotManager()->getSize());
+	ImGui::Text("PlayerShots: %d", player->getShotManager()->getSize());
+	ImGui::Text("EnemyShots: %d", EnemyManager::getInstance().getShotManager()->getSize());
 	ImGui::Text("Enemys: %d", EnemyManager::getInstance().getSize());
 	ImGui::Text("StageParts: %d", StageManager::getInstance().getSize());
 	ImGui::Separator();	// •ªŠ„ü
-	ImGui::Text("Total Objects: %d", EnemyManager::getInstance().getEnemys()->size() + player->getShotManager()->getSize() + StageManager::getInstance().getSize());
+	ImGui::Text("Total Objects: %d", StageManager::getInstance().getSize() + EnemyManager::getInstance().getEnemys()->size()
+										+ player->getShotManager()->getSize() + EnemyManager::getInstance().getShotManager()->getSize());
 
 	ImGui::PopStyleColor(2);	// ImGui::PushStyleColorˆê‚Â‚É‚Â‚«ˆø”ˆê‚Â‘‚¦‚é‚Á‚Û‚¢
 	ImGui::End();

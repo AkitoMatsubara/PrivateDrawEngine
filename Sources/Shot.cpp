@@ -11,9 +11,6 @@ void Shot::Initialize()
 	if(!Model)	Model = std::make_unique<Skinned_Mesh>(".\\Resources\\Shots\\Shot.fbx");
 	Sphere = std::make_unique<Geometric_Sphere>();
 
-	SkinnedShader = std::make_unique<ShaderEx>();
-	SkinnedShader->Create(L"Shaders\\skinned_mesh_vs", L"Shaders\\skinned_mesh_ps");
-
 	Parameters = std::make_unique<Object3d>();
 
 	LifeTimer = 0;
@@ -23,7 +20,7 @@ void Shot::Initialize()
 void Shot::Update()
 {
 	// とりあえず前に進む動きを作る
-	static const float MOVE_SPEED = 0.5f;
+	static const float MOVE_SPEED = 0.1f;
 	Parameters->Velocity = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };	// 例のごとく毎フレーム加速度リセット
 	Parameters->Velocity += Model->getWorld().Backward() * MOVE_SPEED;
 	Parameters->Position += Parameters->Velocity;
@@ -38,14 +35,13 @@ void Shot::Update()
 	// モデルに描画系パラメーターを渡す
 	Sphere->Parameters->CopyParam(Parameters.get());
 	Sphere->Parameters->Color = DirectX::SimpleMath::Vector4{ 1.0f,LifeTimer/20.0f,1.0f,1.0f };
-	//Sphere->Parameters->CopyParam(Model->getParameters());
 	Model->getParameters()->CopyParam(Parameters.get());
 }
 
 void Shot::Render()
 {
 	if (Exist) {
-		Model->Render(SkinnedShader.get());
+		Model->Render();
 		//Sphere->Render();
 	}
 }
@@ -68,17 +64,37 @@ void ShotManager::Update()
 		}
 		else {	// 存在が確認されたので処理します
 			shots->get()->Update();
-			for (auto enem = EnemyManager::getInstance().getEnemys()->begin(); enem != EnemyManager::getInstance().getEnemys()->end(); ++enem)
+			if (Master == MASTER::PLAYER)
 			{
-				// 大前提判定を取る者の存在判定 両方とも存在している且つ
-				if (shots->get()->getExist() && enem->get()->getExist())
+				for (auto enem = EnemyManager::getInstance().getEnemys()->begin(); enem != EnemyManager::getInstance().getEnemys()->end(); ++enem)
 				{
-					// 当たり判定、戻り値trueであれば
-					if (isHit(enem->get()->Parameters.get()))
+					// 大前提判定を取る者の存在判定 両方とも存在している且つ
+					if (shots->get()->getExist() && enem->get()->getExist())
 					{
-						enem->get()->setExist(false);
-						//shots->get()->setExist(false);	//  TODO: 存在消す処理をコメントアウトしているのはデバッグ用 一度の弾で複数体消すため
-						//break;
+						// 当たり判定、戻り値trueであれば
+						if (isHit(enem->get()->Parameters.get()))
+						{
+							enem->get()->setExist(false);
+							//shots->get()->setExist(false);	//TODO: 存在消す処理をコメントアウトしているのはデバッグ用 一度の弾で複数体消すため
+							//break;
+						}
+					}
+				}
+			}
+			else if (Master == MASTER::ENEMY)
+			{
+				for (auto enem = EnemyManager::getInstance().getEnemys()->begin(); enem != EnemyManager::getInstance().getEnemys()->end(); ++enem)
+				{
+					// 大前提判定を取る者の存在判定 両方とも存在している且つ
+					if (shots->get()->getExist() && Player::getInstance()->Parameters->Exist)
+					{
+						// 当たり判定、戻り値trueであれば
+						if (isHit(Player::getInstance()->Parameters.get()))
+						{
+							Player::getInstance()->Parameters->Exist = false;
+							//shots->get()->setExist(false);	//TODO: 存在消す処理をコメントアウトしているのはデバッグ用 一度の弾で複数体消すため
+							//break;
+						}
 					}
 				}
 			}

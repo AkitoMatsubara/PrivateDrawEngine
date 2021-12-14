@@ -20,7 +20,7 @@ void Player::Initialize() {
 	Parameters->Color        = DirectX::SimpleMath::Vector4{ 1.0f,1.0f,1.0f,1.0f };
 
 	ShotsManager = std::make_unique<ShotManager>();
-	ShotsManager->Initialize();
+	ShotsManager->Initialize(ShotManager::MASTER::PLAYER);
 
 	Capcule = std::make_unique<Geometric_Capsule>(1.0f, 10, 10);
 	testSphere = std::make_unique<Geometric_Sphere>();
@@ -90,7 +90,7 @@ void Player::ImguiPlayer()
 void Player::Control()
 {
 	static float MOVE_SPEED = 0.05f;
-	static float ROTATE = DirectX::XMConvertToRadians(2);
+	static float ROTATE = DirectX::XMConvertToRadians(3);
 	Parameters->Acceleration = DirectX::SimpleMath::Vector3{ 0.0f, 0.0f, 0.0f };
 	Parameters->Velocity = DirectX::SimpleMath::Vector3{ 0.0f, 0.0f, 0.0f };	// 入力中だけ動かすために毎フレーム初期化 完成とかつけ始めるといらない
 
@@ -119,13 +119,13 @@ void Player::Control()
 		if (GetKeyState('A') < 0) {
 			Parameters->Orientation *= DirectX::SimpleMath::Quaternion::CreateFromAxisAngle(Model->getWorld().Down(), ROTATE);
 		}
-		// debug用
-		if (GetKeyState('Q') < 0) {
-			Parameters->Position.y-= 0.01f;
-		}
-		if (GetKeyState('E') < 0) {
-			Parameters->Position.y += 0.01f;
-		}
+		//// debug用 上下降
+		//if (GetKeyState('Q') < 0) {
+		//	Parameters->Position.y-= 0.01f;
+		//}
+		//if (GetKeyState('E') < 0) {
+		//	Parameters->Position.y += 0.01f;
+		//}
 	}
 	Parameters->Position += Parameters->Velocity;
 
