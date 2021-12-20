@@ -24,6 +24,8 @@ private:
 	std::unique_ptr<Geometric_Sphere> testSphere;
 
 	std::unique_ptr<ShotManager> ShotsManager;
+	inline static Player* instance;
+
 public:
 	std::unique_ptr<Object3d> Parameters;
 
@@ -42,7 +44,6 @@ public:
 	ShotManager* getShotManager() { return ShotsManager.get(); }
 	static Player* getInstance()
 	{
-		static Player* instance;
 		return instance;
 	}
 };

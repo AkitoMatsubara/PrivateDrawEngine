@@ -88,7 +88,7 @@ void SceneTest_2::Update() {
 	//pos.y = 0.0f;
 	//camera->SetPos(pos);
 
-		// カメラ操作
+	// カメラ操作
 	camera->Operate();
 
 	if (GetAsyncKeyState(VK_RBUTTON) &1) {
@@ -212,8 +212,8 @@ void SceneTest_2::imguiUpdate() {
 	// 3D用パラメータ
 	player->ImguiPlayer();
 	// ライト調整等グローバル設定
-	ImGui::Begin("SceneImGui");
-	ImGui::SliderFloat3("Light_Direction", light_dir, -10.0f, 10.0f);
+	ImGui::Begin("SceneImGui Object Counts");
+	//ImGui::SliderFloat3("Light_Direction", light_dir, -10.0f, 10.0f);
 	ImGui::Separator();
 	ImGui::Text("PlayerShots: %d", player->getShotManager()->getSize());
 	ImGui::Text("EnemyShots: %d", EnemyManager::getInstance().getShotManager()->getSize());

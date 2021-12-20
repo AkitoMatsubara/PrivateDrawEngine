@@ -16,12 +16,16 @@ void Enemy::Initialize() {
 	Parameters->Scale = DirectX::SimpleMath::Vector3{ 1.0f,1.0f,1.0f };
 	Parameters->Color = DirectX::SimpleMath::Vector4{ 1.0f,1.0f,1.0f,1.0f };
 
+	state = ENEMYSTATE::GOTARGET;
+	ShotInterval = 5.0f;
+	interval = 0.0f;
+	shoted = false;
+
 	Capcule = std::make_unique<Geometric_Capsule>(1.0f, 10, 10);
 }
 
 void Enemy::Update() {
 	Move();	// うごかすところ
-
 
 	// モデルに描画系パラメーターを渡す
 	Model->getParameters()->CopyParam(Parameters.get());
@@ -42,32 +46,32 @@ void Enemy::Move()
 {
 	static float speed = 0.01f;
 	Parameters->Acceleration = DirectX::SimpleMath::Vector3{ 0.0f, 0.0f, 0.0f };
-	Parameters->Velocity = DirectX::SimpleMath::Vector3{ 0.0f, 0.0f, 0.0f };	// 入力中だけ動かすために毎フレーム初期化 普通いらない
+	Parameters->Velocity = DirectX::SimpleMath::Vector3{ 0.0f, 0.0f, 0.0f };	// 入力中だけ動かすために毎フレーム初期化 普通いらない?
 
 	Parameters->calcForward();
 	static float MOVE_SPEED = 0.02f;
 
 	//--------------------------------------------------------
-//前進処理
-	if (GetKeyState('W') < 0) {
-		Parameters->Velocity += Model->getWorld().Backward() * MOVE_SPEED;	// 前方に移動
-	}
-	//後退処理
-	if (GetKeyState('S') < 0) {
-		Parameters->Velocity += Model->getWorld().Backward() * MOVE_SPEED;	// 前方に移動
-	}
-	//回転処理
+	switch (state)
 	{
-		//if (GetKeyState('D') < 0) {
-		//	Parameters->Orientation *= DirectX::SimpleMath::Quaternion::CreateFromAxisAngle(Model->getWorld().Up(), DirectX::XMConvertToRadians(4));
-		//}
-		//if (GetKeyState('A') < 0) {
-		//	Parameters->Orientation *= DirectX::SimpleMath::Quaternion::CreateFromAxisAngle(Model->getWorld().Up(), DirectX::XMConvertToRadians(4));
-		//}
+	case ENEMYSTATE::GOTARGET:
+		// Targetの方に向く処理 敵の挙動に組み込もうと思ってるのでとりあえず作った次第
+		FocusTarget(360.0f, 100.0f);
+		Parameters->Velocity += Model->getWorld().Backward() * MOVE_SPEED;	// モデル前方に移動
+		break;
+	case ENEMYSTATE::SHOT:
+		Shot();
 	}
 
-	// Targetの方に向く処理 敵の挙動に組み込もうと思ってるのでとりあえず作った次第
-	FocusTarget(180.0f);
+	// TODO デバッグ用 消そうね
+	if (GetAsyncKeyState('Q') <0)
+	{
+		state = ENEMYSTATE::SHOT;
+	}
+	if (GetAsyncKeyState('P') <0)
+	{
+		state = ENEMYSTATE::GOTARGET;
+	}
 
 	Parameters->Position += Parameters->Velocity;
 	//--------------------------------------------------------
@@ -76,16 +80,16 @@ void Enemy::Move()
 	//Position += Velocity;
 }
 
-void Enemy::FocusTarget(float focusRange)
+void Enemy::FocusTarget(float focusAngle, float focusRange)
 {
-	float fov = DirectX::XMConvertToRadians(focusRange * 0.5f);	// タゲを追う視野角を半分に計算。-fov～fovの角度にいたら追跡開始するので
+	float fov = DirectX::XMConvertToRadians(focusAngle * 0.5f);	// タゲを追う視野角を半分に計算。-fov～fovの角度にいたら追跡開始するので
 	DirectX::SimpleMath::Vector3 d = Target.Position - Parameters->Position; // 方向ベクトル
-	if (d.Length() <= 0)return;	// ターゲットとの距離が0以下の場合、これより先卦算するとエラー吐かれるので進みません
+	if (d.Length() <= 0 || d.Length() >= focusRange)return;	// ターゲットとの距離が0以下 もしくは 有効距離外の場合 は向きません
 	d.Normalize();
 
 	DirectX::SimpleMath::Vector3 axis;	// 回転軸
-	DirectX::SimpleMath::Vector3 forward = Model->getWorld().Backward();	// 回転軸 SimpleMathの関係上逆です
-	FLOAT		angle;	// 回転角
+	DirectX::SimpleMath::Vector3 forward = Model->getWorld().Backward();	// 回転軸 SimpleMathの関係上座標系が逆です
+	FLOAT angle;	// 回転角
 	forward.Cross(d, axis);	// 前方と目標の外積
 	if (axis == DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f))return;	// 軸の計算に失敗したら先には進まない 失敗…？
 	angle = acosf(forward.Dot(d));	// 前方と目標の間の角度
@@ -99,6 +103,26 @@ void Enemy::FocusTarget(float focusRange)
 	}
 }
 
+void Enemy::Shot()
+{
+	if (!shoted)
+	{
+		EnemyManager::getInstance().getShotManager()->newSet(Parameters.get());
+		StageManager::getInstance().Check(*Parameters);	// 床にダメージ
+		shoted = true;
+	}
+	else
+	{
+		interval += 0.1f;
+	}
+	if(interval>=ShotInterval)
+	{
+		interval = 0.0f;
+		shoted = false;
+	}
+
+}
+
 //--------------------------------------------------//
 //					EnemyManager					//
 //--------------------------------------------------//
@@ -109,30 +133,28 @@ void EnemyManager::Initialize()
 
 	shotsManager = std::make_unique<ShotManager>();
 	shotsManager->Initialize(ShotManager::MASTER::ENEMY);
-
 }
 
 void EnemyManager::Update()
 {
 	// 存在フラグの立っていない要素は削除する
-	for (auto it = Enemys.begin(); it != Enemys.end();)
+	for (auto enem = Enemys.begin(); enem != Enemys.end();)
 	{
-		if (!it->get()->getExist())
+		if (!enem->get()->getExist())
 		{
-			it = Enemys.erase(it);	//要素削除は次のイテレータを返すため手動で次に進む必要がない
+			enem = Enemys.erase(enem);	//要素削除は次のイテレータを返すため手動で次に進む必要がない
 		}
 		else {
 			// 存在している敵の更新
-			it->get()->Update();
-			if (GetAsyncKeyState('Q') < 0) {
-				// Shotの生成
-				// TODO: 暫定 要修正
-				shotsManager->newSet(it->get()->Parameters.get());
-				StageManager::getInstance().Check(*it->get()->Parameters);	// 床にダメージ
+			enem->get()->Update();
+			//if (GetAsyncKeyState('Q') < 0) {
+			//	// Shotの生成
+			//	// TODO: 暫定 要修正
+			//	shotsManager->newSet(it->get()->Parameters.get());
+			//	StageManager::getInstance().Check(*it->get()->Parameters);	// 床にダメージ
+			//}
 
-			}
-
-			++it;	// 次へ
+			++enem;	// 次へ
 		}
 	}
 
@@ -141,10 +163,10 @@ void EnemyManager::Update()
 
 void EnemyManager::Render()
 {
-	for (auto it = Enemys.begin(); it != Enemys.end(); ++it)
+	for (auto enem = Enemys.begin(); enem != Enemys.end(); ++enem)
 	{
 		// 敵の描画
-		it->get()->Render();
+		enem->get()->Render();
 	}
 	shotsManager->Render();
 }

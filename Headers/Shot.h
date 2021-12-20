@@ -70,5 +70,5 @@ public:
 	size_t getSize() { return Shots.size(); };
 	std::vector<std::unique_ptr<Shot>>* getShots() { return &Shots; }	// 格納コンテナを返す 外部から参照したいときに
 
-	bool isHit(const Object3d* Capcule);
+	bool isHit(const Object3d* capcule,const Shot* shots);
 };

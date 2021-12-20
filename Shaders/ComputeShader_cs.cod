@@ -46,26 +46,17 @@
 // -------------------- ----- ------ -------- -------- ------- ------
 // no Output
 cs_4_0
-dcl_globalFlags refactoringAllowed | skipOptimization
+dcl_globalFlags refactoringAllowed
 dcl_constantbuffer CB2[1], immediateIndexed
 dcl_uav_structured u0, 4
 dcl_input vThreadID.x
 dcl_temps 1
 dcl_thread_group 1, 1, 1
-//
-// Initial variable locations:
-//   vThreadID.x <- DTid.x; vThreadID.y <- DTid.y; vThreadID.z <- DTid.z
-//
-#line 33 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine\Shaders\ComputeShader_cs.hlsl"
-sincos r0.x, null, cb2[0].x
-mov r0.y, l(1)
-iadd r0.y, r0.y, vThreadID.x
-utof r0.y, r0.y
-div r0.x, r0.x, r0.y
-mov r0.y, -r0.x
-max r0.x, r0.y, r0.x
+iadd r0.x, vThreadID.x, l(1)
+utof r0.x, r0.x
+sincos r0.y, null, cb2[0].x
+div r0.x, r0.y, r0.x
+mov r0.x, |r0.x|
 store_structured u0.x, vThreadID.x, l(0), r0.x
-
-#line 34
 ret 
-// Approximately 9 instruction slots used
+// Approximately 7 instruction slots used

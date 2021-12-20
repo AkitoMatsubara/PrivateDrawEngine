@@ -14,7 +14,6 @@ void Player::Initialize() {
 	Parameters->Position     = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
 	Parameters->Vector       = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
 	Parameters->Acceleration = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
-	//Parameters->Rotate       = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
 	Parameters->Orientation = DirectX::SimpleMath::Quaternion{ 0.0f,0.0f,0.0f,1.0f };
 	Parameters->Scale        = DirectX::SimpleMath::Vector3{ 1.0f,1.0f,1.0f };
 	Parameters->Color        = DirectX::SimpleMath::Vector4{ 1.0f,1.0f,1.0f,1.0f };
@@ -24,6 +23,7 @@ void Player::Initialize() {
 
 	Capcule = std::make_unique<Geometric_Capsule>(1.0f, 10, 10);
 	testSphere = std::make_unique<Geometric_Sphere>();
+	instance = this;	// 1P想定のみ 2P不可
 }
 
 void Player::Update() {
@@ -36,6 +36,7 @@ void Player::Update() {
 	Model->getParameters()->CopyParam(Parameters.get());
 
 	//-----------------------------------------------------------------------------------------------------------------------------------------------------
+#ifdef _DEBUG
 	Capcule->Parameters->CopyParam(Parameters.get());	// Playerに付随するように位置を同期
 	DirectX::SimpleMath::Vector3 pPos = Parameters->Position;
 	Object3d* cPos = Capcule->Parameters.get();
@@ -61,15 +62,17 @@ void Player::Update() {
 	{
 		testSphere->Parameters->Color = DirectX::SimpleMath::Vector4{ 1.0f,1.0f,1.0f,1.0f };
 	}
+#endif
 	//-----------------------------------------------------------------------------------------------------------------------------------------------------
 }
 
 void Player::Render() {
 	ShotsManager->Render();
-
 	Model->Render();
+#ifdef _DEBUG
 	Capcule->Render(true);
 	testSphere->Render(true);
+#endif
 }
 
 void Player::ImguiPlayer()

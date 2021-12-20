@@ -75,7 +75,7 @@ void Camera::Operate()
 {
 	// ƒJƒƒ‰‘€ì
 	static float cameraSpeed = 0.05f;
-	static float cAngle = 0.0f;	// ‰ñ“]Šp
+	static float cAngle = 0.0f;		// ‰ñ“]Šp
 	static float cDist = -10.0f;	// ‹——£
 	static const float MIN_DIST = 3.0f;
 	static const float MAX_DIST = 10.0f;

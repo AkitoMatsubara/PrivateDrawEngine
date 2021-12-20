@@ -38,7 +38,7 @@ public:
 		Orientation = DirectX::SimpleMath::Quaternion{ 0.0f,0.0f,0.0f,1.0f };
 		Color = DirectX::SimpleMath::Vector4{ 0.0f,0.0f,0.0f,1.0f };
 
-		Exist = false;
+		Exist = true;
 		MaxLife = 1;
 		CurLife = MaxLife;
 	};

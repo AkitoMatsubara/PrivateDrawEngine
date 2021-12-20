@@ -5,11 +5,10 @@
 
 #include "XMFLOAT_Helper.h"
 
-
 void Shot::Initialize()
 {
-	if(!Model)	Model = std::make_unique<Skinned_Mesh>(".\\Resources\\Shots\\Shot.fbx");
-	Sphere = std::make_unique<Geometric_Sphere>();
+	Model = std::make_unique<Skinned_Mesh>(".\\Resources\\Shots\\Shot.fbx");
+	//Sphere = std::make_unique<Geometric_Sphere>();
 
 	Parameters = std::make_unique<Object3d>();
 
@@ -33,8 +32,8 @@ void Shot::Update()
 	}
 
 	// モデルに描画系パラメーターを渡す
-	Sphere->Parameters->CopyParam(Parameters.get());
-	Sphere->Parameters->Color = DirectX::SimpleMath::Vector4{ 1.0f,LifeTimer/20.0f,1.0f,1.0f };
+	//Sphere->Parameters->CopyParam(Parameters.get());
+	//Sphere->Parameters->Color = DirectX::SimpleMath::Vector4{ 1.0f,LifeTimer/20.0f,1.0f,1.0f };
 	Model->getParameters()->CopyParam(Parameters.get());
 }
 
@@ -60,11 +59,11 @@ void ShotManager::Update()
 	{
 		if (!shots->get()->getExist())	// こいつ…存在していないぞ!?
 		{
-			shots = this->Shots.erase(shots);	// 存在していないところを消す
+			shots = this->Shots.erase(shots);	// 存在していない弾は消す
 		}
 		else {	// 存在が確認されたので処理します
 			shots->get()->Update();
-			if (Master == MASTER::PLAYER)
+			if (Master == MASTER::PLAYER)	// プレイヤーが発射した弾の処理 敵とは主に当たり判定の処理が違う
 			{
 				for (auto enem = EnemyManager::getInstance().getEnemys()->begin(); enem != EnemyManager::getInstance().getEnemys()->end(); ++enem)
 				{
@@ -72,29 +71,26 @@ void ShotManager::Update()
 					if (shots->get()->getExist() && enem->get()->getExist())
 					{
 						// 当たり判定、戻り値trueであれば
-						if (isHit(enem->get()->Parameters.get()))
+						if (isHit(enem->get()->Parameters.get(), shots->get()))
 						{
 							enem->get()->setExist(false);
-							//shots->get()->setExist(false);	//TODO: 存在消す処理をコメントアウトしているのはデバッグ用 一度の弾で複数体消すため
-							//break;
+							// TODO 存在消す処理をコメントアウトしているのはデバッグ用 一度の弾で複数体消すため
+							shots->get()->setExist(false);
+							break;
 						}
 					}
 				}
 			}
-			else if (Master == MASTER::ENEMY)
+			else if (Master == MASTER::ENEMY)	// 敵が発射した弾の処理
 			{
-				for (auto enem = EnemyManager::getInstance().getEnemys()->begin(); enem != EnemyManager::getInstance().getEnemys()->end(); ++enem)
+				// TODO インスタンスの使用 現状の一人プレイは問題ないが2Pを追加するとなれば改修必須
+				if (shots->get()->getExist() && Player::getInstance()->Parameters->Exist)
 				{
-					// 大前提判定を取る者の存在判定 両方とも存在している且つ
-					if (shots->get()->getExist() && Player::getInstance()->Parameters->Exist)
+					if (isHit(Player::getInstance()->Parameters.get(), shots->get()))
 					{
-						// 当たり判定、戻り値trueであれば
-						if (isHit(Player::getInstance()->Parameters.get()))
-						{
-							Player::getInstance()->Parameters->Exist = false;
-							//shots->get()->setExist(false);	//TODO: 存在消す処理をコメントアウトしているのはデバッグ用 一度の弾で複数体消すため
-							//break;
-						}
+						// あたってます
+						shots->get()->setExist(false);
+						//break;
 					}
 				}
 			}
@@ -120,14 +116,11 @@ void ShotManager::newSet(const Object3d* initData)
 	push(std::move(Shots));
 }
 
-bool ShotManager::isHit(const Object3d* Capcule)
+bool ShotManager::isHit(const Object3d* capcule, const Shot* shots)
 {
-	for (auto it = Shots.begin(); it != Shots.end(); ++it)
+	if (Judge::getInstance()->c_b(*capcule, 1.0f, *shots->Parameters))
 	{
-		if (Judge::getInstance()->c_b(*Capcule, 1.0f, *it->get()->Parameters))
-		{
-			return true;
-		}
+		return true;
 	}
-		return false;
+	return false;
 }

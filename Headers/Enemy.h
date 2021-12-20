@@ -17,8 +17,21 @@ private:
 	// 当たり判定可視化
 	std::unique_ptr<Geometric_Capsule> Capcule;
 
-	Object3d Target;	// 狙う相手
-protected:
+	Object3d Target;	// 狙う相手 位置
+
+	enum ENEMYSTATE
+	{
+		GOTARGET,	// ターゲット方向へ進む
+		SHOT,		// 前方に撃つ
+		END			// 動かない
+
+	};
+	ENEMYSTATE state;	// 挙動をステート分けするため
+
+	float ShotInterval;	// 発射間隔
+	float interval = 0.0f;
+	bool shoted = false;
+
 public:
 	std::unique_ptr<Object3d> Parameters;
 	// 関数
@@ -33,18 +46,21 @@ public:
 	void Update();
 	void Render();
 
-	void FocusTarget(float focusRange);	// ターゲット方向へ向く
+	/// <summary>ターゲット方向へ向く</summary>
+	/// <param name="focusAngle">視野角度 0.0f～360.0f</param>
+	/// <param name="focusRange">視界距離</param>
+	void FocusTarget(float focusAngle,float focusRange);
 
-	static Enemy* getInstance()
-	{
-		static Enemy* instance;
-		return instance;
-	}
+	/// <summary>弾を撃つ</summary>
+	void Shot();
+
+
 
 	bool getExist() { return Parameters->Exist; }
 	void setExist(const bool flg) { Parameters->Exist = flg; }
 
 	void setTarget(const Object3d &target) { Target = target; }
+	const Object3d* getTarget() { return &Target; }
 };
 
 class EnemyManager
