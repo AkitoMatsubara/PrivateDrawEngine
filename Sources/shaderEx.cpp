@@ -56,7 +56,10 @@ HRESULT ShaderEx::create_vs_from_cso(ID3D11Device* device,	// shaderEx.cppでしか
 	FILE* fp = nullptr;
 	errno_t error;
 	error = fopen_s(&fp, cso_name, "rb");	// ファイルポインタ、ファイル名、rb：読み取り専用のバイナリモード
-	if (error != 0)assert("CSO File not found");
+	if (error != 0)
+	{
+		assert("CSO File not found");
+	}
 
 	fseek(fp, 0, SEEK_END);	// ファイルポインタ、移動バイト数、ファイルの先頭(_SET)、現在位置(_CUR)、終端(_END)
 	long cso_sz = ftell(fp);	// ファイルの読み書き位置を取得
@@ -244,145 +247,109 @@ HRESULT ShaderEx::create_cs_from_cso(ID3D11Device* device, const char* cso_name,
 }
 
 
-bool ShaderEx::Create(const WCHAR* vsfilename, const WCHAR* psfilename)
+bool ShaderEx::CreatePS(const WCHAR* psfilename)
 {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
 	ID3D11DeviceContext* device_context = FRAMEWORK->GetDeviceContext();
 	UINT numElements = sizeof(input_element_desc) / sizeof(input_element_desc[0]);
 	//ワイド文字からマルチバイト文字へ変換
 	char fullname[256];
-	memset(fullname, NULL, sizeof(fullname));
-	wcstombs(fullname, vsfilename, wcslen(vsfilename));
-	sprintf(fullname, "%s%s", fullname, ".cso");
-	create_vs_from_cso(device, fullname, VS.GetAddressOf(), InputLayout.GetAddressOf(), input_element_desc, numElements);
 
 	memset(fullname, NULL, sizeof(fullname));
 	wcstombs(fullname, psfilename, wcslen(psfilename));
 	sprintf(fullname, "%s%s", fullname, ".cso");
 	create_ps_from_cso(device, fullname, PS.GetAddressOf());
 
-	// 入力レイアウト設定
-	device_context->IASetInputLayout(InputLayout.Get());
-
-
 	return false;
+
 }
 
-bool ShaderEx::Create(const WCHAR* vsfilename, const WCHAR* gsfilename, const WCHAR* psfilename)
+bool ShaderEx::CreateVS(const WCHAR* vsfilename)
 {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
 	ID3D11DeviceContext* device_context = FRAMEWORK->GetDeviceContext();
 	UINT numElements = sizeof(input_element_desc) / sizeof(input_element_desc[0]);
 	//ワイド文字からマルチバイト文字へ変換
 	char fullname[256];
+
 	memset(fullname, NULL, sizeof(fullname));
 	wcstombs(fullname, vsfilename, wcslen(vsfilename));
 	sprintf(fullname, "%s%s", fullname, ".cso");
 	create_vs_from_cso(device, fullname, VS.GetAddressOf(), InputLayout.GetAddressOf(), input_element_desc, numElements);
-
-	memset(fullname, NULL, sizeof(fullname));
-	wcstombs(fullname, gsfilename, wcslen(gsfilename));
-	sprintf(fullname, "%s%s", fullname, ".cso");
-	create_gs_from_cso(device, fullname, GS.GetAddressOf());
-
-	memset(fullname, NULL, sizeof(fullname));
-	wcstombs(fullname, psfilename, wcslen(psfilename));
-	sprintf(fullname, "%s%s", fullname, ".cso");
-	create_ps_from_cso(device, fullname, PS.GetAddressOf());
 
 	// 入力レイアウト設定
 	device_context->IASetInputLayout(InputLayout.Get());
 
 
 	return false;
+
 }
 
-bool ShaderEx::Create(const WCHAR* vsfilename, const WCHAR* hsfilename, const WCHAR* dsfilename, const WCHAR* psfilename)
+bool ShaderEx::CreateDS(const WCHAR* dsfilename)
 {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
 	ID3D11DeviceContext* device_context = FRAMEWORK->GetDeviceContext();
 	UINT numElements = sizeof(input_element_desc) / sizeof(input_element_desc[0]);
-
 	//ワイド文字からマルチバイト文字へ変換
 	char fullname[256];
-	memset(fullname, NULL, sizeof(fullname));
-	wcstombs(fullname, vsfilename, wcslen(vsfilename));
-	sprintf(fullname, "%s%s", fullname, ".cso");
-	create_vs_from_cso(device, fullname, VS.GetAddressOf(), InputLayout.GetAddressOf(), input_element_desc, numElements);
-
-	memset(fullname, NULL, sizeof(fullname));
-	wcstombs(fullname, hsfilename, wcslen(hsfilename));
-	sprintf(fullname, "%s%s", fullname, ".cso");
-	create_hs_from_cso(device, fullname, HS.GetAddressOf());
 
 	memset(fullname, NULL, sizeof(fullname));
 	wcstombs(fullname, dsfilename, wcslen(dsfilename));
 	sprintf(fullname, "%s%s", fullname, ".cso");
 	create_ds_from_cso(device, fullname, DS.GetAddressOf());
 
-	memset(fullname, NULL, sizeof(fullname));
-	wcstombs(fullname, psfilename, wcslen(psfilename));
-	sprintf(fullname, "%s%s", fullname, ".cso");
-	create_ps_from_cso(device, fullname, PS.GetAddressOf());
-
-
-	// 入力レイアウト設定
-	device_context->IASetInputLayout(InputLayout.Get());
-
 	return false;
+
 }
 
-bool ShaderEx::Create(const WCHAR* vsfilename, const WCHAR* hsfilename, const WCHAR* dsfilename, const WCHAR* gsfilename, const WCHAR* psfilename)
+bool ShaderEx::CreateHS(const WCHAR* hsfilename)
 {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
 	ID3D11DeviceContext* device_context = FRAMEWORK->GetDeviceContext();
 	UINT numElements = sizeof(input_element_desc) / sizeof(input_element_desc[0]);
-
 	//ワイド文字からマルチバイト文字へ変換
 	char fullname[256];
-	//memset(fullname, NULL, sizeof(fullname));
-	//wcstombs(fullname, vsfilename, wcslen(vsfilename));
-	//sprintf(fullname, "%s%s", fullname, ".cso");
-	create_vs_from_cso(device, "sprite_vs.cso", VS.GetAddressOf(), InputLayout.GetAddressOf(), input_element_desc, numElements);
 
 	memset(fullname, NULL, sizeof(fullname));
 	wcstombs(fullname, hsfilename, wcslen(hsfilename));
 	sprintf(fullname, "%s%s", fullname, ".cso");
 	create_hs_from_cso(device, fullname, HS.GetAddressOf());
 
-	memset(fullname, NULL, sizeof(fullname));
-	wcstombs(fullname, dsfilename, wcslen(dsfilename));
-	sprintf(fullname, "%s%s", fullname, ".cso");
-	create_ds_from_cso(device, fullname, DS.GetAddressOf());
+	return false;
+
+}
+
+bool ShaderEx::CreateGS(const WCHAR* gsfilename)
+{
+	ID3D11Device* device = FRAMEWORK->GetDevice();
+	ID3D11DeviceContext* device_context = FRAMEWORK->GetDeviceContext();
+	UINT numElements = sizeof(input_element_desc) / sizeof(input_element_desc[0]);
+	//ワイド文字からマルチバイト文字へ変換
+	char fullname[256];
 
 	memset(fullname, NULL, sizeof(fullname));
 	wcstombs(fullname, gsfilename, wcslen(gsfilename));
 	sprintf(fullname, "%s%s", fullname, ".cso");
 	create_gs_from_cso(device, fullname, GS.GetAddressOf());
 
-	memset(fullname, NULL, sizeof(fullname));
-	wcstombs(fullname, psfilename, wcslen(psfilename));
-	sprintf(fullname, "%s%s", fullname, ".cso");
-	create_ps_from_cso(device, fullname, PS.GetAddressOf());
-
-	// 入力レイアウト設定
-	device_context->IASetInputLayout(InputLayout.Get());
-
 	return false;
+
 }
 
-bool ShaderEx::Create(const WCHAR* csfilename)
+bool ShaderEx::CreateCS(const WCHAR* csfilename)
 {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
 	ID3D11DeviceContext* device_context = FRAMEWORK->GetDeviceContext();
 	UINT numElements = sizeof(input_element_desc) / sizeof(input_element_desc[0]);
-
 	//ワイド文字からマルチバイト文字へ変換
 	char fullname[256];
+
 	memset(fullname, NULL, sizeof(fullname));
 	wcstombs(fullname, csfilename, wcslen(csfilename));
 	sprintf(fullname, "%s%s", fullname, ".cso");
 	create_cs_from_cso(device, fullname, CS.GetAddressOf());
 
 	return false;
+
 }
+

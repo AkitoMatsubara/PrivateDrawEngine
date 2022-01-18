@@ -77,7 +77,7 @@ void Shader::Activate() {
 	device_context->PSSetShader(PS.Get(), NULL, 0);
 	//device_context->HSSetShader(HS.Get(), NULL, 0);
 	//device_context->DSSetShader(DS.Get(), NULL, 0);
-	//device_context->GSSetShader(GS.Get(), NULL, 0);
+	device_context->GSSetShader(GS.Get(), NULL, 0);
 }
 
 void Shader::Inactivate() {
@@ -90,5 +90,5 @@ void Shader::Inactivate() {
 	device_context->PSSetShader(NULL, NULL, 0);
 	//device_context->HSSetShader(NULL, NULL, 0);
 	//device_context->DSSetShader(NULL, NULL, 0);
-	//device_context->GSSetShader(NULL, NULL, 0);
+	device_context->GSSetShader(NULL, NULL, 0);
 }

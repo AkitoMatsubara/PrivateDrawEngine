@@ -26,7 +26,6 @@ public:
 
 	// Skkined_Mesh用
 	std::unique_ptr<Skinned_Mesh> skinned_mesh;
-	std::unique_ptr<ShaderEx> SkinnedShader = nullptr;
 
 
 	// 個人 ImGuiで数値を編集、格納して関数に渡す変数

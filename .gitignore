@@ -37,6 +37,7 @@
 # フォルダ名/
 Resources/
 External/
+packages/
 Others/
 Cache/
 .vs/

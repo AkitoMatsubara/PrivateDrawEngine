@@ -10,7 +10,7 @@
 
 
 // 頂点バッファオブジェクトの生成
-sprite_Batch::sprite_Batch(const wchar_t* filename, size_t max_sprites, const char* vs_cso_name, const char* ps_cso_name) :max_vertices(max_sprites * 6)
+sprite_Batch::sprite_Batch(const wchar_t* filename, size_t max_sprites) :max_vertices(max_sprites * 6)
 {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
 	HRESULT hr{ S_OK };
@@ -37,30 +37,37 @@ sprite_Batch::sprite_Batch(const wchar_t* filename, size_t max_sprites, const ch
 	hr = device->CreateBuffer(&buffer_desc, &subresource_data, vertex_buffer.GetAddressOf());		// 作成するバッファ情報、作成するバッファの初期化情報、作成したバッファを保存するポインタ
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));	// _ASSERT_EXPR：第一引数条件が満たされなければ第二引数のメッセージを表示する
 
-	param.Pos     = DirectX::SimpleMath::Vector2(0.0f, 0.0f);
-	param.Size = DirectX::SimpleMath::Vector2(static_cast<float>(texture2d_desc.Width), static_cast<float>(texture2d_desc.Height));
-	param.TexPos  = DirectX::SimpleMath::Vector2(0.0f, 0.0f);
-	param.TexSize = DirectX::SimpleMath::Vector2(static_cast<float>(texture2d_desc.Width), static_cast<float>(texture2d_desc.Height));
-	param.Angle   = 0.0f;
-	param.Color   = DirectX::SimpleMath::Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	if (!SpriteShader)	// 一回だけ生成
+	{
+		SpriteShader = std::make_unique<ShaderEx>();
+		//SpriteShader->Create(L"Shaders\\sprite_vs", L"Shaders\\sprite_ps");
+		SpriteShader->CreateVS(L"Shaders\\sprite_vs");
+		SpriteShader->CreatePS(L"Shaders\\sprite_ps");
+	}
+
+	Parameters = std::make_unique <Object2d>();
+	Parameters->Pos     = DirectX::SimpleMath::Vector2(0.0f, 0.0f);
+	Parameters->Size    = DirectX::SimpleMath::Vector2(static_cast<float>(texture2d_desc.Width), static_cast<float>(texture2d_desc.Height));
+	Parameters->TexPos  = DirectX::SimpleMath::Vector2(0.0f, 0.0f);
+	Parameters->TexSize = DirectX::SimpleMath::Vector2(static_cast<float>(texture2d_desc.Width), static_cast<float>(texture2d_desc.Height));
+	Parameters->Angle   = 0.0f;
+	Parameters->Color   = DirectX::SimpleMath::Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
-sprite_Batch::~sprite_Batch() {
-	rerease_all_textures();
-}
+sprite_Batch::~sprite_Batch() {}
 
 void sprite_Batch::begin() {
 	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();
 
 	vertices.clear();
 	// シェーダのバインド
-	immediate_context->VSSetShader(vertex_shader.Get(), nullptr, 0);
-	immediate_context->PSSetShader(pixel_shader.Get(), nullptr, 0);
+	//immediate_context->VSSetShader(vertex_shader.Get(), nullptr, 0);
+	//immediate_context->PSSetShader(pixel_shader.Get(), nullptr, 0);
 	// SRVバインド
 	immediate_context->PSSetShaderResources(0, 1, shader_resource_view.GetAddressOf());	// レジスタ番号、シェーダリソースの数、SRVのポインタ
 }
 
-void sprite_Batch::end() {
+void sprite_Batch::end(ShaderEx* shader) {
 	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();
 
 	// テクスチャ座標を頂点バッファにセットする
@@ -88,19 +95,22 @@ void sprite_Batch::end() {
 		1,				               // 頂点バッファの数
 		vertex_buffer.GetAddressOf(),  // 頂点バッファの配列
 		&stride,		               // １頂点のサイズの配列
-		&offset);		               // 頂点バッファの開始位置をずらすオフセットの配列
+		&offset);		       // 頂点バッファの開始位置をずらすオフセットの配列
 
 	//プリミティブタイプ及びデータの順序に関する情報のバインド
 	immediate_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);	// プリミティブの形状を指定できる？
 											// D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST は3頂点、D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIPは四頂点 連続三角形
-	// 入力レイアウトオブジェクトのバインド
-	immediate_context->IASetInputLayout(input_layout.Get());	// 入力レイアウトの設定
+	// シェーダのバインド
+	SpriteShader->Activate();
 
 	// ラスタライザステートの設定
 	immediate_context->RSSetState(rasterizer_states[0].Get());
 
 	// プリミティブの描画
 	immediate_context->Draw(static_cast<UINT>(vertex_count), 0);	// 頂点の数、描画開始時点で使う頂点バッファの最初のインデックス
+
+	// シェーダの無効化
+	SpriteShader->Inactivate();
 
 }
 
@@ -166,9 +176,9 @@ void sprite_Batch::Render(DirectX::SimpleMath::Vector2 pos, DirectX::SimpleMath:
 }
 
 void sprite_Batch::Render() {
-	CreateVertexData(param.Pos, param.Size, param.Angle, param.Color, param.TexPos, param.TexSize);
+	CreateVertexData(Parameters->Pos, Parameters->Size, Parameters->Angle, Parameters->Color, Parameters->TexPos, Parameters->TexSize);
 }
 
 void sprite_Batch::Render(DirectX::SimpleMath::Vector2 Pos, DirectX::SimpleMath::Vector2 Size) {
-	CreateVertexData(Pos, Size, 0, param.Color, param.TexPos, param.TexSize);
+	CreateVertexData(Pos, Size, 0, Parameters->Color, Parameters->TexPos, Parameters->TexSize);
 }

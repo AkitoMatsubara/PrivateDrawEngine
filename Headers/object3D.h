@@ -29,14 +29,14 @@ public:
 	// コンストラクタで初期化しておく 使うのにそもそも値入ってなかったらおかしいもんねぇ？
 	Object3d()
 	{
-		Position = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
-		Vector = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
+		Position     = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
+		Vector       = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
 		Acceleration = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
-		Velocity = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
+		Velocity     = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
 
-		Scale = DirectX::SimpleMath::Vector3{ 1.0f,1.0f,1.0f };
-		Orientation = DirectX::SimpleMath::Quaternion{ 0.0f,0.0f,0.0f,1.0f };
-		Color = DirectX::SimpleMath::Vector4{ 0.0f,0.0f,0.0f,1.0f };
+		Scale        = DirectX::SimpleMath::Vector3{ 1.0f,1.0f,1.0f };
+		Orientation  = DirectX::SimpleMath::Quaternion{ 0.0f,0.0f,0.0f,1.0f };
+		Color        = DirectX::SimpleMath::Vector4{ 0.0f,0.0f,0.0f,1.0f };
 
 		Exist = true;
 		MaxLife = 1;

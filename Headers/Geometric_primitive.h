@@ -6,12 +6,11 @@
 
 #include "shaderEx.h"
 #include "Object3d.h"
+#include "Rasterizer.h"
 
 #include "imgui.h"
 #include "imgui_impl_dx11.h"
 #include "imgui_impl_win32.h"
-
-
 
 
 class Geometric_Primitive {
@@ -23,10 +22,10 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> index_buffer;
 
 	Microsoft::WRL::ComPtr<ID3D11Buffer> constant_buffer;
-	Microsoft::WRL::ComPtr<ID3D11RasterizerState>	rasterizer_states[3];	// 0:片面塗りつぶし,1:片面ワイヤーフレーム,2:両面ワイヤーフレーム
 
 	static std::unique_ptr<ShaderEx> GeometricShader;
 	DirectX::SimpleMath::Matrix world;
+	Rasterizer rasterizer;
 
 	//std::unique_ptr<ShaderEx> GeometricShader;
 

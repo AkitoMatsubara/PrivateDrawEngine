@@ -128,7 +128,8 @@ Skinned_Mesh::Skinned_Mesh(const char* fbx_filename, int cstNo, bool triangulate
 	if(!SkinnedShader)	// 一回だけ生成
 	{
 		SkinnedShader = std::make_unique<ShaderEx>();
-		SkinnedShader->Create(L"Shaders\\skinned_mesh_vs", L"Shaders\\skinned_mesh_ps");
+		SkinnedShader->CreateVS(L"Shaders\\skinned_mesh_vs");
+		SkinnedShader->CreatePS(L"Shaders\\skinned_mesh_ps");
 	}
 	// 各種パラメータの初期化
 	Parameters = std::make_unique<Object3d>();
@@ -406,7 +407,7 @@ void Skinned_Mesh::imguiWindow(const char* beginname) {
 	//ImGui::End();	// ウィンドウ終了
 	//// パラメータ代入
 	//setPos(DirectX::SimpleMath::Vector3(pos[0], pos[1], pos[2]));
-	//setSize(DirectX::SimpleMath::Vector3(size[0], size[1], size[2]));
-	//setAngle(DirectX::SimpleMath::Vector3(angle[0], angle[1], angle[2]));
+	//setScale(DirectX::SimpleMath::Vector3(size[0], size[1], size[2]));
+	//setOrientation(DirectX::SimpleMath::Vector3(angle[0], angle[1], angle[2]));
 	//setColor(DirectX::SimpleMath::Vector4(Color[0], Color[1], Color[2], Color[3]));
 }

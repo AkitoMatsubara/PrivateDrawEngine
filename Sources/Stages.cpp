@@ -38,15 +38,16 @@ void StageParts::Render()
 bool StageParts::onObject(const Object3d& obj)
 {
 	// 計算負荷軽減のため(になるか分からないけど)判定距離を制限
+	static constexpr float rideDist = 1.5f;	// 判定距離
 	DirectX::SimpleMath::Vector3 length = Parameters->Position - obj.Position;
-	if (length.Length() > 2.5f) return false;	// 検証的に2.5f範指定がバグなくて良さそう
+	if (length.Length() > rideDist || !this->Parameters->Exist) return false;	// 距離以上離れているかそも存在しなかったらやめ
 
-	DirectX::SimpleMath::Vector3 objForward = obj.Position + (obj.Vector * 0.7f);	// プレイヤーから前方に少しずらした位置 撃ち出し部分から判定を取るため
+	DirectX::SimpleMath::Vector3 objHead = obj.Position + (obj.Vector * 0.7f);	// プレイヤーから前方に少しずらした位置。頭部分。 撃ち出し部分からも判定を取るため
 
 	// まずステージの三角形頂点を算出します
 	// 今(12/09)現在のモデルに合わせてるので、変えたらやり直す必要あるからちょっとまずいかも
-	float ofs_x = 1.0f;	// 原点から左右へのズレ
-	float ofs_z = 1.0f;	// 原点から上へのズレ
+	static constexpr float ofs_x = 1.0f;	// 原点から左右へのズレ
+	static constexpr float ofs_z = 1.0f;	// 原点から上へのズレ
 	DirectX::SimpleMath::Vector3 triangle[3];
 	triangle[0] = Parameters->Position + (Model->getWorld().Backward() * ofs_x);	// 前方の点のつもり
 	triangle[1] = Parameters->Position + (Model->getWorld().Forward() * ofs_x) + (Model->getWorld().Left() * ofs_z);	// 右方の点のつもり
@@ -61,12 +62,12 @@ bool StageParts::onObject(const Object3d& obj)
 	/*[2(C)]*---------*[1(B)]	*/
 
 	// y無視のxz平面で外積を計算 ここだけしか使わんのでラムダ式で定義
-	auto cross = [](const DirectX::SimpleMath::Vector3& v1, const DirectX::SimpleMath::Vector3& v2) {return (v1.x * v2.z) - (v1.z * v2.x); };
+	constexpr auto cross = [](const DirectX::SimpleMath::Vector3& v1, const DirectX::SimpleMath::Vector3& v2) {return (v1.x * v2.z) - (v1.z * v2.x); };
 	DirectX::SimpleMath::Vector3 A_p, B_p, C_p, A_B, B_C, C_A;	// それぞれのベクトルを格納する変数
 	{
-		A_p = objForward - triangle[0];		// Aからobj前方に向かうベクトル
-		B_p = objForward - triangle[1];		// Bからobj前方に向かうベクトル
-		C_p = objForward - triangle[2];		// Cからobj前方に向かうベクトル
+		A_p = objHead - triangle[0];		// Aからobj前方に向かうベクトル
+		B_p = objHead - triangle[1];		// Bからobj前方に向かうベクトル
+		C_p = objHead - triangle[2];		// Cからobj前方に向かうベクトル
 		A_B = triangle[1] - triangle[0];	// AからBに向かうベクトル
 		B_C = triangle[2] - triangle[1];	// BからCに向かうベクトル
 		C_A = triangle[0] - triangle[2];	// CからAに向かうベクトル
@@ -99,7 +100,7 @@ void StageParts::Damage()
 	Parameters->CurLife--;	// 体力を減らす
 	Parameters->Color.w = static_cast<float>(Parameters->CurLife) / static_cast<float>(Parameters->MaxLife);
 
-	// もし体力が0以下であれば存在フラグをへし折る
+	// もし体力が0以下であれば存在フラグをへし折るﾊﾞｷｨ
 	if (Parameters->CurLife <= 0)
 	{
 		Parameters->Exist = false;
@@ -144,15 +145,11 @@ void StageManager::Initialize()
 			if (i % 2)inversion = !inversion;	// しかし、奇数列目なら角度反転フラグの「条件」を反転させる
 			if (inversion)	// 180°回転させる
 			{
-				//Stages[row + col]->Parameters->Rotate = DirectX::SimpleMath::Vector3(0.0f, 180.0f, 0.0);
-				//Stages[row + col]->Parameters->Orientation.CreateFromAxisAngle(Stages[row + col]->Model->getWorld().Up(), 180.0f);
 				Stages[row + col]->Parameters->Orientation = DirectX::SimpleMath::Quaternion::CreateFromYawPitchRoll(DirectX::XMConvertToRadians(180.0f), 0.0f, 0.0);
 				Stages[row + col]->Parameters->Color = DirectX::SimpleMath::Vector4(1.0f, 0.0f, 0.0f, 1.0f);
 			}
 			else
 			{
-				//Stages[row + col]->Parameters->Rotate = DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f);
-				//Stages[row + col]->Parameters->Orientation.CreateFromAxisAngle(Stages[row + col]->Model->getWorld().Up(), 0.0f);
 				Stages[row + col]->Parameters->Orientation = DirectX::SimpleMath::Quaternion::CreateFromYawPitchRoll(0.0f, 0.0f, 0.0);
 				Stages[row + col]->Parameters->Color = DirectX::SimpleMath::Vector4(0.0f, 0.0f, 1.0f, 1.0f);
 			}
@@ -189,14 +186,29 @@ void StageManager::Check(const Object3d& obj)
 	for (auto& it : Stages)
 	{
 		// オブジェクトとステージの位置判定で上に乗っていたらステージのダメージ処理を呼び出す
-		// コメントアウトはデバッグ用に 見やすくしてた
-		//if(Stages[PARTS_SIZE / 2]->onObject(obj))
 		if(it->onObject(obj))
 		{
 			it->Damage();
-			//it->Parameters->Color.y = 1.0f;
 
 		}
-		//else{ it->Parameters->Color.y = 0.0f; }
 	}
+}
+
+bool StageManager::RideParts(Object3d& obj)
+{
+	for (auto& it : Stages)
+	{
+		// オブジェクトとステージの位置判定で上に乗っていたらy値を固定する
+		if (it->onObject(obj))
+		{
+			obj.Position.y = 0.0f;	// 見た目上ステージの上にいる
+			return true;
+
+		}
+		else
+		{
+			obj.Position.y -= 0.00005f;	// 毎フレームの落下速度
+		}
+	}
+	return false;
 }

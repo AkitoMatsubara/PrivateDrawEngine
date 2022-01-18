@@ -19,7 +19,7 @@ private:
 
 	Object3d Target;	// 狙う相手 位置
 
-	enum ENEMYSTATE
+	enum class ENEMYSTATE
 	{
 		GOTARGET,	// ターゲット方向へ進む
 		SHOT,		// 前方に撃つ
@@ -28,20 +28,18 @@ private:
 	};
 	ENEMYSTATE state;	// 挙動をステート分けするため
 
-	float ShotInterval;	// 発射間隔
-	float interval = 0.0f;
-	bool shoted = false;
+	float ShotInterval;	// 発射間隔指定
+	float interval;	// 発射してからいくらか
+	bool shoted;	// 撃ったかどうか
 
 public:
 	std::unique_ptr<Object3d> Parameters;
 	// 関数
 private:
-	void Move(); // 制御関数
-protected:
-public:
-	Enemy() {};
-	~Enemy() {};
+	void Move(); // 挙動制御関数
+	void GoStraight();	// ターゲットへ直進行動
 
+public:
 	void Initialize();
 	void Update();
 	void Render();
@@ -51,7 +49,8 @@ public:
 	/// <param name="focusRange">視界距離</param>
 	void FocusTarget(float focusAngle,float focusRange);
 
-	/// <summary>弾を撃つ</summary>
+	/// <summary>弾のセットから発射、床ダメージ処理を呼び出す</summary>
+	/// <summary>あと発射間隔の管理</summary>
 	void Shot();
 
 

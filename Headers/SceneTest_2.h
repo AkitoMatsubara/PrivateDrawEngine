@@ -2,6 +2,7 @@
 #include "SceneManager.h"
 
 #include "Player.h"
+#include "GPUParticle.h"
 
 class SceneTest_2 :public SceneBase {
 
@@ -38,13 +39,13 @@ private:
 
 	BUFIN_TYPE vBufInArray[NUM_ELEMENTS];               // 入力用バッファーの配列を宣言
 
+	std::unique_ptr<GPUParticle> gpu_particle_;
 	// てすとしめ---------------------------------------------------------------------
 
 public:
 	// Sprite型 画像描画用
 	std::unique_ptr<Sprite> sprites;
 	std::unique_ptr<sprite_Batch> sprite_batches[8];
-	std::unique_ptr<ShaderEx> SpriteShader = nullptr;
 
 	// シーン定数バッファ
 	struct scene_constants {
@@ -56,9 +57,6 @@ public:
 
 	// Geometric_primitiveの変数やつ
 	std::unique_ptr< Geometric_Cube> grid;	// グリッド線もどき
-
-	// Skkined_Mesh用
-	std::unique_ptr<ShaderEx> SkinnedShader = nullptr;
 
 	// プレイヤーオブジェクト
 	std::unique_ptr<Player> player;

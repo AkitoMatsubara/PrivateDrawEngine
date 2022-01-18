@@ -35,6 +35,9 @@ void Player::Update() {
 	// モデルに描画系パラメーターを渡す
 	Model->getParameters()->CopyParam(Parameters.get());
 
+	StageManager::getInstance().RideParts(*Parameters);
+
+
 	//-----------------------------------------------------------------------------------------------------------------------------------------------------
 #ifdef _DEBUG
 	Capcule->Parameters->CopyParam(Parameters.get());	// Playerに付随するように位置を同期

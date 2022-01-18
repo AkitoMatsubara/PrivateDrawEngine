@@ -48,4 +48,3 @@ public:
 		return static_cast<float>(current_ticks.QuadPart - start_ticks.QuadPart) / static_cast<float>(ticks_per_second.QuadPart);
 	}
 };
-

@@ -1,5 +1,7 @@
 #include "Camera.h"
 
+#include "framework.h"
+
 Camera::Camera()
 {
 	Position = DirectX::SimpleMath::Vector3{ 0,1,10 };
@@ -18,8 +20,8 @@ Camera::Camera()
 	Fov = DirectX::XM_PI / 6.0f;
 	Near = 0.1f;
 	Far = 2000.0f;
-	Width = 1280.0f;
-	Height = 720.0f;
+	Width = static_cast<float>(SCREEN_WIDTH);
+	Height = static_cast<float>(SCREEN_HEIGHT);
 	Aspect = Width / Height;
 	bView = false;
 }
@@ -77,8 +79,8 @@ void Camera::Operate()
 	static float cameraSpeed = 0.05f;
 	static float cAngle = 0.0f;		// ‰ñ“]Šp
 	static float cDist = -10.0f;	// ‹——£
-	static const float MIN_DIST = 3.0f;
-	static const float MAX_DIST = 10.0f;
+	static constexpr float MIN_DIST = 3.0f;
+	static constexpr float MAX_DIST = 10.0f;
 	if (GetKeyState(VK_LEFT) < 0)   cAngle += DirectX::XMConvertToRadians(1);	// ƒJƒƒ‰¶‰ñ“]
 	if (GetKeyState(VK_RIGHT) < 0)  cAngle -= DirectX::XMConvertToRadians(1);	// ƒJƒƒ‰‰E‰ñ“]
 

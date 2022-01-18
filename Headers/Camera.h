@@ -12,8 +12,8 @@ protected:
 	DirectX::SimpleMath::Matrix ProjectionMatrix;
 	FLOAT Fov;
 	FLOAT Aspect;
-	FLOAT Near;
-	FLOAT Far;
+	FLOAT Near;	// 描画範囲的な
+	FLOAT Far;	// 描画範囲的な
 	FLOAT Width;
 	FLOAT Height;
 	bool bView;
@@ -29,7 +29,7 @@ public:
 	void SetOrtho(FLOAT width, FLOAT height, FLOAT min, FLOAT max);
 
 	void Activate();	// 自身の値をもとに作成する
-	void Operate();
+	void Operate();		// カメラ操作
 	DirectX::XMMATRIX GetView() { return XMLoadFloat4x4(&ViewMatrix); }
 	DirectX::XMMATRIX GetProjection() { return XMLoadFloat4x4(&ProjectionMatrix); }
 	DirectX::SimpleMath::Vector3 GetPos() { return Position; }

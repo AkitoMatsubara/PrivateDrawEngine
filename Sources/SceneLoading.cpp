@@ -27,7 +27,8 @@ bool SceneLoading::Initialize() {
 		// ロード画像の初期化
 		loadingImage = std::make_unique<Sprite>(L".\\Resources\\screenshot.jpg");	// シェーダーはコンストラクタ内で指定しているため、別を使うには改良が必要
 		SpriteShader = std::make_unique<ShaderEx>();
-		SpriteShader->Create(L"Shaders\\sprite_vs", L"Shaders\\sprite_ps");
+		SpriteShader->CreateVS(L"Shaders\\sprite_vs");
+		SpriteShader->CreatePS( L"Shaders\\sprite_ps");
 	}
 
 	// スレッド開始

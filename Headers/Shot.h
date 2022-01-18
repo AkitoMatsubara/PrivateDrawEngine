@@ -52,7 +52,7 @@ private:
 
 public:
 	// Œ‚‚¿Žè‚ª’N‚©
-	enum MASTER
+	enum class MASTER
 	{
 		PLAYER,
 		ENEMY,

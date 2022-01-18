@@ -4,7 +4,7 @@
 #include "Enemy.h"
 #include "Stages.h"
 
-#include "UseConputeShader.h"
+#include "UseComputeShader.h"
 
 #include <SimpleMath.h>
 bool SceneTest_2::Initialize() {
@@ -23,9 +23,7 @@ bool SceneTest_2::Initialize() {
 
 		// spriteオブジェクトを生成(今回は先頭の１つだけを生成する)
 		sprites = std::make_unique<Sprite>(L".\\Resources\\screenshot.jpg");	// シェーダーはコンストラクタ内で指定しているため、別を使うには改良が必要
-		sprites->setSize(1280, 720);
-		SpriteShader = std::make_unique<ShaderEx>();
-		SpriteShader->Create(L"Shaders\\sprite_vs", L"Shaders\\sprite_ps");
+		sprites->setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
 
 		// Geometric_primitiveオブジェクトの生成
 		{
@@ -41,8 +39,6 @@ bool SceneTest_2::Initialize() {
 
 		StageManager::getInstance().Initialize();
 
-		SkinnedShader = std::make_unique<ShaderEx>();
-		SkinnedShader->Create(L"Shaders\\skinned_mesh_vs", L"Shaders\\skinned_mesh_ps");
 	}
 
 	// Compute Shaderセッティング
@@ -51,7 +47,7 @@ bool SceneTest_2::Initialize() {
 		CreateConstantBuffer(constant_buffer[1].GetAddressOf(), sizeof(cs_constants));
 
 		ComputeShader = std::make_unique<ShaderEx>();
-		ComputeShader->Create(L"Shaders\\ComputeShader_cs");
+		ComputeShader->CreateCS(L"Shaders\\ComputeShader_cs");
 
 		// 入力用バッファーに初期値を設定する
 		for (int i = 0; i < NUM_ELEMENTS; i++)
@@ -61,18 +57,20 @@ bool SceneTest_2::Initialize() {
 		}
 
 		// コンピュートシェーダーへの入力時に使用するSRVを作成する
-		UseConputeShader::CreateSRVForStructuredBuffer(sizeof(BUFIN_TYPE), NUM_ELEMENTS, &vBufInArray[0], pBufInput.GetAddressOf(), pBufInputSRV.GetAddressOf());
+		UseComputeShader::CreateSRVForStructuredBuffer(sizeof(BUFIN_TYPE), NUM_ELEMENTS, &vBufInArray[0], pBufInput.GetAddressOf(), pBufInputSRV.GetAddressOf());
 
 		// コンピュートシェーダーからの出力時に使用するUAVを作成する
-		UseConputeShader::CreateUAVForStructuredBuffer(sizeof(BUFOUT_TYPE), NUM_ELEMENTS, NULL, pBufResult.GetAddressOf(), pBufResultUAV.GetAddressOf());
+		UseComputeShader::CreateUAVForStructuredBuffer(sizeof(BUFOUT_TYPE), NUM_ELEMENTS, NULL, pBufResult.GetAddressOf(), pBufResultUAV.GetAddressOf());
 	}
 
 	camera->SetProjection(DirectX::XMConvertToRadians(30), camera->GetWidth() / camera->GetHeight(), camera->GetNear(), camera->GetFar());
-
+	gpu_particle_ = std::make_unique<GPUParticle>();
+	gpu_particle_->Init();
 	return true;
 }
 
 void SceneTest_2::Update() {
+	gpu_particle_->Update();
 	const float elapsed_time = FRAMEWORK->GetElapsedTime();
 	// シーン切り替え
 	if (GetAsyncKeyState('G') & 1) setScene(std::make_unique<SceneTitle>());
@@ -80,32 +78,35 @@ void SceneTest_2::Update() {
 	player->Update();
 	StageManager::getInstance().Update();
 
-
-	// 透視投影行列の作成
-	//camera->Set((camera->GetPos() + player->Parameters->Position), player->Parameters->Position, DirectX::XMFLOAT3(0, 1, 0));
+	// カメラ設定
 	camera->Set(camera->GetPos(), player->Parameters->Position, DirectX::XMFLOAT3(0, 1, 0));
-	//DirectX::SimpleMath::Vector3 pos = camera->GetPos();
-	//pos.y = 0.0f;
-	//camera->SetPos(pos);
-
 	// カメラ操作
 	camera->Operate();
 
-	if (GetAsyncKeyState(VK_RBUTTON) &1) {
-		EnemyManager::getInstance().newSet(player->Parameters.get());	// お試し右クリックで敵を生成
-	}
+	// 敵関連
 	{
+		// お試し右クリックでランダム位置に敵を生成
+		// TODO デバッグ用
+		if (GetAsyncKeyState(VK_RBUTTON) < 0)
+		{
+			Object3d desc;
+			desc.CopyParam(player->Parameters.get());
+			desc.Position += DirectX::SimpleMath::Vector3(rand() % 10, 0, rand() % 10);
+			desc.Orientation *= DirectX::SimpleMath::Quaternion::CreateFromAxisAngle({ 0.0f,1.0f,0.0f }, DirectX::XMConvertToRadians(rand() % 180));
+			EnemyManager::getInstance().newSet(&desc);
+			//EnemyManager::getInstance().newSet(player->Parameters.get());
+		}
 		for (auto it = EnemyManager::getInstance().getEnemys()->begin(); it != EnemyManager::getInstance().getEnemys()->end(); ++it)
 		{
-			// 敵の描画
+			// すべての敵にターゲット設定
 			it->get()->setTarget(*player->Parameters);
 		}
 
+		EnemyManager::getInstance().Update();	// 敵更新
 	}
-	EnemyManager::getInstance().Update();
 
+	// コンピュートシェーダーを実行する
 	{
-		// コンピュートシェーダーを実行する
 		Microsoft::WRL::ComPtr<ID3D11DeviceContext> immediate_context = FRAMEWORK->GetDeviceContext();
 		Microsoft::WRL::ComPtr<ID3D11Device> device = FRAMEWORK->GetDevice();
 		HRESULT hr = { S_OK };
@@ -113,6 +114,7 @@ void SceneTest_2::Update() {
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		static float theta = 0.0f;
 		theta = (theta <= 1.0f) ? theta + 0.01f : 0.0f;	// チカチカすりゅ～！(色が)
+
 		//D3D11_MAPPED_SUBRESOURCE subRes;	// 別の更新方法 のはず。未完成
 		//immediate_context->Map(pBufInput.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &subRes);
 		//BUFIN_TYPE* pBufType = (BUFIN_TYPE*)subRes.pData;
@@ -126,22 +128,22 @@ void SceneTest_2::Update() {
 		immediate_context->UpdateSubresource(constant_buffer[1].Get(), 0, 0, &csData, 0, 0);
 		immediate_context->CSSetConstantBuffers(2, 1, constant_buffer[1].GetAddressOf());
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		UseConputeShader::RunComputeShader(ComputeShader->GetCS(), pBufInputSRV.Get(), pBufResultUAV.Get(), 3, 1, 1);
+		UseComputeShader::RunComputeShader(ComputeShader->GetCS(), pBufInputSRV.Get(), 0, pBufResultUAV.Get(), 0, 3, 1, 1);
 
 		// アンオーダードアクセスビューのバッファの内容を CPU から読み込み可能なバッファへコピーする
-		ID3D11Buffer* debugbuf = UseConputeShader::CreateAndCopyToBuffer(device.Get(), immediate_context.Get(), pBufResult.Get());
+		ID3D11Buffer* debugbuf = nullptr;
+		UseComputeShader::CreateAndCopyToBuffer(pBufResult.Get(), &debugbuf);
 
 		D3D11_MAPPED_SUBRESOURCE MappedResource = { 0 };
 		hr = immediate_context->Map(debugbuf, 0, D3D11_MAP_READ, 0, &MappedResource);	// 読み取り専用でマップ
-		_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-
-		BUFOUT_TYPE* p;
-		ZeroMemory(&p, sizeof(BUFOUT_TYPE));
-		p = reinterpret_cast<BUFOUT_TYPE*>(MappedResource.pData);	// 型変換して代入
+		{
+			BUFOUT_TYPE* p;	// 受け取る型の変数を用意する
+			// "p,配列要素数"とウォッチ式に入力すると値が見れる これ便利
+			p = (BUFOUT_TYPE*)MappedResource.pData;	// 型変換して代入
+			player->Parameters->Color = DirectX::SimpleMath::Vector4{ p[1].i, p[0].i, p[2].i, 1.0f };
+		}
 		immediate_context->Unmap(debugbuf, 0);	// マップ解除
 		debugbuf->Release();	// CS受け取りポインタを解放
-
-		player->Parameters->Color = DirectX::SimpleMath::Vector4{ p[1].i, p[0].i, p[2].i, 1.0f };
 	}
 
 	imguiUpdate();
@@ -165,7 +167,7 @@ void SceneTest_2::Render() {
 	// 2Dオブジェクトの描画設定
 	{
 		immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(DS_TRUE), 1);		// 3Dオブジェクトの後ろに出すため一旦
-		sprites->Render(SpriteShader.get());
+		sprites->Render();
 		immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(DS_TRUE_WRITE), 1);	// 2Dオブジェクトとの前後関係をしっかりするため再設定
 	}
 	// 3Dオブジェクトの描画設定
@@ -186,6 +188,8 @@ void SceneTest_2::Render() {
 			StageManager::getInstance().Render();
 			player->Render();
 			EnemyManager::getInstance().Render();
+			gpu_particle_->SetSceneConstantBuffer(constant_buffer[0].Get());
+			gpu_particle_->Draw();
 		}
 	}
 
@@ -208,7 +212,7 @@ void SceneTest_2::imguiUpdate() {
 
 	//imguiSceneChanger();
 	// 2D用 内部関数で完結させてる
-	sprites->ImguiWindow();
+	//sprites->ImguiWindow();
 	// 3D用パラメータ
 	player->ImguiPlayer();
 	// ライト調整等グローバル設定
@@ -221,7 +225,8 @@ void SceneTest_2::imguiUpdate() {
 	ImGui::Text("StageParts: %d", StageManager::getInstance().getSize());
 	ImGui::Separator();	// 分割線
 	ImGui::Text("Total Objects: %d", StageManager::getInstance().getSize() + EnemyManager::getInstance().getEnemys()->size()
-										+ player->getShotManager()->getSize() + EnemyManager::getInstance().getShotManager()->getSize());
+		+ player->getShotManager()->getSize() + EnemyManager::getInstance().getShotManager()->getSize());
+	if (ImGui::Button("Scene Initialize")) { SceneTest_2::Initialize(); }
 
 	ImGui::PopStyleColor(2);	// ImGui::PushStyleColor一つにつき引数一つ増えるっぽい
 	ImGui::End();

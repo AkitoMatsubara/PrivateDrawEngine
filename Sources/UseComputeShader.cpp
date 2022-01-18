@@ -1,9 +1,9 @@
-#include "UseConputeShader.h"
+#include "UseComputeShader.h"
 #include "framework.h"
 
 
 // 構造化バッファを作成する
-HRESULT UseConputeShader::CreateStructuredBuffer(UINT uElementSize, UINT uCount, VOID* pInitData, ID3D11Buffer** ppBuf)
+HRESULT UseComputeShader::CreateStructuredBuffer(UINT uElementSize, UINT uCount, void* pInitData, ID3D11Buffer** ppBuf)
 {
 	ID3D11Device* pD3DDevice = FRAMEWORK->GetDevice();
 	HRESULT hr = E_FAIL;
@@ -12,7 +12,7 @@ HRESULT UseConputeShader::CreateStructuredBuffer(UINT uElementSize, UINT uCount,
 	D3D11_BUFFER_DESC BufferDesc;
 	ZeroMemory(&BufferDesc, sizeof(D3D11_BUFFER_DESC));
 	BufferDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS |			// アンオーダード アクセス リソースをバインドする
-		D3D11_BIND_SHADER_RESOURCE;								// バッファーをシェーダー ステージにバインドする
+		D3D11_BIND_SHADER_RESOURCE;									// バッファーをシェーダー ステージにバインドする
 	BufferDesc.ByteWidth = uElementSize * uCount;					// バッファサイズ
 	BufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;	// 構造化バッファーとしてリソースを作成する
 	BufferDesc.StructureByteStride = uElementSize;					// 構造化バッファーのサイズ (バイト単位)
@@ -25,28 +25,26 @@ HRESULT UseConputeShader::CreateStructuredBuffer(UINT uElementSize, UINT uCount,
 		hr = pD3DDevice->CreateBuffer(&BufferDesc, &InitData, ppBuf);
 	}
 	// 初期値なしで領域のみ確保する
-	else
-	{
-		hr = pD3DDevice->CreateBuffer(&BufferDesc, NULL, ppBuf);
-	}
+	else { hr = pD3DDevice->CreateBuffer(&BufferDesc, nullptr, ppBuf); }
+
 	return hr;
 }
 
 // コンピュートシェーダーへの入力時に使用するシェーダーリソースビューを作成する
-HRESULT UseConputeShader::CreateSRVForStructuredBuffer(UINT uElementSize, UINT uCount, VOID* pInitData, ID3D11Buffer** ppBuf, ID3D11ShaderResourceView** ppSRVOut) {
+HRESULT UseComputeShader::CreateSRVForStructuredBuffer(UINT uElementSize, UINT uCount, void* pInitData, ID3D11Buffer** ppBuf, ID3D11ShaderResourceView** ppSRVOut) {
 	ID3D11Device* pD3DDevice = FRAMEWORK->GetDevice();
 	HRESULT hr = E_FAIL;
-	*ppBuf = NULL;
-	*ppSRVOut = NULL;
+	*ppBuf = nullptr;
+	*ppSRVOut = nullptr;
 
 	// 構造化バッファーを作成する
-	hr = UseConputeShader::CreateStructuredBuffer(uElementSize, uCount, pInitData, ppBuf);
+	hr = UseComputeShader::CreateStructuredBuffer(uElementSize, uCount, pInitData, ppBuf);
 	if (FAILED(hr))_ASSERT_EXPR_A(false, "FAILED CreateStructuredBuffer");
 
 	// 構造化バッファーからシェーダーリソースビューを作成する
 	D3D11_SHADER_RESOURCE_VIEW_DESC SRVDesc;
 	ZeroMemory(&SRVDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
-	SRVDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFEREX;   // 拡張されたバッファーであることを指定する
+	SRVDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFEREX;   // SRVであることを指定する
 	SRVDesc.BufferEx.FirstElement = 0;
 	SRVDesc.Format = DXGI_FORMAT_UNKNOWN;
 	SRVDesc.BufferEx.NumElements = uCount;                  // リソース内の要素の数
@@ -59,20 +57,20 @@ HRESULT UseConputeShader::CreateSRVForStructuredBuffer(UINT uElementSize, UINT u
 }
 
 // コンピュートシェーダーからの出力時に使用するアンオーダードアクセスビューを作成する
-HRESULT UseConputeShader::CreateUAVForStructuredBuffer(UINT uElementSize, UINT uCount, VOID* pInitData, ID3D11Buffer** ppBuf, ID3D11UnorderedAccessView** ppUAVOut) {
+HRESULT UseComputeShader::CreateUAVForStructuredBuffer(UINT uElementSize, UINT uCount, void* pInitData, ID3D11Buffer** ppBuf, ID3D11UnorderedAccessView** ppUAVOut) {
 	ID3D11Device* pD3DDevice = FRAMEWORK->GetDevice();
 	HRESULT hr = E_FAIL;
-	*ppBuf = NULL;
-	*ppUAVOut = NULL;
+	*ppBuf = nullptr;
+	*ppUAVOut = nullptr;
 
 	// 構造化バッファーを作成する
-	hr = UseConputeShader::CreateStructuredBuffer(uElementSize, uCount, pInitData, ppBuf);
+	hr = UseComputeShader::CreateStructuredBuffer(uElementSize, uCount, pInitData, ppBuf);
 	if (FAILED(hr))	_ASSERT_EXPR_A(false, "FAILED CreateStructuredBuffer");
 
 	// 構造化バッファーからアンオーダードアクセスビューを作成する
 	D3D11_UNORDERED_ACCESS_VIEW_DESC UAVDesc;
 	ZeroMemory(&UAVDesc, sizeof(D3D11_UNORDERED_ACCESS_VIEW_DESC));
-	UAVDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;   // バッファーであることを指定する
+	UAVDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;   // UAVであることを指定する
 	UAVDesc.Buffer.FirstElement = 0;
 	UAVDesc.Format = DXGI_FORMAT_UNKNOWN;
 	UAVDesc.Buffer.NumElements = uCount;                  // リソース内の要素の数
@@ -84,48 +82,56 @@ HRESULT UseConputeShader::CreateUAVForStructuredBuffer(UINT uElementSize, UINT u
 	return hr;
 }
 
-// アンオーダードアクセスビューのバッファの内容をCPUから読み込み可能なバッファを作成してコピーする
-ID3D11Buffer* UseConputeShader::CreateAndCopyToBuffer(ID3D11Device* pD3DDevice, ID3D11DeviceContext* pD3DDeviceContext, ID3D11Buffer* pBuffer)
+// アンオーダードアクセスビューのバッファ(GPU)の内容をCPUから読み込み可能なバッファを作成してコピーする
+void UseComputeShader::CreateAndCopyToBuffer(ID3D11Buffer* pSrcBuf,ID3D11Buffer** ppDstBuf)
 {
-	ID3D11Buffer* debugbuf = NULL;
+	ID3D11Device* device = FRAMEWORK->GetDevice();
+	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();
 
 	D3D11_BUFFER_DESC BufferDesc;
 	ZeroMemory(&BufferDesc, sizeof(D3D11_BUFFER_DESC));
-	pBuffer->GetDesc(&BufferDesc);
+	pSrcBuf->GetDesc(&BufferDesc);	// 引数のBUFFER_DESCを取得
+	// 中身をCPUで読み込むめるようににDESCを再設定
 	BufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;  // CPU から読み込みできるように設定する
-	BufferDesc.Usage = D3D11_USAGE_STAGING;             // GPU から CPU へのデータ転送 (コピー) をサポートするリソース
+	BufferDesc.Usage = D3D11_USAGE_STAGING;             // GPU から CPU へのデータ転送 (コピー) をサポートするリソース CPU読み書き専用
 	BufferDesc.BindFlags = 0;
 	BufferDesc.MiscFlags = 0;
-	if (FAILED(pD3DDevice->CreateBuffer(&BufferDesc, NULL, &debugbuf))) return debugbuf;
 
-	pD3DDeviceContext->CopyResource(debugbuf, pBuffer);
+	// 再設定したDESCでbufferを作成
+	if (FAILED(device->CreateBuffer(&BufferDesc, nullptr, ppDstBuf)))
+	{
+		_ASSERT_EXPR_A(false, "FAILED CreateReadBackBuffer. Not Set Shader?");
+	}
 
-	return debugbuf;
+	// 引数bufferのデータを作成したbufferにコピー
+	immediate_context->CopyResource(*ppDstBuf, pSrcBuf);
+
 }
 
-void UseConputeShader::RunComputeShader(ID3D11ComputeShader* pComputeShader, ID3D11ShaderResourceView* pSrcSRV, ID3D11UnorderedAccessView* pDstUAV, UINT X, UINT Y, UINT Z) {
+void UseComputeShader::RunComputeShader(ID3D11ComputeShader* pComputeShader, ID3D11ShaderResourceView* pSrcSRV, UINT SRVslot, ID3D11UnorderedAccessView* pDstUAV, UINT UAVslot, UINT X, UINT Y, UINT Z) {
 	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();
 
-	immediate_context->CSSetShader(pComputeShader, NULL, 0);
+	// 使うCSを設定
+	immediate_context->CSSetShader(pComputeShader, nullptr, 0);
 
 	// シェーダーリソースビューをコンピュートシェーダーに設定
-	immediate_context->CSSetShaderResources(0, 1, &pSrcSRV);
+	immediate_context->CSSetShaderResources(SRVslot, 1, &pSrcSRV);
 
 	// アンオーダードアクセスビューをコンピュートシェーダーに設定
-	immediate_context->CSSetUnorderedAccessViews(0, 1, &pDstUAV, NULL);
+	immediate_context->CSSetUnorderedAccessViews(UAVslot, 1, &pDstUAV, nullptr);
 
-	// コンピュートシェーダーを実行する。スレッド数とかようわからんが
+	// コンピュートシェーダーを実行する。スレッド数とかようわからんがこれ
 	immediate_context->Dispatch(X, Y, Z);
 
 	// コンピュートシェーダの設定解除
-	immediate_context->CSSetShader(NULL, NULL, 0);
+	immediate_context->CSSetShader(nullptr, nullptr, 0);
 
-	ID3D11UnorderedAccessView* ppUAViewNULL[1] = { NULL };
-	immediate_context->CSSetUnorderedAccessViews(0, 1, ppUAViewNULL, NULL);
+	ID3D11UnorderedAccessView* ppUAViewNULL[1] = { nullptr };
+	immediate_context->CSSetUnorderedAccessViews(0, 1, ppUAViewNULL, nullptr);
 
-	ID3D11ShaderResourceView* ppSRVNULL[2] = { NULL, NULL };
+	ID3D11ShaderResourceView* ppSRVNULL[2] = { nullptr, nullptr };
 	immediate_context->CSSetShaderResources(0, 2, ppSRVNULL);
 
-	ID3D11Buffer* ppCBNULL[1] = { NULL };
+	ID3D11Buffer* ppCBNULL[1] = { nullptr };
 	immediate_context->CSSetConstantBuffers(0, 1, ppCBNULL);
 }

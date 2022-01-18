@@ -76,18 +76,24 @@ Sprite::Sprite(const wchar_t* filename)
 	hr = device->CreateRasterizerState(&rasterizer_desc, rasterizer_states[2].GetAddressOf());
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 
+	if (!SpriteShader)	// 一回だけ生成
+	{
+		SpriteShader = std::make_unique<ShaderEx>();
+		SpriteShader->CreateVS(L"Shaders\\sprite_vs");
+		SpriteShader->CreatePS(L"Shaders\\sprite_ps");
+	}
 
-	param.Pos =DirectX::SimpleMath::Vector2(0.0f, 0.0f);
-	param.Size = DirectX::SimpleMath::Vector2(static_cast<float>(texture2d_desc.Width), static_cast<float>(texture2d_desc.Height));
-	param.TexPos  =DirectX::SimpleMath::Vector2(0.0f, 0.0f);
-	param.TexSize = DirectX::SimpleMath::Vector2(static_cast<float>(texture2d_desc.Width), static_cast<float>(texture2d_desc.Height));
-	param.Angle   = 0.0f;
-	param.Color   =DirectX::SimpleMath::Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	param = std::make_unique<Object2d>();
+
+	param->Pos =DirectX::SimpleMath::Vector2(0.0f, 0.0f);
+	param->Size = DirectX::SimpleMath::Vector2(static_cast<float>(texture2d_desc.Width), static_cast<float>(texture2d_desc.Height));
+	param->TexPos  =DirectX::SimpleMath::Vector2(0.0f, 0.0f);
+	param->TexSize = DirectX::SimpleMath::Vector2(static_cast<float>(texture2d_desc.Width), static_cast<float>(texture2d_desc.Height));
+	param->Angle   = 0.0f;
+	param->Color   =DirectX::SimpleMath::Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
-Sprite::~Sprite() {
-	rerease_all_textures();
-}
+Sprite::~Sprite() {}
 
 
 void Sprite::CreateVertexData(Shader* shader,DirectX::SimpleMath::Vector2 pos,DirectX::SimpleMath::Vector2 size, float angle,
@@ -126,10 +132,10 @@ void Sprite::CreateVertexData(Shader* shader,DirectX::SimpleMath::Vector2 pos,Di
 	right_top    = SpriteMath::ConvertToNDC(right_top   , viewport);
 	right_bottom = SpriteMath::ConvertToNDC(right_bottom, viewport);
 
-	DirectX::SimpleMath::Vector2 TexLeft_top    { (TexPos.x)             / texture2d_desc.Width , (TexPos.y)				/ texture2d_desc.Height };
-	DirectX::SimpleMath::Vector2 TexRight_top   { (TexPos.x + TexSize.x) / texture2d_desc.Width , (TexPos.y)				/ texture2d_desc.Height };
-	DirectX::SimpleMath::Vector2 TexLeft_bottom { (TexPos.x)             / texture2d_desc.Width , (TexPos.y + TexSize.y)	/ texture2d_desc.Height };
-	DirectX::SimpleMath::Vector2 TexRight_bottom{ (TexPos.x + TexSize.x) / texture2d_desc.Width , (TexPos.y + TexSize.y)	/ texture2d_desc.Height };
+	const DirectX::SimpleMath::Vector2 TexLeft_top    { (TexPos.x)             / texture2d_desc.Width , (TexPos.y)				/ texture2d_desc.Height };
+	const DirectX::SimpleMath::Vector2 TexRight_top   { (TexPos.x + TexSize.x) / texture2d_desc.Width , (TexPos.y)				/ texture2d_desc.Height };
+	const DirectX::SimpleMath::Vector2 TexLeft_bottom { (TexPos.x)             / texture2d_desc.Width , (TexPos.y + TexSize.y)	/ texture2d_desc.Height };
+	const DirectX::SimpleMath::Vector2 TexRight_bottom{ (TexPos.x + TexSize.x) / texture2d_desc.Width , (TexPos.y + TexSize.y)	/ texture2d_desc.Height };
 
 
 	// 計算結果で頂点バッファオブジェクトを更新する
@@ -170,8 +176,8 @@ void Sprite::CreateVertexData(Shader* shader,DirectX::SimpleMath::Vector2 pos,Di
 	immediate_context->PSSetShaderResources(0, 1, shader_resource_view.GetAddressOf());	// レジスタ番号、シェーダリソースの数、SRVのポインタ
 
 	// 頂点バッファのバインド
-	UINT stride{ sizeof(Vertex) };
-	UINT offset{ 0 };
+	const UINT stride{ sizeof(Vertex) };
+	const UINT offset{ 0 };
 	immediate_context->IASetVertexBuffers(
 		0,								// 入力スロットの開始番号
 		1,								// 頂点バッファの数
@@ -193,25 +199,25 @@ void Sprite::CreateVertexData(Shader* shader,DirectX::SimpleMath::Vector2 pos,Di
 	shader->Inactivate();
 }
 
-void Sprite::Render(Shader* shader,DirectX::SimpleMath::Vector2 pos,DirectX::SimpleMath::Vector2 size, float angle,DirectX::SimpleMath::Vector4 color,DirectX::SimpleMath::Vector2 TexPos,DirectX::SimpleMath::Vector2 TexSize) {
-	CreateVertexData(shader, pos, size, angle, color, TexPos, TexSize);
-}
+//void Sprite::Render(Shader* shader,DirectX::SimpleMath::Vector2 pos,DirectX::SimpleMath::Vector2 size, float angle,DirectX::SimpleMath::Vector4 color,DirectX::SimpleMath::Vector2 TexPos,DirectX::SimpleMath::Vector2 TexSize) {
+//	CreateVertexData(shader, pos, size, angle, color, TexPos, TexSize);
+//}
 
 void Sprite::Render(Shader* shader) {
-	CreateVertexData(shader, param.Pos, param.Size, param.Angle, param.Color, param.TexPos, param.TexSize);
+	CreateVertexData(shader, param->Pos, param->Size, param->Angle, param->Color, param->TexPos, param->TexSize);
 }
 
-void Sprite::Render(Shader* shader,DirectX::SimpleMath::Vector2 Pos,DirectX::SimpleMath::Vector2 Size) {
-	CreateVertexData(shader, Pos, Size, param.Angle, param.Color, param.TexPos, param.TexSize);
-}
+//void Sprite::Render(Shader* shader,DirectX::SimpleMath::Vector2 Pos,DirectX::SimpleMath::Vector2 Size) {
+//	CreateVertexData(shader, Pos, Size, param->Angle, param->Color, param->TexPos, param->TexSize);
+//}
 
 void Sprite::ImguiWindow() {
-	static float pos[2]     { param.Pos.x    ,param.Pos.y };
-	static float size[2]    { param.Size.x   ,param.Size.y };
-	static float angle      { param.Angle};
-	static float TexPos[2]  { param.TexPos.x ,param.TexPos .y };
-	static float TexSize[2] { param.TexSize.x,param.TexSize.y };
-	static float Color[4] = { param.Color.x  ,param.Color.y,param.Color.z,param.Color.w };
+	static float pos[2]     { param->Pos.x    ,param->Pos.y };
+	static float size[2]    { param->Size.x   ,param->Size.y };
+	static float angle      { param->Angle};
+	static float TexPos[2]  { param->TexPos.x ,param->TexPos .y };
+	static float TexSize[2] { param->TexSize.x,param->TexSize.y };
+	static float Color[4] = { param->Color.x  ,param->Color.y,param->Color.z,param->Color.w };
 
 	ImGui::Begin("Sprite_param");
 
@@ -226,7 +232,7 @@ void Sprite::ImguiWindow() {
 
 	setPos    (DirectX::SimpleMath::Vector2(pos[0], pos[1]));
 	setSize   (DirectX::SimpleMath::Vector2(size[0], size[1]));
-	setAngle  (angle);
+	setRotate(angle);
 	setTexPos (DirectX::SimpleMath::Vector2(TexPos[0], TexPos[1]));
 	setTexSize(DirectX::SimpleMath::Vector2(TexSize[0], TexSize[1]));
 	setColor  (DirectX::SimpleMath::Vector4(Color[0], Color[1], Color[2], Color[3]));

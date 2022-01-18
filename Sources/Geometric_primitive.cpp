@@ -16,9 +16,9 @@ Geometric_Primitive::Geometric_Primitive(const WCHAR* vs_name, const WCHAR* ps_n
 	if (!GeometricShader)
 	{
 		GeometricShader = std::make_unique<ShaderEx>();
-		GeometricShader->Create(vs_name, ps_name);
+		GeometricShader->CreateVS(vs_name);
+		GeometricShader->CreatePS(ps_name);
 	}
-	//GeometricShader = std::make_unique<ShaderEx>();
 	// コンスタントバッファ作成
 	D3D11_BUFFER_DESC buffer_desc{};
 	buffer_desc.ByteWidth = sizeof(Constants);
@@ -28,33 +28,7 @@ Geometric_Primitive::Geometric_Primitive(const WCHAR* vs_name, const WCHAR* ps_n
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 
 	// ラスタライザオブジェクトの生成
-	D3D11_RASTERIZER_DESC rasterizer_desc{};
-	/*-----塗りつぶし 前面描画-----*/
-	rasterizer_desc.FillMode = D3D11_FILL_SOLID;	// レンダリングに使う塗りつぶしモード D3D11_FILL_SOLID|D3D11_FILL_WIREFRAME
-	rasterizer_desc.CullMode = D3D11_CULL_BACK;	// 描画する法線方向 D3D11_CULL_NONE(両面描画)|D3D11_CULL_FRONT(後面描画)|D3D11_CULL_BACK(前面描画)
-	rasterizer_desc.FrontCounterClockwise = FALSE;	// 三角形が前面か背面かを決定する TRUEの時、頂点が反対周りだと前向きとみなされる
-	rasterizer_desc.DepthBias = 0;					// 深度バイアス 同一深度上に表示するときに優先度を決めるのに使用したりする
-	rasterizer_desc.DepthBiasClamp = 0;			// 上記同様     ピクセルの最大深度バイアス
-	rasterizer_desc.SlopeScaledDepthBias = 0;		// 上記同様     特定のピクセルの傾きのスカラー
-	rasterizer_desc.DepthClipEnable = TRUE;		// 距離に基づいてクリッピングを有効にするか
-	rasterizer_desc.ScissorEnable = FALSE;			// シザー矩形カリングを使用するか シザー矩形：描画領域の指定によく使われる
-	rasterizer_desc.MultisampleEnable = FALSE;		// マルチサンプリングアンチエイリアス(MSAA)のRTVを使用している時、tureで四辺形ラインアンチエイリアス、falseでアルファラインアンチエイリアスを使用
-													// MSAAを使用するにはリソース生成時にDX11_SAMPLE_DESC::Countを1より上の値を設定する必要がある
-	rasterizer_desc.AntialiasedLineEnable = FALSE;	// MSAAのRTVを使用している時、線分描画でMultisampleEnableがfalseの時にアンチエイリアスを有効にする
-	hr = device->CreateRasterizerState(&rasterizer_desc, rasterizer_states[0].GetAddressOf());
-	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-	/*-----ワイヤーフレーム 前面描画-----*/
-	rasterizer_desc.FillMode = D3D11_FILL_WIREFRAME;
-	rasterizer_desc.CullMode = D3D11_CULL_BACK;
-	rasterizer_desc.AntialiasedLineEnable = TRUE;
-	hr = device->CreateRasterizerState(&rasterizer_desc, rasterizer_states[1].GetAddressOf());
-	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-	/*-----ワイヤーフレーム 両面描画-----*/
-	rasterizer_desc.FillMode = D3D11_FILL_WIREFRAME;
-	rasterizer_desc.CullMode = D3D11_CULL_NONE;
-	rasterizer_desc.AntialiasedLineEnable = TRUE;
-	hr = device->CreateRasterizerState(&rasterizer_desc, rasterizer_states[2].GetAddressOf());
-	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
+	rasterizer.SetRasterizer(device);
 
 	// 各種パラメータの初期化
 	Parameters = std::make_unique<Object3d>();
@@ -118,20 +92,20 @@ void Geometric_Primitive::Render(bool wireframe) {
 	DirectX::XMMATRIX R{ DirectX::XMMatrixRotationQuaternion(Parameters->Orientation) };	// 回転
 	DirectX::XMMATRIX T{ DirectX::XMMatrixTranslation(Parameters->Position.x,Parameters->Position.y,Parameters->Position.z) };	// 平行移動
 
-	
 	XMStoreFloat4x4(&world, S * R * T);	// ワールド変換行列作成
 
 	Constants data{ world,Parameters->Color };
 	// メモリからマップ不可能なメモリに作成されたサブリソースにデータをコピー
 	immediate_context->UpdateSubresource(constant_buffer.Get(),	// 宛先リソースへのポインタ
-		0,	// 宛先サブリソースを識別するインデックス
+		0,														// 宛先サブリソースを識別するインデックス
 		0, &data, 0, 0);
 
 	// 定数バッファの設定
 	immediate_context->VSSetConstantBuffers(0, 1, constant_buffer.GetAddressOf());
 
 	// ラスタライザステートの設定
-	immediate_context->RSSetState(rasterizer_states[wireframe].Get());
+	immediate_context->RSSetState(rasterizer.states[wireframe].Get());
+
 
 	D3D11_BUFFER_DESC buffer_desc{};
 	index_buffer->GetDesc(&buffer_desc);

@@ -18,8 +18,10 @@
 // Name                 Index   Mask Register SysValue  Format   Used
 // -------------------- ----- ------ -------- -------- ------- ------
 // SV_POSITION              0   xyzw        0      POS   float   xyzw
-// TEXCOORD                 0   xy          1     NONE   float   xy  
-// COLOR                    0   xyzw        2     NONE   float   xyzw
+// POSITION                 0   xyzw        1     NONE   float       
+// NORMAL                   0   xyzw        2     NONE   float       
+// TEXCOORD                 0   xy          3     NONE   float   xy  
+// COLOR                    0   xyzw        4     NONE   float   xyzw
 //
 vs_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
@@ -27,8 +29,8 @@ dcl_input v0.xyz
 dcl_input v2.xy
 dcl_input v3.xyzw
 dcl_output_siv o0.xyzw, position
-dcl_output o1.xy
-dcl_output o2.xyzw
+dcl_output o3.xy
+dcl_output o4.xyzw
 dcl_temps 3
 //
 // Initial variable locations:
@@ -36,11 +38,13 @@ dcl_temps 3
 //   v1.x <- vin.normal.x; v1.y <- vin.normal.y; v1.z <- vin.normal.z; 
 //   v2.x <- vin.texcoord.x; v2.y <- vin.texcoord.y; 
 //   v3.x <- vin.color.x; v3.y <- vin.color.y; v3.z <- vin.color.z; v3.w <- vin.color.w; 
-//   o2.x <- <main return value>.color.x; o2.y <- <main return value>.color.y; o2.z <- <main return value>.color.z; o2.w <- <main return value>.color.w; 
-//   o1.x <- <main return value>.texcoord.x; o1.y <- <main return value>.texcoord.y; 
+//   o1.x <- <main return value>.world_position.x; o1.y <- <main return value>.world_position.y; o1.z <- <main return value>.world_position.z; o1.w <- <main return value>.world_position.w; 
+//   o2.x <- <main return value>.world_normal.x; o2.y <- <main return value>.world_normal.y; o2.z <- <main return value>.world_normal.z; o2.w <- <main return value>.world_normal.w; 
+//   o4.x <- <main return value>.color.x; o4.y <- <main return value>.color.y; o4.z <- <main return value>.color.z; o4.w <- <main return value>.color.w; 
+//   o3.x <- <main return value>.texcoord.x; o3.y <- <main return value>.texcoord.y; 
 //   o0.x <- <main return value>.position.x; o0.y <- <main return value>.position.y; o0.z <- <main return value>.position.z; o0.w <- <main return value>.position.w
 //
-#line 6 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine GPUParticle仮実裁Eい\Shaders\sprite_vs.hlsl"
+#line 6 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine GPUParticle仮実裁Eい\Shaders\GPUParticle_vs.hlsl"
 itof r0.w, l(1)  // r0.w <- vout.position.w
 mov r0.xyz, v0.xyzx  // r0.x <- vout.position.x; r0.y <- vout.position.y; r0.z <- vout.position.z
 
@@ -50,9 +54,9 @@ mov r1.xyzw, v3.xyzw  // r1.x <- vout.color.x; r1.y <- vout.color.y; r1.z <- vou
 #line 8
 mov r2.xy, v2.xyxx  // r2.x <- vout.texcoord.x; r2.y <- vout.texcoord.y
 
-#line 9
+#line 18
 mov o0.xyzw, r0.xyzw
-mov o2.xyzw, r1.xyzw
-mov o1.xy, r2.xyxx
+mov o4.xyzw, r1.xyzw
+mov o3.xy, r2.xyxx
 ret 
 // Approximately 8 instruction slots used

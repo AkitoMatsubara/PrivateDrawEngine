@@ -1,8 +1,10 @@
 #pragma once
-#include "shader.h"
+
+#include "shaderEx.h"
+#include "Object2d.h"
+
 #include <d3d11.h>
 #include <SimpleMath.h>
-#include "shaderEx.h"
 
 #include <wrl.h>
 
@@ -15,22 +17,21 @@
 //	XMFLOAT4 color;
 //};
 
-// 矩形用のステータス
-struct SpriteParam {
-	DirectX::SimpleMath::Vector2 Pos;		// 描画位置
-	DirectX::SimpleMath::Vector2 Size;		// 描画サイズ
-	DirectX::SimpleMath::Vector2 TexPos;	// テクスチャの開始位置
-	DirectX::SimpleMath::Vector2 TexSize;	// テクスチャの使用サイズ
-	float Angle = 0.0f;		// 回転角度
-	DirectX::SimpleMath::Vector4 Color;		// 加算色
-};
+//// 矩形用のステータス
+//struct SpriteParam {
+//	DirectX::SimpleMath::Vector2 Pos;		// 描画位置
+//	DirectX::SimpleMath::Vector2 Size;		// 描画サイズ
+//	DirectX::SimpleMath::Vector2 TexPos;	// テクスチャの開始位置
+//	DirectX::SimpleMath::Vector2 TexSize;	// テクスチャの使用サイズ
+//	float Angle = 0.0f;		// 回転角度
+//	DirectX::SimpleMath::Vector4 Color;		// 加算色
+//};
 
 class Sprite {
 private:
 	// メンバ変数
 	Microsoft::WRL::ComPtr<ID3D11VertexShader>			vertex_shader;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader>			pixel_shader;
-	Microsoft::WRL::ComPtr<ID3D11InputLayout>			input_layout;
 	Microsoft::WRL::ComPtr<ID3D11Buffer>				vertex_buffer;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>	shader_resource_view;
 	Microsoft::WRL::ComPtr<ID3D11RasterizerState>		rasterizer_states[3];	// 0:片面塗りつぶし,1:片面ワイヤーフレーム,2:両面ワイヤーフレーム
@@ -38,7 +39,10 @@ private:
 
 	D3D11_TEXTURE2D_DESC	texture2d_desc;
 
-	SpriteParam param;
+	//SpriteParam Parameters;
+	std::unique_ptr<Object2d> param;
+	static inline std::unique_ptr<ShaderEx> SpriteShader;	// デフォルトで使用するシェーダ
+
 public:
 	// コンストラクタ、デストラクタ
 	Sprite(const wchar_t* filename);
@@ -50,15 +54,15 @@ public:
 	void CreateVertexData(Shader* shader, DirectX::SimpleMath::Vector2 pos, DirectX::SimpleMath::Vector2 size, float angle, DirectX::SimpleMath::Vector4 color
 		, DirectX::SimpleMath::Vector2 TexPos, DirectX::SimpleMath::Vector2 TexSize);
 
-	// メンバ変数でできるならいらない？と思い削除←やっぱいるわ課題的に
-	void Render(Shader* shader, DirectX::SimpleMath::Vector2 pos, DirectX::SimpleMath::Vector2 size, float andle, DirectX::SimpleMath::Vector4 color
-		, DirectX::SimpleMath::Vector2 TexPos, DirectX::SimpleMath::Vector2 TexSize);	// immediate(対象となるデータそのものをコード中に記したものを即値という)
+	//// メンバ変数でできるならいらない？と思い削除←やっぱいるわ課題的に
+	//void Render(Shader* shader, DirectX::SimpleMath::Vector2 pos, DirectX::SimpleMath::Vector2 size, float andle, DirectX::SimpleMath::Vector4 color
+	//	, DirectX::SimpleMath::Vector2 TexPos, DirectX::SimpleMath::Vector2 TexSize);	// immediate(対象となるデータそのものをコード中に記したものを即値という)
 
 	// メンバ変数のパラメータで描画
-	void Render(Shader* shader);	// immediate(対象となるデータそのものをコード中に記したものを即値という)
+	void Render(Shader* shader = SpriteShader.get());	// immediate(対象となるデータそのものをコード中に記したものを即値という)
 
-	// 位置だけ指定するRender アニメーション不可
-	void Render(Shader* shader, DirectX::SimpleMath::Vector2 Pos, DirectX::SimpleMath::Vector2 Size);
+	//// 位置だけ指定するRender アニメーション不可
+	//void Render(Shader* shader, DirectX::SimpleMath::Vector2 Pos, DirectX::SimpleMath::Vector2 Size);
 
 	//// テキスト画像からテキストを切り抜いて描画(画像なのでフォーマット固定)
 	//void Text_Out(ID3D11DeviceContext* immediate_context, std::string s, XMFLOAT2 pos, XMFLOAT2 size, XMFLOAT4 color);
@@ -71,26 +75,26 @@ public:
 
 
 	// セッター
-	void setPos    (DirectX::SimpleMath::Vector2 pos)     { param.Pos     = pos; }
-	void setSize   (DirectX::SimpleMath::Vector2 Size)    { param.Size    = Size; }
-	void setTexPos (DirectX::SimpleMath::Vector2 texPos)  { param.TexPos  = texPos; }
-	void setTexSize(DirectX::SimpleMath::Vector2 texSize) { param.TexSize = texSize; }
-	void setAngle  (float angle)      { param.Angle   = angle; }
-	void setColor  (DirectX::SimpleMath::Vector4 color)   { param.Color   = color; }
+	void setPos    (DirectX::SimpleMath::Vector2 pos)     { param->Pos     = pos; }
+	void setSize(DirectX::SimpleMath::Vector2 Size)    { param->Size    = Size; }
+	void setTexPos (DirectX::SimpleMath::Vector2 texPos)  { param->TexPos  = texPos; }
+	void setTexSize(DirectX::SimpleMath::Vector2 texSize) { param->TexSize = texSize; }
+	void setRotate(float angle)      { param->Angle   = angle; }
+	void setColor  (DirectX::SimpleMath::Vector4 color)   { param->Color   = color; }
 
-	void setPos    (float posX, float posY)           { param.Pos     = DirectX::SimpleMath::Vector2(posX, posY); }
-	void setSize   (float SizeX, float SizeY)         { param.Size    = DirectX::SimpleMath::Vector2(SizeX, SizeY); }
-	void setTexPos (float texPosX, float texPosY)     { param.TexPos  = DirectX::SimpleMath::Vector2(texPosX, texPosY); }
-	void setTexSize(float texSizeX, float texSizeY)   { param.TexSize = DirectX::SimpleMath::Vector2(texSizeX, texSizeY); }
-	void setColor(float r, float g, float b, float a) { param.Color   = DirectX::SimpleMath::Vector4(r, g, b, a); }
+	void setPos    (float posX, float posY)           { param->Pos     = DirectX::SimpleMath::Vector2(posX, posY); }
+	void setSize   (float SizeX, float SizeY)         { param->Size    = DirectX::SimpleMath::Vector2(SizeX, SizeY); }
+	void setTexPos (float texPosX, float texPosY)     { param->TexPos  = DirectX::SimpleMath::Vector2(texPosX, texPosY); }
+	void setTexSize(float texSizeX, float texSizeY)   { param->TexSize = DirectX::SimpleMath::Vector2(texSizeX, texSizeY); }
+	void setColor(float r, float g, float b, float a) { param->Color   = DirectX::SimpleMath::Vector4(r, g, b, a); }
 
 	// ゲッター
-	DirectX::SimpleMath::Vector2 getPos()     { return param.Pos;}
-	DirectX::SimpleMath::Vector2 getSize()    { return param.Size;}
-	DirectX::SimpleMath::Vector2 getTexPos()  { return param.TexPos;}
-	DirectX::SimpleMath::Vector2 getTexSize() { return param.TexSize;}
-	float getAngle() { return param.Angle; }
-	DirectX::SimpleMath::Vector4 getColor  () { return param.Color;}
+	DirectX::SimpleMath::Vector2 getPos()     { return param->Pos;}
+	DirectX::SimpleMath::Vector2 getSize()    { return param->Size;}
+	DirectX::SimpleMath::Vector2 getTexPos()  { return param->TexPos;}
+	DirectX::SimpleMath::Vector2 getTexSize() { return param->TexSize;}
+	float getAngle() { return param->Angle; }
+	DirectX::SimpleMath::Vector4 getColor  () { return param->Color;}
 };
 
 namespace SpriteMath

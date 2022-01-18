@@ -26,8 +26,6 @@ bool SceneTitle::Initialize() {
 		// spriteオブジェクトを生成(今回は先頭の１つだけを生成する)
 		TitleImage = std::make_unique<Sprite>(L".\\Resources\\screenshot.jpg");	// シェーダーはコンストラクタ内で指定しているため、別を使うには改良が必要
 		TitleImage->setSize(1280, 720);
-		SpriteShader = std::make_unique<ShaderEx>();
-		SpriteShader->Create(L"Shaders\\sprite_vs", L"Shaders\\sprite_ps");
 
 		// Geometric_primitiveオブジェクトの生成
 		{
@@ -35,7 +33,8 @@ bool SceneTitle::Initialize() {
 			grid->setPos(DirectX::SimpleMath::Vector3(0, -1, 0));
 			grid->setSize(DirectX::SimpleMath::Vector3(10, 0.1f, 10));
 			GeomtricShader = std::make_unique<ShaderEx>();
-			GeomtricShader->Create(L"Shaders\\geometric_primitive_vs", L"Shaders\\geometric_primitive_ps");
+			GeomtricShader->CreateVS(L"Shaders\\geometric_primitive_vs");
+			GeomtricShader->CreatePS(L"Shaders\\geometric_primitive_ps");
 		}
 
 		//skinned_mesh = make_unique<Skinned_Mesh>(".\\Resources\\cube.000.fbx");		// テクスチャ、マテリアル無し
@@ -45,9 +44,6 @@ bool SceneTitle::Initialize() {
 		//skinned_mesh = make_unique<Skinned_Mesh>(".\\Resources\\cube.002.1.fbx");	// テクスチャ有り無し、マテリアル有り無し混合
 		//skinned_mesh = make_unique<Skinned_Mesh>(".\\Resources\\cube.003.0.fbx");	// 複数メッシュ キューブと猿
 		//skinned_mesh = make_unique<Skinned_Mesh>(".\\Resources\\cube.003.1.fbx", Skinned_Mesh::CST_RIGHT_Z, true);	// 3角形化されていない複数メッシュ キューブ
-		SkinnedShader = std::make_unique<ShaderEx>();
-		SkinnedShader->Create(L"Shaders\\skinned_mesh_vs", L"Shaders\\skinned_mesh_ps");
-
 		camera = std::make_unique<Camera>();
 	}
 	return true;
@@ -94,7 +90,7 @@ void SceneTitle::Render() {
 	// 2Dオブジェクトの描画設定
 	{
 		immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(DS_TRUE), 1);	// 3Dオブジェクトの後ろに出すため一旦
-		TitleImage->Render(SpriteShader.get());
+		TitleImage->Render();
 	}
 	// 3Dオブジェクトの描画設定
 	{
@@ -114,7 +110,7 @@ void SceneTitle::Render() {
 		{
 			// 3DオブジェクトRender内に移植 現状ここである必要なし？
 			grid->Render(true);
-			skinned_mesh->Render(SkinnedShader.get());
+			skinned_mesh->Render();
 		}
 	}
 

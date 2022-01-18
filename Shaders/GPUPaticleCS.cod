@@ -7,8 +7,8 @@
 // cbuffer CS_CONSTANT
 // {
 //
-//   float Theta;                       // Offset:    0 Size:     4
-//   float3 dummy;                      // Offset:    4 Size:    12 [unused]
+//   float3 Size;                       // Offset:    0 Size:    12
+//   float dummy;                       // Offset:   12 Size:     4 [unused]
 //
 // }
 //
@@ -18,9 +18,12 @@
 //   struct BufOutType
 //   {
 //       
-//       float i;                       // Offset:    0
+//       float3 Pos;                    // Offset:    0
+//       float dummy;                   // Offset:   12
+//       float3 Size;                   // Offset:   16
+//       float dummy2;                  // Offset:   28
 //
-//   } $Element;                        // Offset:    0 Size:     4
+//   } $Element;                        // Offset:    0 Size:    32
 //
 // }
 //
@@ -29,8 +32,8 @@
 //
 // Name                                 Type  Format         Dim      HLSL Bind  Count
 // ------------------------------ ---------- ------- ----------- -------------- ------
-// BufferOut                             UAV  struct         r/w             u0      1 
-// CS_CONSTANT                       cbuffer      NA          NA            cb2      1 
+// BufferOut                             UAV  struct         r/w             u1      1 
+// CS_CONSTANT                       cbuffer      NA          NA            cb3      1 
 //
 //
 //
@@ -47,25 +50,19 @@
 // no Output
 cs_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
-dcl_constantbuffer CB2[1], immediateIndexed
-dcl_uav_structured u0, 4
+dcl_constantbuffer CB3[1], immediateIndexed
+dcl_uav_structured u1, 32
 dcl_input vThreadID.x
-dcl_temps 1
 dcl_thread_group 1, 1, 1
 //
 // Initial variable locations:
 //   vThreadID.x <- DTid.x; vThreadID.y <- DTid.y; vThreadID.z <- DTid.z
 //
-#line 33 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine GPUParticle仮実裁Eい\Shaders\ComputeShader_cs.hlsl"
-sincos r0.x, null, cb2[0].x
-mov r0.y, l(1)
-iadd r0.y, r0.y, vThreadID.x
-utof r0.y, r0.y
-div r0.x, r0.x, r0.y
-mov r0.y, -r0.x
-max r0.x, r0.y, r0.x
-store_structured u0.x, vThreadID.x, l(0), r0.x
+#line 30 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine GPUParticle仮実裁Eい\Shaders\GPUPaticleCS.hlsl"
+store_structured u1.x, vThreadID.x, l(16), cb3[0].x
+store_structured u1.x, vThreadID.x, l(20), cb3[0].y
+store_structured u1.x, vThreadID.x, l(24), cb3[0].z
 
-#line 34
+#line 32
 ret 
-// Approximately 9 instruction slots used
+// Approximately 4 instruction slots used

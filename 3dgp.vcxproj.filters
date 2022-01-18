@@ -83,6 +83,9 @@
     <Filter Include="Headers\DataLoad\GeometricPrimitives">
       <UniqueIdentifier>{c9203c75-d77d-49fe-9e3d-9e9e45f65a96}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders\GPUParticle">
+      <UniqueIdentifier>{714705a2-f819-444d-ab07-8fbf9a8d138b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\sprite_ps.hlsl">
@@ -112,6 +115,15 @@
     <FxCompile Include="Shaders\ComputeShader_cs.hlsl">
       <Filter>Shaders\ComputeShader</Filter>
     </FxCompile>
+    <FxCompile Include="Shaders\GPUPaticleCS.hlsl">
+      <Filter>Shaders\GPUParticle</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\GPUParticle_ps.hlsl">
+      <Filter>Shaders\GPUParticle</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\GPUParticle_vs.hlsl">
+      <Filter>Shaders\GPUParticle</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\sprite.hlsli">
@@ -125,6 +137,10 @@
     </None>
     <None Include="Shaders\skinned_mesh.hlsli">
       <Filter>Shaders\Skinned_Mesh</Filter>
+    </None>
+    <None Include="packages.config" />
+    <None Include="Shaders\GPUParticle.hlsli">
+      <Filter>Shaders\GPUParticle</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -230,7 +246,13 @@
     <ClInclude Include="Headers\Camera.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="Headers\UseConputeShader.h">
+    <ClInclude Include="Headers\UseComputeShader.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\GPUParticle.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\Object2d.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>
@@ -334,7 +356,10 @@
     <ClCompile Include="Sources\Camera.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="Sources\UseConputeShader.cpp">
+    <ClCompile Include="Sources\UseComputeShader.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\GPUParticle.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
   </ItemGroup>

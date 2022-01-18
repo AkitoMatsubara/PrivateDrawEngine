@@ -34,8 +34,8 @@ public:
 class StageManager
 {
 private:
-	const static int ROW_PARTS = 21;	// 行数。奇数での設定お願いします
-	const static int COL_PARTS = 21;	// 列数。奇数での設定お願いします
+	const static int ROW_PARTS = 25;	// 行数。奇数での設定お願いします
+	const static int COL_PARTS = 25;	// 列数。奇数での設定お願いします
 	const static int PARTS_SIZE = ROW_PARTS * COL_PARTS;	// 縦*横の全てのパーツ数
 
 	std::array<std::unique_ptr<StageParts>, PARTS_SIZE> Stages;	// そのままモデル
@@ -51,9 +51,12 @@ public:
 		static StageManager instance;
 		return instance;
 	}
-	// StagePartsのonObject()に渡す仲介
-	//void Check(const DirectX::SimpleMath::Vector3& obj);
+	// StagePartsの上で弾を発射したときに呼び出す。
+	///<summary>どの床に乗ってるか判定、ダメージ加算</summary>
 	void Check(const Object3d& obj);
+
+	/// <summary>床の上にいなければ下に落ちる処理</summary>
+	bool RideParts(Object3d& obj);
 
 	// 取得、格納系
 	size_t getSize() { return Stages.size(); };

@@ -20,11 +20,15 @@ private:
 public:
 	ShaderEx() {}
 	virtual ~ShaderEx() {}
-	bool Create(const WCHAR* vsfilename, const WCHAR* psfilename);
-	bool Create(const WCHAR* vsfilename, const WCHAR* gsfilename, const WCHAR* psfilename);
-	bool Create(const WCHAR* vsfilename, const WCHAR* dsfilename, const WCHAR* hsfilename, const WCHAR* psfilename);
-	bool Create(const WCHAR* vsfilename, const WCHAR* dsfilename, const WCHAR* hsfilename, const WCHAR* gsfilename, const WCHAR* psfilename);
-	bool Create(const WCHAR* csfilename);
 
-	ID3D11ComputeShader* GetCS() { return CS.Get(); }
+	bool CreateVS(const WCHAR* vsfilename);
+	bool CreatePS(const WCHAR* psfilename);
+	bool CreateDS(const WCHAR* dsfilename);
+	bool CreateHS(const WCHAR* hsfilename);
+	bool CreateGS(const WCHAR* gsfilename);
+	bool CreateCS(const WCHAR* csfilename);
+
+	ID3D11ComputeShader*	GetCS() { return CS.Get(); }
+	ID3D11PixelShader*		GetPS() { return PS.Get(); }
+	ID3D11VertexShader*		GetVS() { return VS.Get(); }
 };

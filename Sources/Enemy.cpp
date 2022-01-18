@@ -11,7 +11,6 @@ void Enemy::Initialize() {
 	Parameters->Position = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
 	Parameters->Vector = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
 	Parameters->Acceleration = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
-	//Parameters->Rotate= DirectX::SimpleMath::Vector3{0.0f,0.0f,0.0f};
 	Parameters->Orientation = DirectX::SimpleMath::Quaternion{ 0.0f,0.0f,0.0f,1.0f };
 	Parameters->Scale = DirectX::SimpleMath::Vector3{ 1.0f,1.0f,1.0f };
 	Parameters->Color = DirectX::SimpleMath::Vector4{ 1.0f,1.0f,1.0f,1.0f };
@@ -30,11 +29,13 @@ void Enemy::Update() {
 	// モデルに描画系パラメーターを渡す
 	Model->getParameters()->CopyParam(Parameters.get());
 
+#ifdef _DEBUG
 	Capcule->Parameters->CopyParam(Parameters.get());
 	static constexpr float CAPCULESIZE = 0.6f;
 	Capcule->Parameters->Scale = DirectX::SimpleMath::Vector3(CAPCULESIZE * 0.7f, CAPCULESIZE, CAPCULESIZE);
 	Capcule->Parameters->Color = DirectX::SimpleMath::Vector4{ 1.0f,1.0f,1.0f,1.0f, };
 	Capcule->Parameters->Orientation.x += 90;
+#endif
 }
 
 void Enemy::Render() {
@@ -49,21 +50,25 @@ void Enemy::Move()
 	Parameters->Velocity = DirectX::SimpleMath::Vector3{ 0.0f, 0.0f, 0.0f };	// 入力中だけ動かすために毎フレーム初期化 普通いらない?
 
 	Parameters->calcForward();
-	static float MOVE_SPEED = 0.02f;
+	static constexpr float MOVE_SPEED = 0.02f;
 
 	//--------------------------------------------------------
-	switch (state)
+	if (StageManager::getInstance().RideParts(*Parameters))	// ステージに乗っているかどうか、乗っていれば行動する
 	{
-	case ENEMYSTATE::GOTARGET:
-		// Targetの方に向く処理 敵の挙動に組み込もうと思ってるのでとりあえず作った次第
-		FocusTarget(360.0f, 100.0f);
-		Parameters->Velocity += Model->getWorld().Backward() * MOVE_SPEED;	// モデル前方に移動
-		break;
-	case ENEMYSTATE::SHOT:
-		Shot();
+		switch (state)
+		{
+		case ENEMYSTATE::GOTARGET:
+			//// Targetの方に向く処理 敵の挙動に組み込もうと思ってるのでとりあえず作った次第
+			//FocusTarget(360.0f, 100.0f);
+			//Parameters->Velocity += Model->getWorld().Backward() * MOVE_SPEED;	// モデル前方に移動
+			GoStraight();
+			break;
+		case ENEMYSTATE::SHOT:
+			Shot();
+			break;
+		}
 	}
-
-	// TODO デバッグ用 消そうね
+	// TODO デバッグ用 本実装終わったら消そうね
 	if (GetAsyncKeyState('Q') <0)
 	{
 		state = ENEMYSTATE::SHOT;
@@ -74,6 +79,8 @@ void Enemy::Move()
 	}
 
 	Parameters->Position += Parameters->Velocity;
+
+	if (Parameters->Position.y <= -5.0f)Parameters->Exist = false;	// TODO マジックナンバー
 	//--------------------------------------------------------
 
 	//Velocity+= acceleration;
@@ -103,6 +110,19 @@ void Enemy::FocusTarget(float focusAngle, float focusRange)
 	}
 }
 
+void Enemy::GoStraight()
+{
+	static constexpr float MOVE_SPEED = 0.02f;
+	// Targetの方に向く処理 敵の挙動に組み込もうと思ってるのでとりあえず作った次第
+	FocusTarget(360.0f, 100.0f);
+	Parameters->Velocity += Model->getWorld().Backward() * MOVE_SPEED;	// モデル前方に移動
+	// いつもの距離確認
+	DirectX::SimpleMath::Vector3 dist = Target.Position - Parameters->Position;
+	if (dist.Length() <= 3.5f) { state = ENEMYSTATE::SHOT; }	// TODO マジックナンバー
+
+}
+
+
 void Enemy::Shot()
 {
 	if (!shoted)
@@ -113,13 +133,18 @@ void Enemy::Shot()
 	}
 	else
 	{
-		interval += 0.1f;
+		FocusTarget(360.0f, 100.0f);
+		interval += 0.1f;	// TODO マジックナンバー? どう分けよう?
 	}
 	if(interval>=ShotInterval)
 	{
 		interval = 0.0f;
 		shoted = false;
 	}
+
+	// いつもの距離確認
+	DirectX::SimpleMath::Vector3 dist = Target.Position - Parameters->Position;
+	if (dist.Length() >= 3.5f) { state = ENEMYSTATE::GOTARGET; }	// TODO マジックナンバー
 
 }
 
@@ -147,13 +172,6 @@ void EnemyManager::Update()
 		else {
 			// 存在している敵の更新
 			enem->get()->Update();
-			//if (GetAsyncKeyState('Q') < 0) {
-			//	// Shotの生成
-			//	// TODO: 暫定 要修正
-			//	shotsManager->newSet(it->get()->Parameters.get());
-			//	StageManager::getInstance().Check(*it->get()->Parameters);	// 床にダメージ
-			//}
-
 			++enem;	// 次へ
 		}
 	}
