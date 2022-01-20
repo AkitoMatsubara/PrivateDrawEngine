@@ -19,10 +19,6 @@ void StageParts::Initialize()
 
 void StageParts::Update()
 {
-	// ギミック組み込む
-	// 弾を撃ったobjectを検知、そいつが立っているステージをライフ削る
-	// ライフがなくなれば床が抜け落ちるって感じ
-
 	// 描画するためモデルに情報を渡す
 	Model->getParameters()->CopyParam(Parameters.get());
 }
@@ -100,7 +96,7 @@ void StageParts::Damage()
 	Parameters->CurLife--;	// 体力を減らす
 	Parameters->Color.w = static_cast<float>(Parameters->CurLife) / static_cast<float>(Parameters->MaxLife);
 
-	// もし体力が0以下であれば存在フラグをへし折るﾊﾞｷｨ
+	// もし体力が0以下であれば存在フラグをへし折る
 	if (Parameters->CurLife <= 0)
 	{
 		Parameters->Exist = false;

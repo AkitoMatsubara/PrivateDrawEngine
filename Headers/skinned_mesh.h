@@ -223,7 +223,6 @@ public:
 
 	void setPos(float posX, float posY, float posZ) { Parameters->Position = DirectX::SimpleMath::Vector3(posX, posY, posZ); }
 	void setScale(float sizeX, float sizeY, float sizeZ) { Parameters->Scale = DirectX::SimpleMath::Vector3(sizeX, sizeY, sizeZ); }
-	//void setOrientation(float angleX, float angleY, float angleZ) { Parameters->Rotate = DirectX::SimpleMath::Vector3(angleX, angleY, angleZ); }
 	void setOrientation(float angleX, float angleY, float angleZ) { Parameters->Orientation = DirectX::SimpleMath::Quaternion(angleX, angleY, angleZ, Parameters->Orientation.w); }
 	void setColor(float r, float g, float b, float a) { Parameters->Color = DirectX::SimpleMath::Vector4(r, g, b, a); }
 

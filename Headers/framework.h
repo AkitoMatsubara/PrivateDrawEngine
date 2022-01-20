@@ -29,6 +29,8 @@ class framework
 {
 	// 変数
 private:
+	static framework* instance;
+
 	high_resolution_timer tictoc;
 	uint32_t frames{ 0 };
 	float elapsed_time{ 0.0f };
@@ -51,19 +53,6 @@ private:
 
 	Microsoft::WRL::ComPtr<ID3D11SamplerState>	sampler_states[3];
 	std::shared_ptr<Sampler> sample;
-
-	static framework* instance;
-	//-------------------------------------------------------------------
-	// fps算出系
-	int frameRate = 60;
-	float MIN_FREAM_TIME;
-	float frameTime;
-	LARGE_INTEGER timeStart;
-	LARGE_INTEGER timeEnd;
-	LARGE_INTEGER timeFreq;
-	// fpsを取得するなら0で初期化しないとゴミが混ざってマイナスから始まったりする(かも知れない)
-	float fps;
-	//-------------------------------------------------------------------
 
 public:
 	CONST HWND hwnd;

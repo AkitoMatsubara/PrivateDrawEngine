@@ -4,7 +4,7 @@
 #include "Player.h"
 #include "GPUParticle.h"
 
-class SceneTest_2 :public SceneBase {
+class SceneGame :public SceneBase {
 
 	// •Ï” //
 private:

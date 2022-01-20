@@ -40,7 +40,7 @@ dcl_temps 3
 //   o1.x <- <main return value>.texcoord.x; o1.y <- <main return value>.texcoord.y; 
 //   o0.x <- <main return value>.position.x; o0.y <- <main return value>.position.y; o0.z <- <main return value>.position.z; o0.w <- <main return value>.position.w
 //
-#line 6 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine GPUParticle仮実裁Eい\Shaders\sprite_vs.hlsl"
+#line 6 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine\Shaders\sprite_vs.hlsl"
 itof r0.w, l(1)  // r0.w <- vout.position.w
 mov r0.xyz, v0.xyzx  // r0.x <- vout.position.x; r0.y <- vout.position.y; r0.z <- vout.position.z
 

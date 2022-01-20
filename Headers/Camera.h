@@ -18,6 +18,8 @@ protected:
 	FLOAT Height;
 	bool bView;
 
+	inline static constexpr float CAMMERASPEED = 0.05f;
+
 public:
 	Camera();
 	virtual ~Camera();

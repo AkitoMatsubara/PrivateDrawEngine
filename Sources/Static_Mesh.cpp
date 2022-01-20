@@ -446,11 +446,11 @@ void Static_Mesh::imguiWindow(const char* beginname) {
 
 	ImGui::Begin(beginname);	// 識別ID 同じIDだと一緒のウィンドウにまとめられる
 
-	ImGui::SliderFloat3(u8"Position", pos, -5, 5);
-	ImGui::SliderFloat3(u8"Size", size, 0, 5);
-	ImGui::SliderFloat3(u8"angle", angle, -360, 360);
-	ImGui::ColorEdit4(u8"Color", (float*)&Color);
-	ImGui::Checkbox(u8"WireFrame", &wireframe);
+	ImGui::SliderFloat3("Position", pos, -5, 5);
+	ImGui::SliderFloat3("Size", size, 0, 5);
+	ImGui::SliderFloat3("angle", angle, -360, 360);
+	ImGui::ColorEdit4("Color", (float*)&Color);
+	ImGui::Checkbox("WireFrame", &wireframe);
 
 	ImGui::End();	// ウィンドウ終了
 	// パラメータ代入

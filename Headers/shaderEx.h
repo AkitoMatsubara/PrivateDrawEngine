@@ -2,6 +2,7 @@
 #include "shader.h"
 
 #include <d3d11.h>
+#include  <mutex>
 
 
 
@@ -16,7 +17,8 @@ private:
 	HRESULT create_gs_from_cso(ID3D11Device* device, const char* cso_name, ID3D11GeometryShader** geometry_shader);
 	HRESULT create_cs_from_cso(ID3D11Device* device, const char* cso_name, ID3D11ComputeShader** compute_shader);
 
-
+	//std::mutex mutex;
+	//std::mutex& GetMutex() { return mutex; }
 public:
 	ShaderEx() {}
 	virtual ~ShaderEx() {}

@@ -213,7 +213,7 @@
     <ClInclude Include="Headers\SceneTitle.h">
       <Filter>Headers\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="Headers\SceneTest_2.h">
+    <ClInclude Include="Headers\SceneGame.h">
       <Filter>Headers\Scene</Filter>
     </ClInclude>
     <ClInclude Include="Headers\SceneLoading.h">
@@ -253,6 +253,12 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="Headers\Object2d.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\Score.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\FrameRateCalculator.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>
@@ -329,7 +335,7 @@
     <ClCompile Include="Sources\CSSample.cpp">
       <Filter>Sources\System</Filter>
     </ClCompile>
-    <ClCompile Include="Sources\SceneTest_2.cpp">
+    <ClCompile Include="Sources\SceneGame.cpp">
       <Filter>Sources\Scenes</Filter>
     </ClCompile>
     <ClCompile Include="Sources\SceneLoading.cpp">
@@ -360,6 +366,12 @@
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="Sources\GPUParticle.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\Score.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\FrameRateCalculator.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
   </ItemGroup>

@@ -123,10 +123,10 @@ void Geometric_Primitive::imguiWindow(const char* beginname) {
 
 	ImGui::Begin(beginname);	// 識別ID 同じIDだと一緒のウィンドウにまとめられる
 
-	ImGui::SliderFloat3(u8"Position", pos, -5, 5);
-	ImGui::SliderFloat3(u8"Size", size, 0, 5);
+	ImGui::SliderFloat3("Position", pos, -5, 5);
+	ImGui::SliderFloat3("Size", size, 0, 5);
 	//ImGui::SliderFloat3(u8"angle", angle, -360, 360);
-	ImGui::ColorEdit4(u8"Color", (float*)&Color);
+	ImGui::ColorEdit4("Color", (float*)&Color);
 
 	ImGui::End();
 	setPos(DirectX::SimpleMath::Vector3(pos[0], pos[1], pos[2]));

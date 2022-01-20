@@ -21,15 +21,14 @@ public:
 	high_resolution_timer(high_resolution_timer&&) noexcept = delete;
 	high_resolution_timer& operator=(high_resolution_timer&&) noexcept = delete;
 
-	// Returns the total time elapsed since Reset() was called, NOT counting any
-	// time when the clock is stopped.
+	// Reset()が呼ばれてからの経過時間の合計を返します。
+	// 時計が停止している時間。
 	float time_stamp() const  // in seconds
 	{
-		// If we are stopped, do not count the time that has passed since we stopped.
-		// Moreover, if we previously already had a pause, the distance
-		// stop_time - base_time includes paused time, which we do not want to count.
-		// To correct this, we can subtract the paused time from mStopTime:
-		//
+		// 停止している場合は、停止してからの経過時間を数えない。
+		// さらに、以前にすでに一時停止していた場合、その距離
+		// stop_time - base_time には一時停止時間が含まれており、これはカウントしたくない。
+		// これを修正するには、mStopTime から一時停止時間を差し引けばよい。
 		//                     |<--paused_time-->|
 		// ----*---------------*-----------------*------------*------------*------> time
 		//  base_time       stop_time        start_time     stop_time    this_time
@@ -39,11 +38,9 @@ public:
 			return static_cast<float>(((stop_time - paused_time) - base_time) * seconds_per_count);
 		}
 
-		// The distance this_time - mBaseTime includes paused time,
-		// which we do not want to count.  To correct this, we can subtract
-		// the paused time from this_time:
-		//
-		//  (this_time - paused_time) - base_time
+		// this_time - mBaseTimeの距離には、カウントしたくない一時停止時間が含まれています。
+		// これを修正するには、this_timeから一時停止した時間を差し引けばよい。
+		// (this_time - paused_time) - base_time
 		//
 		//                     |<--paused_time-->|
 		// ----*---------------*-----------------*------------*------> time
@@ -59,7 +56,7 @@ public:
 		return static_cast<float>(delta_time);
 	}
 
-	void reset() // Call before message loop.
+	void reset() // メッセージループの前に呼び出す。
 	{
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&this_time));
 		base_time = this_time;
@@ -74,7 +71,7 @@ public:
 		LONGLONG start_time;
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&start_time));
 
-		// Accumulate the time elapsed between stop and start pairs.
+		// 停止と開始のペアの間の経過時間を積算する。
 		//
 		//                     |<-------d------->|
 		// ----*---------------*-----------------*------------> time
@@ -88,7 +85,7 @@ public:
 		}
 	}
 
-	void stop() // Call when paused.
+	void stop() // 一時停止中に呼び出す。
 	{
 		if (!stopped)
 		{
@@ -97,7 +94,7 @@ public:
 		}
 	}
 
-	void tick() // Call every frame.
+	void tick() // フレーム毎に呼び出す。
 	{
 		if (stopped)
 		{
@@ -106,15 +103,15 @@ public:
 		}
 
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&this_time));
-		// Time difference between this frame and the previous.
+		// このフレームと前のフレームとの時間差。
 		delta_time = (this_time - last_time) * seconds_per_count;
 
-		// Prepare for next frame.
+		// 次のフレームを準備する．
 		last_time = this_time;
 
-		// Force nonnegative.  The DXSDK's CDXUTTimer mentions that if the
-		// processor goes into a power save mode or we get shuffled to another
-		// processor, then mDeltaTime can be negative.
+		// 強制的に非負にする。 DXSDKのCDXUTTimerでは、以下の場合に言及されています。
+		// プロセッサがパワーセーブモードに入るか、他のプロセッサにシャッフルされる。
+		// mDeltaTime は負になる可能性があります。
 		if (delta_time < 0.0)
 		{
 			delta_time = 0.0;

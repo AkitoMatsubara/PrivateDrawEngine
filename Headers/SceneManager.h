@@ -56,13 +56,13 @@ public:
 
 	void imguiSceneChanger();
 
-	void setScene(std::unique_ptr<SceneBase> scene) { newScene = move(scene); }
-	std::unique_ptr<SceneBase> getScene() { return move(newScene); }
+	void setScene(std::unique_ptr<SceneBase> scene) { newScene = std::move(scene); }
+	std::unique_ptr<SceneBase> getScene() { return std::move(newScene); }
 
 	// 準備完了しているか
 	bool isReady() const { return ready; }
 	// 準備完了設定
-	void setReady() { ready = true; }
+	void setReady(bool set) { ready = set; }
 
 };
 
@@ -77,7 +77,7 @@ public:
 
 class SceneManager{
 private:
-	std::unique_ptr<SceneBase> scene;
+	std::unique_ptr<SceneBase> currentScene;
 public:
 	static SceneManager& getInstance() {
 		static SceneManager instance;
@@ -85,10 +85,10 @@ public:
 	}
 
 
-	SceneManager() :scene(nullptr) {}
-	~SceneManager() {}
+	SceneManager() :currentScene(nullptr) {}
 
 	void Update();
 	void Render();
-	void ChangeScene(std::unique_ptr<SceneBase> newScene);	// シーン切り替え関数
+	void ChangeScene(SceneBase* newScene);	// シーン切り替え関数
+	//void ChangeScene(std::unique_ptr<SceneBase> newScene);	// シーン切り替え関数
 };

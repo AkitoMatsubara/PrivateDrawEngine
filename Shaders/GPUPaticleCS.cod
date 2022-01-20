@@ -58,7 +58,7 @@ dcl_thread_group 1, 1, 1
 // Initial variable locations:
 //   vThreadID.x <- DTid.x; vThreadID.y <- DTid.y; vThreadID.z <- DTid.z
 //
-#line 30 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine GPUParticle仮実裁Eい\Shaders\GPUPaticleCS.hlsl"
+#line 30 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine\Shaders\GPUPaticleCS.hlsl"
 store_structured u1.x, vThreadID.x, l(16), cb3[0].x
 store_structured u1.x, vThreadID.x, l(20), cb3[0].y
 store_structured u1.x, vThreadID.x, l(24), cb3[0].z

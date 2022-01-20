@@ -1,4 +1,4 @@
-#include "SceneTest_2.h"
+#include "SceneGame.h"
 #include "SceneTitle.h"
 
 #include "Enemy.h"
@@ -7,7 +7,7 @@
 #include "UseComputeShader.h"
 
 #include <SimpleMath.h>
-bool SceneTest_2::Initialize() {
+bool SceneGame::Initialize() {
 	Microsoft::WRL::ComPtr<ID3D11Device> device = FRAMEWORK->GetDevice();	// framework‚©‚çdevice‚ğæ“¾
 	HRESULT hr = { S_OK };
 
@@ -69,11 +69,14 @@ bool SceneTest_2::Initialize() {
 	return true;
 }
 
-void SceneTest_2::Update() {
+void SceneGame::Update() {
 	gpu_particle_->Update();
 	const float elapsed_time = FRAMEWORK->GetElapsedTime();
 	// ƒV[ƒ“Ø‚è‘Ö‚¦
-	if (GetAsyncKeyState('G') & 1) setScene(std::make_unique<SceneTitle>());
+	if (GetAsyncKeyState('G') & 1)
+	{
+		setScene(std::make_unique<SceneTitle>());
+	}
 
 	player->Update();
 	StageManager::getInstance().Update();
@@ -149,7 +152,7 @@ void SceneTest_2::Update() {
 	imguiUpdate();
 }
 
-void SceneTest_2::Render() {
+void SceneGame::Render() {
 	HRESULT hr{ S_OK };
 
 	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();	// DevConæ“¾
@@ -201,7 +204,7 @@ void SceneTest_2::Render() {
 #endif
 }
 
-void SceneTest_2::imguiUpdate() {
+void SceneGame::imguiUpdate() {
 #ifdef USE_IMGUI
 	ImGui_ImplDX11_NewFrame();
 	ImGui_ImplWin32_NewFrame();
@@ -226,7 +229,7 @@ void SceneTest_2::imguiUpdate() {
 	ImGui::Separator();	// •ªŠ„ü
 	ImGui::Text("Total Objects: %d", StageManager::getInstance().getSize() + EnemyManager::getInstance().getEnemys()->size()
 		+ player->getShotManager()->getSize() + EnemyManager::getInstance().getShotManager()->getSize());
-	if (ImGui::Button("Scene Initialize")) { SceneTest_2::Initialize(); }
+	if (ImGui::Button("Scene Initialize")) { SceneGame::Initialize(); }
 
 	ImGui::PopStyleColor(2);	// ImGui::PushStyleColorˆê‚Â‚É‚Â‚«ˆø”ˆê‚Â‘‚¦‚é‚Á‚Û‚¢
 	ImGui::End();

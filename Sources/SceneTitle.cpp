@@ -1,5 +1,5 @@
 #include "SceneTitle.h"
-#include "SceneTest_2.h"
+#include "SceneGame.h"
 #include "SceneLoading.h"
 
 bool SceneTitle::Initialize() {
@@ -55,9 +55,13 @@ void SceneTitle::Update() {
 
 	// シーン切り替え
 	//if (GetKeyState('G') < 0) {
-	//	setScene(std::make_unique<SceneLoading>(std::make_unique<SceneTest_2>()));
+	//	setScene(std::make_unique<SceneLoading>(std::make_unique<SceneGame>()));
 	//}
-	if (GetAsyncKeyState('G') & 1) setScene(std::make_unique<SceneTest_2>());
+	if (GetAsyncKeyState('G') & 1)
+	{
+		setScene(std::make_unique<SceneLoading>(std::make_unique<SceneGame>()));
+	}
+	//if (GetAsyncKeyState('G') & 1) setScene(std::make_unique<SceneGame>());
 	// カメラ操作
 	static float speed = 7.0f;
 	if (GetKeyState('D') < 0)  eyePos.x += speed * elapsed_time;	// 右に

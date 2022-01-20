@@ -1,7 +1,9 @@
 ﻿#include "framework.h"
 #include "SceneManager.h"
 #include "SceneTitle.h"	// 初回起動シーン指定用
-#include "SceneTest_2.h"	// 初回起動シーン指定用
+#include "SceneGame.h"	// 初回起動シーン指定用
+
+#include "FrameRateCalculator.h"
 
 #pragma comment(lib, "winmm.lib")	// timeGetTime()とか使うためwinmm.libを使用する
 
@@ -21,7 +23,6 @@
 #endif
 _CrtDumpMemoryLeaks();	// 呼び出し時、開放されていないポインタがあれば吐く
 */
-
 
 framework* framework::instance = nullptr;
 
@@ -374,15 +375,16 @@ int framework::run() {
 	ImGui::StyleColorsDark();
 #endif
 	//[-------------------------------------------------------------------------------
+
 	// メインループに入る前に精度を取得しておく
-	if (QueryPerformanceFrequency(&timeFreq) == FALSE) { // この関数で0(FALSE)が帰る時はハードウェア的に未対応(よっぽど古くない限り問題なはず)
-		return static_cast<int>(msg.wParam); // 出来ないんでおわり
-	}
-	QueryPerformanceCounter(&timeStart); // 処理開始前に1度取得しておく(初回計算用)
+	//if (QueryPerformanceFrequency(&timeFreq) == FALSE) { // この関数で0(FALSE)が帰る時はハードウェア的に未対応(よっぽど古くない限り問題なはず)
+	//	return static_cast<int>(msg.wParam); // 出来ないんでおわり
+	//}
+	//QueryPerformanceCounter(&timeStart); // 処理開始前に1度取得しておく(初回計算用)
+	FrameRateCalculator::getInstance().Init();
 
 	//-------------------------------------------------------------------------------]
-	SceneManager* scenemanager = new SceneManager;
-	scenemanager->ChangeScene(std::make_unique<SceneTest_2>());
+	SceneManager::getInstance().ChangeScene(new SceneGame());
 
 	while (WM_QUIT != msg.message)
 	{
@@ -394,64 +396,34 @@ int framework::run() {
 		else
 		{
 			tictoc.tick();
-			calculate_frame_stats();
-			scenemanager->Update();
-			scenemanager->Render();
+			SceneManager::getInstance().Update();
+			SceneManager::getInstance().Render();
 
-			// フレームレート関連 適当に作っちゃったのでこんなところに
-			static float AveFrameTime = 0;
 #ifdef USE_IMGUI
 			// フレームレート設定
-			ImGui::Begin(u8"フレーム");
-			if (ImGui::Button("15"))  { frameRate = 15;  AveFrameTime = 0.0f; }	ImGui::SameLine();
-			if (ImGui::Button("30"))  { frameRate = 30;  AveFrameTime = 0.0f; }	ImGui::SameLine();
-			if (ImGui::Button("60"))  { frameRate = 60;  AveFrameTime = 0.0f; }	ImGui::SameLine();
-			if (ImGui::Button("144")) { frameRate = 144; AveFrameTime = 0.0f; }	ImGui::SameLine();
-			if (ImGui::Button("240")) { frameRate = 240; AveFrameTime = 0.0f; }	ImGui::SameLine();
-			if (ImGui::Button("360")) { frameRate = 360; AveFrameTime = 0.0f; }
-			ImGui::Text(u8"(処理)フレーム上限:%d", frameRate);
-			ImGui::Text(u8"フレームレート:%.2f", fps);
-			ImGui::Text(u8"平均フレームレート:%.2f", AveFrameTime);
-			MIN_FREAM_TIME = 1.0f / static_cast<float>(frameRate);
+			ImGui::Begin("fps Editor");
+			if (ImGui::Button("15")) { FrameRateCalculator::getInstance().SetLimit(15);   FrameRateCalculator::getInstance().AveFrameTime = 0.0f; }	ImGui::SameLine();
+			if (ImGui::Button("30")) { FrameRateCalculator::getInstance().SetLimit(30);   FrameRateCalculator::getInstance().AveFrameTime = 0.0f; }	ImGui::SameLine();
+			if (ImGui::Button("60")) { FrameRateCalculator::getInstance().SetLimit(60);   FrameRateCalculator::getInstance().AveFrameTime = 0.0f; }	ImGui::SameLine();
+			if (ImGui::Button("144")) { FrameRateCalculator::getInstance().SetLimit(144); FrameRateCalculator::getInstance().AveFrameTime = 0.0f; }	ImGui::SameLine();
+			if (ImGui::Button("240")) { FrameRateCalculator::getInstance().SetLimit(240); FrameRateCalculator::getInstance().AveFrameTime = 0.0f; }	ImGui::SameLine();
+			if (ImGui::Button("360")) { FrameRateCalculator::getInstance().SetLimit(360); FrameRateCalculator::getInstance().AveFrameTime = 0.0f; }
+			ImGui::Text("fpsLimit:%d", FrameRateCalculator::getInstance().GetLimit());
+			ImGui::Text("fps:%.2f", FrameRateCalculator::getInstance().fps);
+			ImGui::Text("AverageFps:%.2f", FrameRateCalculator::getInstance().AveFrameTime);
 			ImGui::End();
 			ImGui::Render();
 			ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 #endif
 			Flip();	// ImGui用
 
-		//[------------------------------------------------------------------------------- fps計算
-			QueryPerformanceCounter(&timeEnd); // 処理終了後の現時間を取得
-			// 経過時間(秒単位) = (今の時間 - 前フレームの時間) / 周波数
-			frameTime = static_cast<float>(timeEnd.QuadPart - timeStart.QuadPart) / static_cast<float>(timeFreq.QuadPart);
-			fps = (frameRate > (1.0f / frameTime)) ? (1.0f / frameTime) : fps;	// fps算出 なんでか数値が制限超えちゃう時がある。制度も取得してるし止めてるはずなんだが…
-			// 平均fpsのさんしゅつ
-			static float sumFrameTime = 0;	// fps合計変数
-			static int count = 0;			// fps加算回数カウンタ
-			if (fps <= static_cast<float>(frameRate))	// たまに数値超えちゃう 要検証
-			{
-				sumFrameTime += fps;	// 加算していく
-				count++;	// 加算回数のカウント
-			}
-			if (count > frameRate)	// 加算数がfps上限を超えたら除算して平均算出、合計と加算回数をリセット
-			{
-				AveFrameTime = sumFrameTime / static_cast<float>(count);
-				sumFrameTime = 0;
-				count = 0;
-			}
-
-			if (frameTime < MIN_FREAM_TIME) { // 処理時間が想定時間より短かったら
-				DWORD sleepTime = static_cast<DWORD>((MIN_FREAM_TIME - frameTime) * 1000.0f);	// ミリ秒に変換
-				timeBeginPeriod(1); // 分解能を1msに上げる(こうしないとSleepの精度はガタガタらしい)
-				Sleep(sleepTime);   // 寝る
-				timeEndPeriod(1);   // 起きたので1msを戻す
-				continue;	// 起きたのでcontinue
-			}
-			timeStart = timeEnd; // 次フレームの開始時間を現フレームの終了時間に
-			//-------------------------------------------------------------------------------]
+			// fps計算
+			FrameRateCalculator::getInstance().Update();
+			calculate_frame_stats();
 		}
 	}
 
-	delete scenemanager;	// 開放
+	//delete scenemanager;	// 開放
 
 #ifdef USE_IMGUI	// IMGUI後片付け
 	ImGui_ImplDX11_Shutdown();

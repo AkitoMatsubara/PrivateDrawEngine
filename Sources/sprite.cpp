@@ -226,7 +226,7 @@ void Sprite::ImguiWindow() {
 	ImGui::SliderFloat2("TexPos", TexPos, 0, 1960);
 	ImGui::SliderFloat2("TexSize", TexSize, 0, 1960);
 	ImGui::SliderFloat("angle", &angle, 0, 360);
-	ImGui::ColorEdit4(u8"Color", (float*)&Color);
+	ImGui::ColorEdit4("Color", (float*)&Color);
 
 	ImGui::End();
 

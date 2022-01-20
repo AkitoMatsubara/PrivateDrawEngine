@@ -126,7 +126,7 @@
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;USE_IMGUI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>.\Sources;.\External\DirectXTK-master\Inc;.\External\imgui;.\Headers;C:\Program Files\Autodesk\FBX\FBX SDK\2020.2\include;.\External\cereal-master\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -299,8 +299,10 @@
     <ClInclude Include="External\imgui\imstb_textedit.h" />
     <ClInclude Include="External\imgui\imstb_truetype.h" />
     <ClInclude Include="Headers\Camera.h" />
+    <ClInclude Include="Headers\FrameRateCalculator.h" />
     <ClInclude Include="Headers\GPUParticle.h" />
     <ClInclude Include="Headers\Object2d.h" />
+    <ClInclude Include="Headers\Score.h" />
     <ClInclude Include="Headers\UseComputeShader.h" />
     <ClInclude Include="Headers\Enemy.h" />
     <ClInclude Include="Headers\framework.h" />
@@ -319,7 +321,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="Headers\SceneTitle.h" />
-    <ClInclude Include="Headers\SceneTest_2.h" />
+    <ClInclude Include="Headers\SceneGame.h" />
     <ClInclude Include="Headers\shader.h" />
     <ClInclude Include="Headers\shaderEx.h" />
     <ClInclude Include="Headers\Shot.h" />
@@ -344,6 +346,7 @@
     <ClCompile Include="Sources\Camera.cpp" />
     <ClCompile Include="Sources\CSSample.cpp" />
     <ClCompile Include="Sources\Enemy.cpp" />
+    <ClCompile Include="Sources\FrameRateCalculator.cpp" />
     <ClCompile Include="Sources\framework.cpp" />
     <ClCompile Include="Sources\geometric_capsule.cpp" />
     <ClCompile Include="Sources\geometric_cube.cpp" />
@@ -365,7 +368,8 @@
     <ClCompile Include="Sources\SceneTitle.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="Sources\SceneTest_2.cpp" />
+    <ClCompile Include="Sources\SceneGame.cpp" />
+    <ClCompile Include="Sources\Score.cpp" />
     <ClCompile Include="Sources\shader.cpp" />
     <ClCompile Include="Sources\shaderEx.cpp" />
     <ClCompile Include="Sources\Shot.cpp" />

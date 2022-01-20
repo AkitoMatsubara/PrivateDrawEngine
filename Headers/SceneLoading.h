@@ -4,11 +4,9 @@
 class SceneLoading:public SceneBase{
 	// 変数
 private:
-	std::unique_ptr<SceneBase> nextScene;
+	std::unique_ptr<SceneBase> nextScene;	// ロードするシーン
 
 	std::unique_ptr<Sprite> loadingImage;
-	std::unique_ptr<ShaderEx> SpriteShader = nullptr;
-	float angle = 0.0f;
 
 	// シーン定数バッファ
 	struct scene_constants {
@@ -32,10 +30,10 @@ private:
 	// ローディングスレッド
 	static void LoadingThread(SceneLoading* scene);
 public:
-	SceneLoading() {}
-	SceneLoading(std::unique_ptr<SceneBase>nextScene) { this->nextScene = move(nextScene); }
-	~SceneLoading() {}
-
+	SceneLoading(std::unique_ptr<SceneBase>nextScene) :nextScene(nullptr)
+	{
+		this->nextScene = std::move(nextScene);
+	}
 	bool Initialize();
 	void Update();
 	void Render();
