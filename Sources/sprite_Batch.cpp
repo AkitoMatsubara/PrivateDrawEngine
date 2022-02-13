@@ -101,7 +101,7 @@ void sprite_Batch::end(ShaderEx* shader) {
 	immediate_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);	// プリミティブの形状を指定できる？
 											// D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST は3頂点、D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIPは四頂点 連続三角形
 	// シェーダのバインド
-	SpriteShader->Activate();
+	shader->Activate();
 
 	// ラスタライザステートの設定
 	immediate_context->RSSetState(rasterizer_states[0].Get());
@@ -110,7 +110,7 @@ void sprite_Batch::end(ShaderEx* shader) {
 	immediate_context->Draw(static_cast<UINT>(vertex_count), 0);	// 頂点の数、描画開始時点で使う頂点バッファの最初のインデックス
 
 	// シェーダの無効化
-	SpriteShader->Inactivate();
+	shader->Inactivate();
 
 }
 

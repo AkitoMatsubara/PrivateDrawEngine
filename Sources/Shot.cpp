@@ -11,7 +11,6 @@ void Shot::Initialize()
 	//Sphere = std::make_unique<Geometric_Sphere>();
 
 	Parameters = std::make_unique<Object3d>();
-
 	LifeTimer = 0;
 	Exist = false;
 }
@@ -19,7 +18,7 @@ void Shot::Initialize()
 void Shot::Update()
 {
 	// とりあえず前に進む動きを作る
-	static const float MOVE_SPEED = 0.1f;
+	static const float MOVE_SPEED = 0.3f;
 	Parameters->Velocity = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };	// 例のごとく毎フレーム加速度リセット
 	Parameters->Velocity += Model->getWorld().Backward() * MOVE_SPEED;
 	Parameters->Position += Parameters->Velocity;
@@ -48,6 +47,7 @@ void Shot::Render()
 void Shot::set(const Object3d* parent)
 {
 	Parameters->CopyParam(parent);
+	Parameters->Scale = DirectX::SimpleMath::Vector3{ 0.5f,0.5f,0.5f };
 	Exist = true;
 }
 
@@ -63,6 +63,7 @@ void ShotManager::Update()
 		}
 		else {	// 存在が確認されたので処理します
 			shots->get()->Update();
+
 			if (Master == MASTER::PLAYER)	// プレイヤーが発射した弾の処理 敵とは主に当たり判定の処理が違う
 			{
 				for (auto enem = EnemyManager::getInstance().getEnemys()->begin(); enem != EnemyManager::getInstance().getEnemys()->end(); ++enem)
@@ -71,12 +72,11 @@ void ShotManager::Update()
 					if (shots->get()->getExist() && enem->get()->getExist())
 					{
 						// 当たり判定、戻り値trueであれば
-						if (isHit(enem->get()->Parameters.get(), shots->get()))
+						if (isHits(enem->get()->Parameters.get(), shots->get()))
 						{
 							enem->get()->setExist(false);
-							// TODO 存在消す処理をコメントアウトしているのはデバッグ用 一度の弾で複数体消すため
 							shots->get()->setExist(false);
-							break;
+							break;	// 対象の弾が消えるのでEnemyFor文を終了
 						}
 					}
 				}
@@ -86,11 +86,13 @@ void ShotManager::Update()
 				// TODO インスタンスの使用 現状の一人プレイは問題ないが2Pを追加するとなれば改修必須
 				if (shots->get()->getExist() && Player::getInstance()->Parameters->Exist)
 				{
-					if (isHit(Player::getInstance()->Parameters.get(), shots->get()))
+					if (isHits(Player::getInstance()->Parameters.get(), shots->get()))
 					{
 						// あたってます
 						shots->get()->setExist(false);
-						//break;
+						// ダメージ処理、残体力が0以下になれば存在削除
+						// TODO Playerの生死をShotが操作していいものだろうか…
+						if (Player::getInstance()->Damage()<=0) { Player::getInstance()->Parameters->Exist = false; }
 					}
 				}
 			}
@@ -118,7 +120,16 @@ void ShotManager::newSet(const Object3d* initData)
 
 bool ShotManager::isHit(const Object3d* capcule, const Shot* shots)
 {
-	if (Judge::getInstance()->c_b(*capcule, 1.0f, *shots->Parameters))
+	if (Judge::getInstance()->c_b(*capcule, *shots->Parameters))
+	{
+		return true;
+	}
+	return false;
+}
+
+bool ShotManager::isHits(const Object3d* sphere, const Shot* shots)
+{
+	if (Judge::getInstance()->s_s(*sphere, (sphere->Scale.x * 0.5f), *shots->Parameters, (shots->Parameters->Scale.x)))
 	{
 		return true;
 	}

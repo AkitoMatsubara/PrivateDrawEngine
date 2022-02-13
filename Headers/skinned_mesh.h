@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Rasterizer.h"
 #include "shaderEx.h"
 #include "Object3d.h"
 
@@ -174,8 +173,6 @@ private:
 
 	Microsoft::WRL::ComPtr<ID3D11Buffer> constant_buffer;
 
-	Rasterizer rasterizer;
-
 	bool wireframe;	// ワイヤーフレーム表示の有無
 
 	std::unique_ptr<Object3d> Parameters;
@@ -210,7 +207,7 @@ public:
 	// マテリアルの取り出し
 	void Fetch_Materials(FbxScene* fbx_scene, std::unordered_map<uint64_t, Material>& materials);
 
-	void Render(Shader* shader = SkinnedShader.get(), int rasterize = 0);	// デフォルトでシェーダを持っているので未指定でも可
+	void Render(Shader* shader = SkinnedShader.get(), int rs_state = 0);	// デフォルトでシェーダを持っているので未指定でも可
 
 	// paramを編集するimguiウィンドウ
 	void imguiWindow(const char* beginname = "skinned_mesh");

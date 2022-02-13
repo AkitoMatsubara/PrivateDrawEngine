@@ -1,19 +1,21 @@
 #include "GPUParticle.hlsli"
 
-PS_IN main(VS_IN vin) // セマンティクスと一致させて値を受け取る
+// 頂点シェーダの関数
+GS_INPUT main(GS_INPUT_GPU2 In)
 {
-    PS_IN vout;
-    vout.position = float4(vin.position, 1); // 現状は処理を行わないため、そのままピクセルシェーダに流す
-    vout.color = vin.color;
-    vout.texcoord = vin.texcoord;
-    {
-        PS_IN vout;
-        vout.position = mul(float4(vin.position, 0), mul(world, view_projection));
-        vout.world_position = mul(vin.position, world); // ワールド変換
-        vout.world_normal = normalize(mul(vin.normal, world)); // ワールド変換したやつを正規化
-        vout.texcoord = vin.texcoord;
-        vout.color = vin.color;
+    GS_INPUT Out1;
+    Out1.Pos.x = In.Position.x;
+    Out1.Pos.y = In.Position.y;
+    Out1.Pos.z = In.Position.z;
+    Out1.Pos.w = 1;
 
-    }
-    return vout;
+
+    Out1.Tex.x = 0;
+    Out1.Tex.y = 0;
+
+
+
+    return Out1;
+
+//	return In;
 }

@@ -71,4 +71,5 @@ public:
 	std::vector<std::unique_ptr<Shot>>* getShots() { return &Shots; }	// 格納コンテナを返す 外部から参照したいときに
 
 	bool isHit(const Object3d* capcule,const Shot* shots);
+	bool isHits(const Object3d* sphere,const Shot* shots);
 };

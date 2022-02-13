@@ -1,4 +1,4 @@
-#include "SceneGame.h"
+#include "SceneClear.h"
 #include "SceneTitle.h"
 
 #include "Enemy.h"
@@ -7,11 +7,7 @@
 #include "UseComputeShader.h"
 
 #include <SimpleMath.h>
-
-#include "SceneClear.h"
-#include "SceneLoading.h"
-
-bool SceneGame::Initialize() {
+bool SceneClear::Initialize() {
 	Microsoft::WRL::ComPtr<ID3D11Device> device = FRAMEWORK->GetDevice();	// frameworkからdeviceを取得
 	HRESULT hr = { S_OK };
 
@@ -26,15 +22,9 @@ bool SceneGame::Initialize() {
 		camera = std::make_unique<Camera>();
 
 		// spriteオブジェクトを生成(今回は先頭の１つだけを生成する)
-		sprites = std::make_unique<Sprite>(L".\\Resources\\screenshot.jpg");	// シェーダーはコンストラクタ内で指定しているため、別を使うには改良が必要
+		sprites = std::make_unique<Sprite>(L".\\Resources\\clear.jpg");
 		sprites->setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
 
-		// Geometric_primitiveオブジェクトの生成
-		{
-			grid = std::make_unique<Geometric_Cube>();
-			grid->setPos(DirectX::SimpleMath::Vector3(0, -1, 0));
-			grid->setSize(DirectX::SimpleMath::Vector3(10, 0.1f, 10));
-		}
 
 		player = std::make_unique<Player>();
 		player->Initialize();
@@ -73,18 +63,14 @@ bool SceneGame::Initialize() {
 	return true;
 }
 
-void SceneGame::Update() {
+void SceneClear::Update() {
 	gpu_particle_->Update();
 	const float elapsed_time = FRAMEWORK->GetElapsedTime();
-	//// シーン切り替え
-	//if (GetAsyncKeyState('G') & 1)
-	//{
-	//	setScene(std::make_unique<SceneLoading>(std::make_unique<SceneTitle>()));
-	//}
-	//if (GetAsyncKeyState('C') & 1)
-	//{
-	//	setScene(std::make_unique<SceneLoading>(std::make_unique<SceneClear>()));
-	//}
+	// シーン切り替え
+	if (GetAsyncKeyState('G') & 1)
+	{
+		setScene(std::make_unique<SceneTitle>());
+	}
 
 	player->Update();
 	StageManager::getInstance().Update();
@@ -160,7 +146,7 @@ void SceneGame::Update() {
 	imguiUpdate();
 }
 
-void SceneGame::Render() {
+void SceneClear::Render() {
 	HRESULT hr{ S_OK };
 
 	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();	// DevCon取得
@@ -190,20 +176,16 @@ void SceneGame::Render() {
 		XMStoreFloat4x4(&data.view_projection, camera->GetView() * camera->GetProjection());	// Matrixから4x4へ変換
 		data.light_direction = DirectX::SimpleMath::Vector4{ light_dir[0],light_dir[1],light_dir[2],0 };	// シェーダに渡すライトの向き
 		data.camera_position = DirectX::SimpleMath::Vector4{ camera->GetPos().x,camera->GetPos().y,camera->GetPos().z,0 };				// シェーダに渡すカメラの位置
-		data.View = camera->GetView();
-		data.Projection = camera->GetProjection();
-		data.ParticleSize = DirectX::SimpleMath::Vector2{ 1.0f,1.0f };
 		immediate_context->UpdateSubresource(constant_buffer[0].Get(), 0, 0, &data, 0, 0);
 		immediate_context->VSSetConstantBuffers(1, 1, constant_buffer[0].GetAddressOf());	// cBufferはドローコールのたびに消去されるので都度設定する必要がある
 		immediate_context->PSSetConstantBuffers(1, 1, constant_buffer[0].GetAddressOf());
 
 		{
-			grid->Render(true);
 			StageManager::getInstance().Render();
 			player->Render();
 			EnemyManager::getInstance().Render();
 			gpu_particle_->SetSceneConstantBuffer(constant_buffer[0].Get());
-			gpu_particle_->Draw(camera.get());
+			//gpu_particle_->Draw();
 		}
 	}
 
@@ -215,7 +197,7 @@ void SceneGame::Render() {
 #endif
 }
 
-void SceneGame::imguiUpdate() {
+void SceneClear::imguiUpdate() {
 #ifdef USE_IMGUI
 	ImGui_ImplDX11_NewFrame();
 	ImGui_ImplWin32_NewFrame();
@@ -240,8 +222,7 @@ void SceneGame::imguiUpdate() {
 	ImGui::Separator();	// 分割線
 	ImGui::Text("Total Objects: %d", StageManager::getInstance().getSize() + EnemyManager::getInstance().getEnemys()->size()
 		+ player->getShotManager()->getSize() + EnemyManager::getInstance().getShotManager()->getSize());
-	if (ImGui::Button("Stage Initialize")) { StageManager::getInstance().Initialize(); }
-	if (ImGui::Button("Player Initialize")) { player->Initialize(); }
+	if (ImGui::Button("Scene Initialize")) { SceneClear::Initialize(); }
 
 	ImGui::PopStyleColor(2);	// ImGui::PushStyleColor一つにつき引数一つ増えるっぽい
 	ImGui::End();

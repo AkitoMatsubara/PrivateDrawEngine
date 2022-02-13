@@ -23,7 +23,8 @@ public:
 	ShaderEx() {}
 	virtual ~ShaderEx() {}
 
-	bool CreateVS(const WCHAR* vsfilename);
+	//bool CreateVS(const WCHAR* vsfilename, ID3D11InputLayout* ia = nullptr);
+	bool CreateVS(const WCHAR* vsfilename, const UINT IL_NUM = 0 , D3D11_INPUT_ELEMENT_DESC ia_desc[] = nullptr);
 	bool CreatePS(const WCHAR* psfilename);
 	bool CreateDS(const WCHAR* dsfilename);
 	bool CreateHS(const WCHAR* hsfilename);

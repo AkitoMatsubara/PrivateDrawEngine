@@ -6,7 +6,6 @@
 
 #include "shaderEx.h"
 #include "Object3d.h"
-#include "Rasterizer.h"
 
 #include "imgui.h"
 #include "imgui_impl_dx11.h"
@@ -25,9 +24,6 @@ private:
 
 	static std::unique_ptr<ShaderEx> GeometricShader;
 	DirectX::SimpleMath::Matrix world;
-	Rasterizer rasterizer;
-
-	//std::unique_ptr<ShaderEx> GeometricShader;
 
 protected:
 	struct Vertex {
@@ -40,10 +36,10 @@ protected:
 	};
 
 public:
-	Geometric_Primitive(const WCHAR* vs_name = L"Shaders\\geometric_primitive_vs", const WCHAR* ps_name = L"Shaders\\geometric_primitive_ps");
+	Geometric_Primitive();
 	virtual ~Geometric_Primitive() = default;
 
-	void Render(bool wireframe = false);
+	void Render(int rs_state = 0);
 
 	// Parametersを編集するimguiウィンドウ
 	void imguiWindow(const char* beginname = "geometric_primitive");

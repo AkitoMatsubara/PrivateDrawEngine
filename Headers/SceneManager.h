@@ -7,7 +7,6 @@
 #include "sprite.h"
 #include "sprite_Batch.h"
 #include "geometric_primitive.h"
-#include "static_mesh.h"
 #include "skinned_mesh.h"
 
 #include "Camera.h"
@@ -23,7 +22,6 @@
 #include <SimpleMath.h>
 #include <queue>
 
-
 class SceneBase {
 	// 変数
 private:
@@ -33,9 +31,6 @@ protected:
 	std::unique_ptr<SceneBase> newScene;
 	//コンスタントバッファ
 	Microsoft::WRL::ComPtr<ID3D11Buffer> ConstantBuffer;
-
-	//DepthStencilState
-	enum { DS_FALSE, DS_TRUE, DS_FALSE_WRITE, DS_TRUE_WRITE, DS_END };
 
 	std::shared_ptr<Sampler> sampleClamp;
 

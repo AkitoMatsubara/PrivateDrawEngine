@@ -4,7 +4,7 @@
 #include "Player.h"
 #include "GPUParticle.h"
 
-class SceneGame :public SceneBase {
+class SceneClear :public SceneBase {
 
 	// 変数 //
 private:
@@ -48,30 +48,12 @@ public:
 	std::unique_ptr<sprite_Batch> sprite_batches[8];
 
 	// シーン定数バッファ
-	//struct scene_constants {
-	//	DirectX::SimpleMath::Matrix view_projection;	// VP変換行列
-	//	DirectX::SimpleMath::Vector4 light_direction;	// ライトの向き
-	//	DirectX::SimpleMath::Vector4 camera_position;	// カメラの位置
-	//};
-
-	struct scene_constants
-	{
-		DirectX::SimpleMath::Matrix view_projection;
-
-		DirectX::SimpleMath::Vector4 light_direction;
-		DirectX::SimpleMath::Vector4 camera_position;
-
-		DirectX::SimpleMath::Matrix  View;
-		DirectX::SimpleMath::Matrix  Projection;
-		DirectX::SimpleMath::Vector2 ParticleSize; // パーティクルの大きさ
-		float dummy; // ダミー
-		float dummy2;
+	struct scene_constants {
+		DirectX::SimpleMath::Matrix view_projection;	// VP変換行列
+		DirectX::SimpleMath::Vector4 light_direction;	// ライトの向き
+		DirectX::SimpleMath::Vector4 camera_position;	// カメラの位置
 	};
-
 	Microsoft::WRL::ComPtr<ID3D11Buffer> constant_buffer[8];
-
-	// Geometric_primitiveの変数やつ
-	std::unique_ptr< Geometric_Cube> grid;	// グリッド線もどき
 
 	// プレイヤーオブジェクト
 	std::unique_ptr<Player> player;

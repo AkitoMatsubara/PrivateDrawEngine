@@ -6,8 +6,8 @@
 //
 // Name                                 Type  Format         Dim      HLSL Bind  Count
 // ------------------------------ ---------- ------- ----------- -------------- ------
-// diffuse_sampler_state             sampler      NA          NA             s0      1 
-// diffuse_map                       texture  float4          2d             t0      1 
+// smpWrap                           sampler      NA          NA             s0      1 
+// Tex2D                             texture  float4          2d             t0      1 
 //
 //
 //
@@ -16,40 +16,34 @@
 // Name                 Index   Mask Register SysValue  Format   Used
 // -------------------- ----- ------ -------- -------- ------- ------
 // SV_POSITION              0   xyzw        0      POS   float       
-// POSITION                 0   xyzw        1     NONE   float       
-// NORMAL                   0   xyzw        2     NONE   float       
-// TEXCOORD                 0   xy          3     NONE   float   xy  
-// COLOR                    0   xyzw        4     NONE   float   xyzw
+// TEXTURE                  0   xy          1     NONE   float   xy  
+// TEXCOORD                 2   xyz         2     NONE   float       
 //
 //
 // Output signature:
 //
 // Name                 Index   Mask Register SysValue  Format   Used
 // -------------------- ----- ------ -------- -------- ------- ------
-// SV_TARGET                0   xyzw        0   TARGET   float   xyzw
+// SV_Target                0   xyzw        0   TARGET   float   xyzw
 //
 ps_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
 dcl_sampler s0, mode_default
 dcl_resource_texture2d (float,float,float,float) t0
-dcl_input_ps linear v3.xy
-dcl_input_ps linear v4.xyzw
+dcl_input_ps linear v1.xy
 dcl_output o0.xyzw
 dcl_temps 1
 //
 // Initial variable locations:
-//   v0.x <- pin.position.x; v0.y <- pin.position.y; v0.z <- pin.position.z; v0.w <- pin.position.w; 
-//   v1.x <- pin.world_position.x; v1.y <- pin.world_position.y; v1.z <- pin.world_position.z; v1.w <- pin.world_position.w; 
-//   v2.x <- pin.world_normal.x; v2.y <- pin.world_normal.y; v2.z <- pin.world_normal.z; v2.w <- pin.world_normal.w; 
-//   v3.x <- pin.texcoord.x; v3.y <- pin.texcoord.y; 
-//   v4.x <- pin.color.x; v4.y <- pin.color.y; v4.z <- pin.color.z; v4.w <- pin.color.w; 
+//   v0.x <- Input.Pos.x; v0.y <- Input.Pos.y; v0.z <- Input.Pos.z; v0.w <- Input.Pos.w; 
+//   v1.x <- Input.Tex.x; v1.y <- Input.Tex.y; 
+//   v2.x <- Input.wPosition.x; v2.y <- Input.wPosition.y; v2.z <- Input.wPosition.z; 
 //   o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
 //
-#line 14 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine\Shaders\GPUParticle_ps.hlsl"
-sample_indexable(texture2d)(float,float,float,float) r0.xyzw, v3.xyxx, t0.xyzw, s0
-mul r0.xyzw, r0.xyzw, v4.xyzw  // r0.x <- color.x; r0.y <- color.y; r0.z <- color.z; r0.w <- color.w
+#line 22 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine AIパテコピE"
+sample_indexable(texture2d)(float,float,float,float) r0.xyzw, v1.xyxx, t0.xyzw, s0  // r0.x <- color.x; r0.y <- color.y; r0.z <- color.z; r0.w <- color.w
 
-#line 16
+#line 25
 mov o0.xyzw, r0.xyzw
 ret 
-// Approximately 4 instruction slots used
+// Approximately 3 instruction slots used

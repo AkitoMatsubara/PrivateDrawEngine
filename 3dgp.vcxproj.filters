@@ -9,22 +9,12 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
-    <Filter Include="Resources">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
     <Filter Include="Sources">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="imGui">
-      <UniqueIdentifier>{84d01fef-4c85-496c-8319-d6704909a54e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Shaders\Sprite">
       <UniqueIdentifier>{84eba98d-01c4-4874-a130-d1203f310183}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Shaders\Static_Mesh">
-      <UniqueIdentifier>{d9486408-3bb9-4b4a-8764-ca2e22d5e089}</UniqueIdentifier>
     </Filter>
     <Filter Include="Shaders\Geometric_Primitive">
       <UniqueIdentifier>{9669e442-127f-4d58-aade-b6eb6e7c2123}</UniqueIdentifier>
@@ -86,6 +76,9 @@
     <Filter Include="Shaders\GPUParticle">
       <UniqueIdentifier>{714705a2-f819-444d-ab07-8fbf9a8d138b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="imGui">
+      <UniqueIdentifier>{84d01fef-4c85-496c-8319-d6704909a54e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\sprite_ps.hlsl">
@@ -100,12 +93,6 @@
     <FxCompile Include="Shaders\geometric_primitive_vs.hlsl">
       <Filter>Shaders\Geometric_Primitive</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\static_mesh_ps.hlsl">
-      <Filter>Shaders\Static_Mesh</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\static_mesh_vs.hlsl">
-      <Filter>Shaders\Static_Mesh</Filter>
-    </FxCompile>
     <FxCompile Include="Shaders\skinned_mesh_ps.hlsl">
       <Filter>Shaders\Skinned_Mesh</Filter>
     </FxCompile>
@@ -115,13 +102,16 @@
     <FxCompile Include="Shaders\ComputeShader_cs.hlsl">
       <Filter>Shaders\ComputeShader</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\GPUPaticleCS.hlsl">
+    <FxCompile Include="Shaders\GPUParticle_cs.hlsl">
       <Filter>Shaders\GPUParticle</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\GPUParticle_ps.hlsl">
       <Filter>Shaders\GPUParticle</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\GPUParticle_vs.hlsl">
+      <Filter>Shaders\GPUParticle</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\GPUParticle_gs.hlsl">
       <Filter>Shaders\GPUParticle</Filter>
     </FxCompile>
   </ItemGroup>
@@ -131,9 +121,6 @@
     </None>
     <None Include="Shaders\geometric_primitive.hlsli">
       <Filter>Shaders\Geometric_Primitive</Filter>
-    </None>
-    <None Include="Shaders\static_mesh.hlsli">
-      <Filter>Shaders\Static_Mesh</Filter>
     </None>
     <None Include="Shaders\skinned_mesh.hlsli">
       <Filter>Shaders\Skinned_Mesh</Filter>
@@ -168,9 +155,6 @@
     <ClInclude Include="External\imgui\imstb_truetype.h">
       <Filter>imGui</Filter>
     </ClInclude>
-    <ClInclude Include="Headers\static_mesh.h">
-      <Filter>Headers\DataLoad\3D Object</Filter>
-    </ClInclude>
     <ClInclude Include="Headers\misc.h">
       <Filter>Headers\System</Filter>
     </ClInclude>
@@ -188,9 +172,6 @@
     </ClInclude>
     <ClInclude Include="Headers\skinned_mesh.h">
       <Filter>Headers\DataLoad\3D Object</Filter>
-    </ClInclude>
-    <ClInclude Include="Headers\Rasterizer.h">
-      <Filter>Headers\RenderOptions</Filter>
     </ClInclude>
     <ClInclude Include="Headers\SceneManager.h">
       <Filter>Headers\Scene</Filter>
@@ -261,6 +242,9 @@
     <ClInclude Include="Headers\FrameRateCalculator.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="Headers\SceneClear.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui\imgui.cpp">
@@ -308,17 +292,11 @@
     <ClCompile Include="Sources\skinned_mesh.cpp">
       <Filter>Sources\DataLoad\3D Object</Filter>
     </ClCompile>
-    <ClCompile Include="Sources\static_mesh.cpp">
-      <Filter>Sources\DataLoad\3D Object</Filter>
-    </ClCompile>
     <ClCompile Include="Sources\SceneManager.cpp">
       <Filter>Sources\Scenes</Filter>
     </ClCompile>
     <ClCompile Include="Sources\SceneTitle.cpp">
       <Filter>Sources\Scenes</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\Rasterizer.cpp">
-      <Filter>Sources\RenderOptions</Filter>
     </ClCompile>
     <ClCompile Include="Sources\shader.cpp">
       <Filter>Sources\DataLoad\Shaders</Filter>
@@ -330,9 +308,6 @@
       <Filter>Sources\System</Filter>
     </ClCompile>
     <ClCompile Include="Sources\main.cpp">
-      <Filter>Sources\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\CSSample.cpp">
       <Filter>Sources\System</Filter>
     </ClCompile>
     <ClCompile Include="Sources\SceneGame.cpp">
@@ -373,6 +348,9 @@
     </ClCompile>
     <ClCompile Include="Sources\FrameRateCalculator.cpp">
       <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\SceneClear.cpp">
+      <Filter>Sources\Scenes</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

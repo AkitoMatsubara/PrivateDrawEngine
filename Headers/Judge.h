@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 //#include <memory>
 
@@ -6,7 +6,7 @@
 #include "Enemy.h"
 #include "Object3d.h"
 #include "geometric_primitive.h"
-// “–‚½‚è”»’èƒNƒ‰ƒX ‚¢‚ë‚ñ‚È”»’è‚ğæ‚ê‚é‚æ‚¤‚É‚µ‚½‚¢‚æ‚Ë
+
 class Judge
 {
 public:
@@ -15,9 +15,13 @@ public:
 	Judge(){};
 	~Judge();
 
-	static bool c_b(const Object3d& capsle,const float height, const Object3d& sphere);			// Object3d‚Ì’l‚ÅŠæ’£‚ë‚¤‚Æ‚µ‚Ä‚é‚â‚Â
-	static bool JudgeCap_Sphe(const Geometric_Capsule& capsle, const Geometric_Sphere& sphere);	// Geomteric_[X]‚ğg‚Á‚Ä”»’è‚µ‚æ‚¤‚Æ‚µ‚½‚â‚Â
-	static void HitJudge(Player* p, Enemy* e);	// “–‚½‚è”»’è‚ğæ‚éA‚±‚±‚Åˆ—‚ğs‚¤
+	static bool c_b(const Object3d& capsle,const float cHeight,const float cRadian, const Object3d& sphere,const float sRadian);			// capsuleã¨çƒã®å½“ãŸã‚Šåˆ¤å®š é«˜ã•ã‚„åŠå¾„ã‚’æŒ‡å®šã—ã¦åˆ¤å®šã™ã‚‹
+	static bool c_b(const Object3d& capsle,const Object3d& sphere);			// ã‚«ãƒ—ã‚»ãƒ«ã¨çƒ
+	static bool s_s(const Object3d& shpere,const float shpereRadian, const Object3d& shpere2,const float shpere2Radian);	// çƒã¨çƒã®åˆ¤å®š ãã®ã¾ã¾
+	static bool JudgeCap_Sphe(const Geometric_Capsule& capsle, const Geometric_Sphere& sphere);	// Geomteric_ãªã‚“ã¨ã‹ã§åˆ¤å®šã‚’å–ã‚‹æ–¹æ³• ç·åˆçš„ã«å¤§é‡ã«ä½¿ã†ã¨ã¾ãšã„ãã†ãªã®ã§å‡ºç•ªãªã„ï¼Ÿ
+	static void HitJudge(Player* p, Enemy* e);
+
+	static DirectX::XMFLOAT3 QuaternionToEulerAngles(const DirectX::XMFLOAT4& q);
 
 	static Judge* getInstance()
 	{

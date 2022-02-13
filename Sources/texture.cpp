@@ -21,9 +21,9 @@ Texture::Texture() :ShaderResourceView(nullptr){}
 
 Texture::~Texture()
 {
-	if (ShaderResourceView)	ShaderResourceView->Release();
-	if (RenderTargetView)		RenderTargetView->Release();
-	if (DepthStencilView)		DepthStencilView->Release();
+	//if (ShaderResourceView)	ShaderResourceView->Release();
+	//if (RenderTargetView)		RenderTargetView->Release();
+	//if (DepthStencilView)		DepthStencilView->Release();
 }
 
 
@@ -41,15 +41,11 @@ bool Texture::Load(const wchar_t* filename)
 
 	// 画像からシェーダリソースView
 	hr = DirectX::CreateShaderResourceView(device, image.GetImages(), image.GetImageCount(), image.GetMetadata(), &ShaderResourceView);
-
-
-
-
 	assert(SUCCEEDED(hr));
 
 	//テクスチャデータ取得
-	texture2d_desc.Width = metadata.width;
-	texture2d_desc.Height = metadata.height;
+	texture2d_desc.Width  = static_cast<UINT>(metadata.width);
+	texture2d_desc.Height = static_cast<UINT>(metadata.height);
 
 
 	return true;
@@ -81,8 +77,8 @@ bool Texture::LoadMipMap(const wchar_t* filename)
 
 	assert(SUCCEEDED(hr));
 	//テクスチャデータ取得
-	texture2d_desc.Width = metadata.width;
-	texture2d_desc.Height = metadata.height;
+	texture2d_desc.Width  = static_cast<UINT>(metadata.width);
+	texture2d_desc.Height = static_cast<UINT>(metadata.height);
 
 	return true;
 }

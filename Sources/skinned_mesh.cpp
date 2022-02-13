@@ -123,7 +123,6 @@ Skinned_Mesh::Skinned_Mesh(const char* fbx_filename, int cstNo, bool triangulate
 	if (dummyTexture) { make_dummy_texture(dummyTexture.GetAddressOf(), 0xFFFFFFFF, 16); }
 	Create_com_buffers(fbx_filename);
 
-	rasterizer.SetRasterizer(device);
 	CstNo = cstNo;
 	if(!SkinnedShader)	// 一回だけ生成
 	{
@@ -140,10 +139,9 @@ Skinned_Mesh::Skinned_Mesh(const char* fbx_filename, int cstNo, bool triangulate
 	Parameters->Color = DirectX::SimpleMath::Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
-void Skinned_Mesh::Render(Shader* shader, int rasterize) {
+void Skinned_Mesh::Render(Shader* shader, int rs_state) {
 	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();
 
-	rasterize = (rasterize == Rasterizer::RASTERIZER_STATE::SOLID_NONE) ? wireframe : rasterize;	// ラスタライザの指定方法 デフォルト(両面描画)以外の指定ならワイヤーフレーム切り替えを無効にする
 
 	for (const Mesh& mesh : meshes) {
 		// 単位をセンチメートルからメートルに変更するため、scale_factorを0.01に設定する
@@ -151,7 +149,6 @@ void Skinned_Mesh::Render(Shader* shader, int rasterize) {
 		DirectX::XMMATRIX C{ XMLoadFloat4x4(&coordinate_system_transforms[CstNo]) * DirectX::XMMatrixScaling(scale_factor,scale_factor,scale_factor) };
 
 		DirectX::XMMATRIX S{ DirectX::XMMatrixScaling(Parameters->Scale.x,Parameters->Scale.y,Parameters->Scale.z) };	// 拡縮
-		//DirectX::XMMATRIX R{ DirectX::XMMatrixRotationRollPitchYaw(DirectX::XMConvertToRadians(Parameters->Rotate.x), DirectX::XMConvertToRadians(Parameters->Rotate.y), DirectX::XMConvertToRadians(Parameters->Rotate.z)) };	// 回転
 		DirectX::XMMATRIX R = DirectX::XMMatrixRotationQuaternion(Parameters->Orientation);
 		DirectX::XMMATRIX T{ DirectX::XMMatrixTranslation(Parameters->Position.x,Parameters->Position.y,Parameters->Position.z) };	// 平行移動
 
@@ -166,7 +163,7 @@ void Skinned_Mesh::Render(Shader* shader, int rasterize) {
 		// シェーダの設定
 		shader->Activate();
 		// ラスタライザステートの設定
-		immediate_context->RSSetState(rasterizer.states[rasterize].Get());
+		immediate_context->RSSetState(FRAMEWORK->GetRasterizerState(rs_state));
 
 		Constants data{ world,Parameters->Color };
 		DirectX::XMStoreFloat4x4(&data.world, DirectX::XMMatrixMultiply(DirectX::XMLoadFloat4x4(&mesh.default_global_transform), DirectX::XMLoadFloat4x4(&world)));	// グローバルのTransformとworld行列を掛けてworld座標に変換している
@@ -178,7 +175,7 @@ void Skinned_Mesh::Render(Shader* shader, int rasterize) {
 				if (materials.size() > 0)	// マテリアル情報があるか確認
 				{
 					immediate_context->PSSetShaderResources(0, 1, material.srv[0].GetAddressOf());
-					XMStoreFloat4(&data.material_color, DirectX::XMVectorMultiply(DirectX::XMLoadFloat4(&Parameters->Color), DirectX::XMLoadFloat4(&material.Kd)));	// マテリアルとカラーを合成
+					DirectX::XMStoreFloat4(&data.material_color, DirectX::XMVectorMultiply(DirectX::XMLoadFloat4(&Parameters->Color), DirectX::XMLoadFloat4(&material.Kd)));	// マテリアルとカラーを合成
 				}
 			}
 			else

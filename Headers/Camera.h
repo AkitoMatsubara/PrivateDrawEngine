@@ -4,6 +4,10 @@
 class Camera
 {
 private:
+	float cAngle;	// ‰ñ“]Šp
+	float cDist;	// ‹——£
+
+	inline static constexpr float CAMMERASPEED = 0.05f;
 protected:
 	DirectX::SimpleMath::Vector3  Position;
 	DirectX::SimpleMath::Vector3  Target;
@@ -17,9 +21,6 @@ protected:
 	FLOAT Width;
 	FLOAT Height;
 	bool bView;
-
-	inline static constexpr float CAMMERASPEED = 0.05f;
-
 public:
 	Camera();
 	virtual ~Camera();

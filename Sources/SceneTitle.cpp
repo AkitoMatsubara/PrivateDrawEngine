@@ -93,7 +93,7 @@ void SceneTitle::Render() {
 
 	// 2Dオブジェクトの描画設定
 	{
-		immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(DS_TRUE), 1);	// 3Dオブジェクトの後ろに出すため一旦
+		immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(FRAMEWORK->DS_TRUE), 1);	// 3Dオブジェクトの後ろに出すため一旦
 		TitleImage->Render();
 	}
 	// 3Dオブジェクトの描画設定
@@ -109,7 +109,7 @@ void SceneTitle::Render() {
 		immediate_context->VSSetConstantBuffers(1, 1, constant_buffer[0].GetAddressOf());	// cBufferはドローコールのたびに消去されるので都度設定する必要がある
 		immediate_context->PSSetConstantBuffers(1, 1, constant_buffer[0].GetAddressOf());
 
-		immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(DS_TRUE_WRITE), 1);			// 2Dオブジェクトとの前後関係をしっかりするため再設定
+		immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(FRAMEWORK->DS_TRUE_WRITE), 1);			// 2Dオブジェクトとの前後関係をしっかりするため再設定
 
 		{
 			// 3DオブジェクトRender内に移植 現状ここである必要なし？

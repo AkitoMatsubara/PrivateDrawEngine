@@ -27,7 +27,8 @@ public:
 	void Update();
 	void Render();
 
-	bool onObject(const Object3d& obj);
+	bool onObject(const Object3d& obj);	// 三角形モデルのとき 前方に少しずらして判定をとってた
+	bool onObjectSphere(const Object3d& obj,const float& radian);	// 球モデル時の判定
 	void Damage();
 };
 // ステージパーツの総管理クラス というかパーツ全部持ってる
@@ -53,10 +54,10 @@ public:
 	}
 	// StagePartsの上で弾を発射したときに呼び出す。
 	///<summary>どの床に乗ってるか判定、ダメージ加算</summary>
-	void Check(const Object3d& obj);
+	void Check(const Object3d& obj, const float& radian);
 
 	/// <summary>床の上にいなければ下に落ちる処理</summary>
-	bool RideParts(Object3d& obj);
+	bool RideParts(Object3d& obj,const float& radian);
 
 	// 取得、格納系
 	size_t getSize() { return Stages.size(); };

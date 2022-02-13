@@ -5,6 +5,7 @@
 #include  "framework.h"
 
 static float imguiPos[3] = { 0.0f };
+static float imguiRot= { 0.0f };
 
 void Player::Initialize() {
 	Model = std::make_unique<Skinned_Mesh>(".\\Resources\\Player\\Player.fbx");
@@ -14,16 +15,18 @@ void Player::Initialize() {
 	Parameters->Position     = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
 	Parameters->Vector       = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
 	Parameters->Acceleration = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
-	Parameters->Orientation = DirectX::SimpleMath::Quaternion{ 0.0f,0.0f,0.0f,1.0f };
+	Parameters->Orientation  = DirectX::SimpleMath::Quaternion{ 0.0f,0.0f,0.0f,1.0f };
 	Parameters->Scale        = DirectX::SimpleMath::Vector3{ 1.0f,1.0f,1.0f };
 	Parameters->Color        = DirectX::SimpleMath::Vector4{ 1.0f,1.0f,1.0f,1.0f };
+	Parameters->CurLife      = Parameters->MaxLife = 5;
 
 	ShotsManager = std::make_unique<ShotManager>();
 	ShotsManager->Initialize(ShotManager::MASTER::PLAYER);
 
 	Capcule = std::make_unique<Geometric_Capsule>(1.0f, 10, 10);
-	testSphere = std::make_unique<Geometric_Sphere>();
-	instance = this;	// 1P想定のみ 2P不可
+	testSphere2 = std::make_unique<Geometric_Sphere>();
+	playerHitSphere = std::make_unique<Geometric_Sphere>();
+	instance = this;	// 1P想定のみ 現状2P不可
 }
 
 void Player::Update() {
@@ -35,46 +38,63 @@ void Player::Update() {
 	// モデルに描画系パラメーターを渡す
 	Model->getParameters()->CopyParam(Parameters.get());
 
-	StageManager::getInstance().RideParts(*Parameters);
+	StageManager::getInstance().RideParts(*Parameters, Parameters->Scale.x * 0.5f);
 
 
 	//-----------------------------------------------------------------------------------------------------------------------------------------------------
 #ifdef _DEBUG
 	Capcule->Parameters->CopyParam(Parameters.get());	// Playerに付随するように位置を同期
-	DirectX::SimpleMath::Vector3 pPos = Parameters->Position;
-	Object3d* cPos = Capcule->Parameters.get();
 	static const float CAPCULESIZE = 0.7f;
 	Capcule->Parameters->Scale = DirectX::SimpleMath::Vector3(CAPCULESIZE , CAPCULESIZE, CAPCULESIZE);
 	Capcule->Parameters->Color = DirectX::SimpleMath::Vector4{ 1.0f,1.0f,1.0f,1.0f, };
-	//Capcule->Parameters->Rotate.x += 90;
-	Capcule->Parameters->Orientation=DirectX::SimpleMath::Quaternion::CreateFromAxisAngle(Model->getWorld().Right(), DirectX::XMConvertToRadians(90));
+
+	Capcule->Parameters->Orientation = DirectX::SimpleMath::Quaternion::CreateFromAxisAngle(Model->getWorld().Right(), DirectX::XMConvertToRadians(90));
+
+	Capcule->Parameters->Vector.y = sinf((Capcule->Parameters->Orientation.y));
+	Capcule->Parameters->Vector.x = sinf((Capcule->Parameters->Orientation.x));
+	Capcule->Parameters->Vector.z = cosf((Capcule->Parameters->Orientation.y));
+	Capcule->Parameters->Vector.Normalize();	// 方向ベクトルなので正規化しとく
+
 	static const float SPHERESIZE = 0.5f;
-	testSphere->Parameters->CopyParam(Parameters.get());
-	testSphere->Parameters->Scale = DirectX::SimpleMath::Vector3{ SPHERESIZE,SPHERESIZE,SPHERESIZE };
-	//testSphere->Parameters->Position += Capcule->Parameters->Vector * (Capcule->Parameters->Scale *imguiPos[0]);	// 前方確認用
-	testSphere->Parameters->Position += DirectX::SimpleMath::Vector3{ imguiPos[0] ,imguiPos[1] ,imguiPos[2] };
+	testSphere2->Parameters->CopyParam(Parameters.get());
+	testSphere2->Parameters->Scale = DirectX::SimpleMath::Vector3{ SPHERESIZE,SPHERESIZE,SPHERESIZE };
+	//testSphere2->Parameters->Position += Capcule->Parameters->Vector * (Capcule->Parameters->Scale *imguiPos[0]);	// 前方確認用
+	testSphere2->Parameters->Position += DirectX::SimpleMath::Vector3{ imguiPos[0] ,imguiPos[1] ,imguiPos[2] };
+
+	playerHitSphere->Parameters->CopyParam(Parameters.get());
+	playerHitSphere->Parameters->Color = DirectX::SimpleMath::Vector4{ 1.0f,1.0f,1.0f,1.0f };
 
 	// 当たったら青、当たってなかったら白にする
 	//if (ShotsManager->isHit(Parameters.get()))
-	//if (Judge::getInstance()->c_b(*Capcule->Parameters, 0.5f, *testSphere->Parameters))
-	if (Judge::getInstance()->JudgeCap_Sphe(*Capcule, *testSphere))
+	//if (Judge::getInstance()->c_b(*Capcule->Parameters, 0.5f, *testSphere2->Parameters))
+	//if (Judge::getInstance()->JudgeCap_Sphe(*Capcule, *testSphere2))
+	//if (Judge::getInstance()->c_b(*Capcule->Parameters.get(), Capcule->Height, Capcule->Radian, *testSphere2->Parameters.get(), testSphere2->Radian))
+	//{
+	//	testSphere2->Parameters->Color = DirectX::SimpleMath::Vector4{ 1.0f,0.0f,0.0f,1.0f };
+	//}
+	//else
+	//{
+	//	testSphere2->Parameters->Color = DirectX::SimpleMath::Vector4{ 1.0f,1.0f,1.0f,1.0f };
+	//}
+	if (Judge::getInstance()->s_s(*playerHitSphere->Parameters.get(),playerHitSphere->getSize().x*0.5f,*testSphere2->Parameters.get(), testSphere2->Radian))
 	{
-		testSphere->Parameters->Color = DirectX::SimpleMath::Vector4{ 0.0f,1.0f,1.0f,1.0f };
+		testSphere2->Parameters->Color = DirectX::SimpleMath::Vector4{ 1.0f,0.0f,0.0f,1.0f };
 	}
 	else
 	{
-		testSphere->Parameters->Color = DirectX::SimpleMath::Vector4{ 1.0f,1.0f,1.0f,1.0f };
+		testSphere2->Parameters->Color = DirectX::SimpleMath::Vector4{ 1.0f,1.0f,1.0f,1.0f };
 	}
 #endif
 	//-----------------------------------------------------------------------------------------------------------------------------------------------------
 }
 
 void Player::Render() {
+	if (Parameters->Exist) { Model->Render(); }
 	ShotsManager->Render();
-	Model->Render();
 #ifdef _DEBUG
-	Capcule->Render(true);
-	testSphere->Render(true);
+	Capcule->Render        (FRAMEWORK->RS_WIRE_NONE);
+	testSphere2->Render    (FRAMEWORK->RS_WIRE_NONE);
+	playerHitSphere->Render(FRAMEWORK->RS_WIRE_NONE);
 #endif
 }
 
@@ -87,6 +107,9 @@ void Player::ImguiPlayer()
 	// ライト調整等グローバル設定
 	ImGui::Begin("Player");
 	ImGui::SliderFloat3("SpherePos", imguiPos, -10.0f, 10.0f);
+	//ImGui::SliderFloat("playerRot", &imguiRot, 0.0f, 361.0f);
+	//Parameters->Orientation = DirectX::SimpleMath::Quaternion::CreateFromAxisAngle(Model->getWorld().Up(), DirectX::XMConvertToRadians(imguiRot));
+	ImGui::Checkbox("PlayerExist", &Parameters->Exist);
 	ImGui::PopStyleColor(2);
 
 	ImGui::End();
@@ -95,12 +118,12 @@ void Player::ImguiPlayer()
 
 void Player::Control()
 {
-	static float MOVE_SPEED = 0.05f;
+	static float MOVE_SPEED = 0.1f;
 	static float ROTATE = DirectX::XMConvertToRadians(3);
 	Parameters->Acceleration = DirectX::SimpleMath::Vector3{ 0.0f, 0.0f, 0.0f };
 	Parameters->Velocity = DirectX::SimpleMath::Vector3{ 0.0f, 0.0f, 0.0f };	// 入力中だけ動かすために毎フレーム初期化 完成とかつけ始めるといらない
 
-	// 回転追加、ジンバルロック発生？要修正 と思ったけどy軸回転しか使わん気するから修正不必要では？これ
+	// TODO クォータニオンを使用したことにより関数がお亡くなりに。.Vectorを使うのなら要修正
 	Parameters->calcForward();
 
 	//--------------------------------------------------------
@@ -135,13 +158,19 @@ void Player::Control()
 	}
 	Parameters->Position += Parameters->Velocity;
 
-	if (GetAsyncKeyState(VK_LBUTTON) & 1) {
+	if (GetAsyncKeyState(VK_RETURN) & 1) {
 		// Shotの生成
 		ShotsManager->newSet(Parameters.get());
-		StageManager::getInstance().Check(*Parameters);
+		StageManager::getInstance().Check(*Parameters, Parameters->Scale.x * 0.5f);
 	}
 	//--------------------------------------------------------
 
 	//Velocity+= acceleration;
 	//Position += Velocity;
+}
+
+int Player::Damage()
+{
+	return --Parameters->CurLife;	// ダメージを受けるので体力を-1
+
 }

@@ -46,8 +46,8 @@ bool StageParts::onObject(const Object3d& obj)
 	static constexpr float ofs_z = 1.0f;	// 原点から上へのズレ
 	DirectX::SimpleMath::Vector3 triangle[3];
 	triangle[0] = Parameters->Position + (Model->getWorld().Backward() * ofs_x);	// 前方の点のつもり
-	triangle[1] = Parameters->Position + (Model->getWorld().Forward() * ofs_x) + (Model->getWorld().Left() * ofs_z);	// 右方の点のつもり
-	triangle[2] = Parameters->Position + (Model->getWorld().Forward() * ofs_x) + (Model->getWorld().Right() * ofs_z);	// 左方の点のつもり
+	triangle[1] = Parameters->Position + (Model->getWorld().Forward()  * ofs_x) + (Model->getWorld().Left()  * ofs_z);	// 右方の点のつもり
+	triangle[2] = Parameters->Position + (Model->getWorld().Forward()  * ofs_x) + (Model->getWorld().Right() * ofs_z);	// 左方の点のつもり
 	/*	  こうなってるつもり	*/
 	/*		   [0(A)]		前	*/
 	/*		     *			↑	*/
@@ -91,24 +91,129 @@ bool StageParts::onObject(const Object3d& obj)
 	}
 	return false;
 }
+
+bool StageParts::onObjectSphere(const Object3d& obj,const float& radian)
+{
+	// 計算負荷軽減のため(になるか分からないけど)判定距離を制限
+	static constexpr float rideDist = /*1.5f*/2.0f;	// 判定距離
+	DirectX::SimpleMath::Vector3 length = Parameters->Position - obj.Position;
+	if (length.Length() > rideDist || !this->Parameters->Exist) return false;	// 距離以上離れているかそも存在しなかったらやめ
+
+
+	// まずステージの三角形頂点を算出します
+	// 今(12/09)現在のモデルに合わせてるので、変えたらやり直す必要あるからちょっとまずいかも
+	static constexpr float ofs_x = 1.0f;	// 原点から左右へのズレ
+	static constexpr float ofs_z = 1.0f;	// 原点から上へのズレ
+	DirectX::SimpleMath::Vector3 triangle[3];
+	triangle[0] = Parameters->Position + (Model->getWorld().Backward() * ofs_x);	// 前方の点のつもり
+	triangle[1] = Parameters->Position + (Model->getWorld().Forward() * ofs_x) + (Model->getWorld().Left() * ofs_z);	// 右方の点のつもり
+	triangle[2] = Parameters->Position + (Model->getWorld().Forward() * ofs_x) + (Model->getWorld().Right() * ofs_z);	// 左方の点のつもり
+	/*	  こうなってるつもり	*/
+	/*		   [0(A)]		前	*/
+	/*		     *			↑	*/
+	/*		    / \			↑	*/
+	/*		   /   \		↑	*/
+	/*		  /  P  \		↑	*/
+	/*		 /       \			*/
+	/*[2(C)]*---------*[1(B)]	*/
+
+	// y無視のxz平面で外積を計算 ここだけしか使わんのでラムダ式で定義
+	constexpr auto cross = [](const DirectX::SimpleMath::Vector3& v1, const DirectX::SimpleMath::Vector3& v2) {return (v1.x * v2.z) - (v1.z * v2.x); };
+
+	const float rad = (radian)*0.4f;	// 半径 スケール値によって実数値は変動するので計算
+	DirectX::SimpleMath::Vector3 A_p, B_p, C_p, A_B, B_C, C_A;	// それぞれのベクトルを格納する変数
+
+	A_B = triangle[1] - triangle[0];	// AからBに向かうベクトル
+	B_C = triangle[2] - triangle[1];	// BからCに向かうベクトル
+	C_A = triangle[0] - triangle[2];	// CからAに向かうベクトル
+
+	A_p = obj.Position - triangle[0];	// Aからobjに向かうベクトル
+	B_p = obj.Position - triangle[1];	// Bからobjに向かうベクトル
+	C_p = obj.Position - triangle[2];	// Cからobjに向かうベクトル
+
+	A_p.y = B_p.y = C_p.y = A_B.y = B_C.y = C_A.y = 0.0f;	// Y軸は使用しないので0にして消す
+	DirectX::SimpleMath::Vector3 p[3];	// 線分と球の最短点
+	DirectX::SimpleMath::Vector3 len[3];	// 最短点と球の距離
+
+	DirectX::SimpleMath::Vector3 Normal = (triangle[1] - triangle[0]).Cross(triangle[2] - triangle[0]);	// 三角形の法線を算出
+	Normal.Normalize();	// 正規化
+
+	len[0] = p[0] - obj.Position;
+	len[1] = p[1] - obj.Position;
+	len[2] = p[2] - obj.Position;
+	len[0].y = len[1].y = len[2].y = 0.0f;	// y軸除外
+	float ProjectionLength;	// 射影長
+
+
+	//--------------------- 交わり判定開始 一辺とでも当たっていれば乗れているということなのでtrueを返す--------------------- //
+
+	A_B.Normalize();
+	ProjectionLength = A_B.Dot(A_p);	// 射影ベクトルの長さ
+	p[0] = triangle[0] + (A_B * ProjectionLength);	// 球と線分A_Bの最短点
+	len[0] = p[0] - obj.Position;
+	len[0].y = 0.0f;	// y軸除外
+
+
+	if (len[0].Length() <= rad)	// 最短点との距離が半径より小さければ当たっている可能性があるので計算を続ける
+	{
+		if (A_B.Dot(A_p) * A_B.Dot(B_p) < 0) { return true; }	// A_pとB_pの角度が鋭角鈍角一致しなければ線分の範囲であるのであたり
+		if (A_p.Length() < rad || B_p.Length() < rad) { return true; }	// 線分の末端が半径以下であれば末端が円内なので当たり
+	}
+
+	B_C.Normalize();
+	ProjectionLength = B_C.Dot(B_p);	// 射影ベクトルの長さ
+	p[1] = triangle[1] + (B_C * ProjectionLength);	// 球と線分B_Cの最短点
+	len[1] = p[1] - obj.Position;
+	len[1].y = 0.0f;	// y軸除外
+
+	if (len[1].Length() <= rad)	// 最短点との距離が半径より小さければ当たっている可能性があるので計算を続ける
+	{
+		if (B_C.Dot(B_p) * B_C.Dot(C_p) < 0) { return true; }	// B_pとC_pの角度が鋭角鈍角一致しなければ線分の範囲であるのであたり
+		if (B_p.Length() < rad || C_p.Length() < rad) { return true; }	// 線分の末端が半径以下であれば末端が円内なので当たり
+	}
+
+	C_A.Normalize();
+	ProjectionLength = C_A.Dot(C_p);	// 射影ベクトルの長さ
+	p[2] = triangle[2] + (C_A * ProjectionLength);	// 球と線分C_Aの最短点
+	len[2] = p[2] - obj.Position;
+	len[2].y = 0.0f;	// y軸除外
+
+	if (len[2].Length() <= rad)	// 最短点との距離が半径より小さければ当たっている可能性があるので計算を続ける
+	{
+		if (C_A.Dot(C_p) * C_A.Dot(A_p) < 0) { return true; }	// C_pとA_pの角度が鋭角鈍角一致しなければ線分の範囲であるのであたり
+		if (C_p.Length() < rad || A_p.Length() < rad) { return true; }	// 線分の末端が半径以下であれば末端が円内なので当たり
+	}
+
+
+	//--------------------- 交わり判定終了 最終チェック ---------------------//
+	// 球が三角形の内側にあるかどうか確認
+	DirectX::SimpleMath::Vector3 crs[3];	// 3辺と球の外積
+	crs[0] = A_B.Cross(A_p);
+	crs[1] = B_C.Cross(B_p);
+	crs[2] = C_A.Cross(C_p);
+	// 内積がすべてプラスであれば辺から右側にあるので頂点との距離が離れていても内側です
+	float dot[3] = { crs[0].Dot(Normal),crs[1].Dot(Normal),crs[2].Dot(Normal) };
+	return (dot[0] > 0 && dot[1] > 0 && dot[2] > 0) ? true : false;
+}
+
 void StageParts::Damage()
 {
 	Parameters->CurLife--;	// 体力を減らす
 	Parameters->Color.w = static_cast<float>(Parameters->CurLife) / static_cast<float>(Parameters->MaxLife);
 
-	// もし体力が0以下であれば存在フラグをへし折る
-	if (Parameters->CurLife <= 0)
-	{
-		Parameters->Exist = false;
-	}
+	// もし体力が0以下であれば存在フラグをへし折る。それ以外は存在してます
+	Parameters->Exist = (Parameters->CurLife <= 0) ? false : true;
 }
+
+
+
 
 //---------------------------------------------------------------------------------------------------------------------------------------------------------
 StageManager::StageManager()
 {
 	if ((ROW_PARTS % 2 == 0) || (COL_PARTS % 2 == 0))	// もし奇数で設定しちゃってたらなら
 	{
-		_ASSERT_EXPR_A(false, "_StageParts is not an odd number._");	// ステージパーツが奇数では有りませんエラー
+		_ASSERT_EXPR_A(false, "_StageParts is not an odd number._");	// ステージパーツが奇数では有りませんエラー 一応ね
 	}
 }
 
@@ -177,34 +282,33 @@ void StageManager::Render()
 	}
 }
 
-void StageManager::Check(const Object3d& obj)
+void StageManager::Check(const Object3d& obj, const float& radian)
 {
 	for (auto& it : Stages)
 	{
 		// オブジェクトとステージの位置判定で上に乗っていたらステージのダメージ処理を呼び出す
-		if(it->onObject(obj))
+		if(it->onObjectSphere(obj,radian))
+		//if(it->onObject(obj))
 		{
 			it->Damage();
-
 		}
 	}
 }
 
-bool StageManager::RideParts(Object3d& obj)
+bool StageManager::RideParts(Object3d& obj,const float& radian)
 {
 	for (auto& it : Stages)
 	{
 		// オブジェクトとステージの位置判定で上に乗っていたらy値を固定する
-		if (it->onObject(obj))
+		if (it->onObjectSphere(obj,radian))
+		//if (it->onObject(obj))
 		{
 			obj.Position.y = 0.0f;	// 見た目上ステージの上にいる
 			return true;
 
 		}
-		else
-		{
-			obj.Position.y -= 0.00005f;	// 毎フレームの落下速度
-		}
 	}
+
+	obj.Position.y -= 0.05f;	// 毎フレームの落下速度
 	return false;
 }

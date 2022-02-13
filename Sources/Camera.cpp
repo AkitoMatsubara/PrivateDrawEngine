@@ -24,6 +24,9 @@ Camera::Camera()
 	Height = static_cast<float>(SCREEN_HEIGHT);
 	Aspect = Width / Height;
 	bView = false;
+
+	cAngle = 0.0f;
+	cDist = -10.0f;
 }
 Camera::~Camera() {}
 
@@ -76,8 +79,6 @@ void Camera::Activate()
 void Camera::Operate()
 {
 	// ƒJƒƒ‰‘€ì
-	static float cAngle = 0.0f;		// ‰ñ“]Šp
-	static float cDist = -10.0f;	// ‹——£
 	static constexpr float MIN_DIST = 3.0f;
 	static constexpr float MAX_DIST = 10.0f;
 	if (GetKeyState(VK_LEFT) < 0)   cAngle += DirectX::XMConvertToRadians(1);	// ƒJƒƒ‰¶‰ñ“]

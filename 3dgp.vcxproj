@@ -203,7 +203,6 @@
     <None Include="Shaders\GPUParticle.hlsli" />
     <None Include="Shaders\skinned_mesh.hlsli" />
     <None Include="Shaders\sprite.hlsli" />
-    <None Include="Shaders\static_mesh.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\ComputeShader_cs.hlsl">
@@ -224,6 +223,16 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
     </FxCompile>
+    <FxCompile Include="Shaders\GPUParticle_gs.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Geometry</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Geometry</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Geometry</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Geometry</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
+    </FxCompile>
     <FxCompile Include="Shaders\GPUParticle_ps.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
@@ -236,7 +245,7 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
     </FxCompile>
-    <FxCompile Include="Shaders\GPUPaticleCS.hlsl">
+    <FxCompile Include="Shaders\GPUParticle_cs.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
@@ -276,18 +285,6 @@
       <AssemblerOutputFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)Shaders\%(Filename).cod</AssemblerOutputFile>
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)Shaders\%(Filename).cso</ObjectFileOutput>
     </FxCompile>
-    <FxCompile Include="Shaders\static_mesh_ps.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
-    </FxCompile>
-    <FxCompile Include="Shaders\static_mesh_vs.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
-    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\imgui\imconfig.h" />
@@ -302,6 +299,7 @@
     <ClInclude Include="Headers\FrameRateCalculator.h" />
     <ClInclude Include="Headers\GPUParticle.h" />
     <ClInclude Include="Headers\Object2d.h" />
+    <ClInclude Include="Headers\SceneClear.h" />
     <ClInclude Include="Headers\Score.h" />
     <ClInclude Include="Headers\UseComputeShader.h" />
     <ClInclude Include="Headers\Enemy.h" />
@@ -312,7 +310,6 @@
     <ClInclude Include="Headers\misc.h" />
     <ClInclude Include="Headers\Object3d.h" />
     <ClInclude Include="Headers\Player.h" />
-    <ClInclude Include="Headers\Rasterizer.h" />
     <ClInclude Include="Headers\Sampler.h" />
     <ClInclude Include="Headers\SceneLoading.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
@@ -332,7 +329,6 @@
     <ClInclude Include="Headers\Stages.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="Headers\static_mesh.h" />
     <ClInclude Include="Headers\texture.h" />
     <ClInclude Include="Headers\XMFLOAT_Helper.h" />
   </ItemGroup>
@@ -344,7 +340,6 @@
     <ClCompile Include="External\imgui\imgui_ja_gryph_ranges.cpp" />
     <ClCompile Include="External\imgui\imgui_widgets.cpp" />
     <ClCompile Include="Sources\Camera.cpp" />
-    <ClCompile Include="Sources\CSSample.cpp" />
     <ClCompile Include="Sources\Enemy.cpp" />
     <ClCompile Include="Sources\FrameRateCalculator.cpp" />
     <ClCompile Include="Sources\framework.cpp" />
@@ -357,8 +352,8 @@
     <ClCompile Include="Sources\Judge.cpp" />
     <ClCompile Include="Sources\main.cpp" />
     <ClCompile Include="Sources\Player.cpp" />
-    <ClCompile Include="Sources\Rasterizer.cpp" />
     <ClCompile Include="Sources\Sampler.cpp" />
+    <ClCompile Include="Sources\SceneClear.cpp" />
     <ClCompile Include="Sources\SceneLoading.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClCompile>
@@ -379,7 +374,6 @@
     <ClCompile Include="Sources\Stages.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="Sources\static_mesh.cpp" />
     <ClCompile Include="Sources\texture.cpp" />
     <ClCompile Include="Sources\UseComputeShader.cpp" />
   </ItemGroup>

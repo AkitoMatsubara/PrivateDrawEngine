@@ -16,23 +16,15 @@ using namespace Microsoft::WRL;
 
 D3D11_INPUT_ELEMENT_DESC input_element_desc[] =
 {
-	//{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT	,0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-	//{ "COLOR"   , 0, DXGI_FORMAT_R32G32B32A32_FLOAT	,0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-	//{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT		,0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-	//{ "NORMAL"  , 0, DXGI_FORMAT_R32G32B32_FLOAT	,0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-	//{ "PARAM"   , 0, DXGI_FORMAT_R32G32B32A32_FLOAT	,0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-
 	{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,	 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA	, 0 },
 	{ "NORMAL"  , 0, DXGI_FORMAT_R32G32B32_FLOAT,	 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA	, 0 },
 	{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,		 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA	, 0 },
 	{ "COLOR"   , 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA	, 0 },
 	{ "PARAM"   , 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA	, 0 },
-
 };
 
 
-HRESULT ShaderEx::create_vs_from_cso(ID3D11Device* device,	// shaderEx.cppでしか使用しないので軽量化を図るため引数として使用と思われる
-	const char* cso_name, ID3D11VertexShader** vertex_shader, ID3D11InputLayout** input_layout, D3D11_INPUT_ELEMENT_DESC* input_element_desc, UINT num_elements){
+HRESULT ShaderEx::create_vs_from_cso(ID3D11Device* device, const char* cso_name, ID3D11VertexShader** vertex_shader, ID3D11InputLayout** input_layout, D3D11_INPUT_ELEMENT_DESC* input_element_desc, UINT num_elements) {
 
 	struct set_of_vertex_shader_and_input_layout{
 		set_of_vertex_shader_and_input_layout(ID3D11VertexShader* vertex_shader, ID3D11InputLayout* input_layout) : vertex_shader(vertex_shader), input_layout(input_layout) {}
@@ -56,10 +48,7 @@ HRESULT ShaderEx::create_vs_from_cso(ID3D11Device* device,	// shaderEx.cppでしか
 	FILE* fp = nullptr;
 	errno_t error;
 	error = fopen_s(&fp, cso_name, "rb");	// ファイルポインタ、ファイル名、rb：読み取り専用のバイナリモード
-	if (error != 0)
-	{
-		assert("CSO File not found");
-	}
+	if (error != 0) { assert("CSO File not found"); }
 
 	fseek(fp, 0, SEEK_END);	// ファイルポインタ、移動バイト数、ファイルの先頭(_SET)、現在位置(_CUR)、終端(_END)
 	long cso_sz = ftell(fp);	// ファイルの読み書き位置を取得
@@ -251,7 +240,6 @@ bool ShaderEx::CreatePS(const WCHAR* psfilename)
 {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
 	ID3D11DeviceContext* device_context = FRAMEWORK->GetDeviceContext();
-	UINT numElements = sizeof(input_element_desc) / sizeof(input_element_desc[0]);
 	//ワイド文字からマルチバイト文字へ変換
 	char fullname[256];
 
@@ -264,20 +252,60 @@ bool ShaderEx::CreatePS(const WCHAR* psfilename)
 
 }
 
-bool ShaderEx::CreateVS(const WCHAR* vsfilename)
+//bool ShaderEx::CreateVS(const WCHAR* vsfilename, ID3D11InputLayout* ia)
+//{
+//	ID3D11Device* device = FRAMEWORK->GetDevice();
+//	ID3D11DeviceContext* device_context = FRAMEWORK->GetDeviceContext();
+//	UINT numElements = sizeof(input_element_desc) / sizeof(input_element_desc[0]);
+//	//ワイド文字からマルチバイト文字へ変換
+//	char fullname[256];
+//
+//	memset(fullname, NULL, sizeof(fullname));
+//	wcstombs(fullname, vsfilename, wcslen(vsfilename));
+//	sprintf(fullname, "%s%s", fullname, ".cso");
+//
+//	//Microsoft::WRL::ComPtr<ID3D11InputLayout> Ia;
+//	std::unique_ptr<ID3D11InputLayout*> Ia = std::make_unique<ID3D11InputLayout*>();
+//	//const ID3D11InputLayout* Ia;
+//	(ia == nullptr) ? Ia.reset(InputLayout.GetAddressOf()) : Ia.reset(&ia);	// TODO 2/2 関数抜けたときにエラー出る。引数でIAほしいから頑張って治す
+//
+//	//create_vs_from_cso(device, fullname, VS.GetAddressOf(), Ia.get(), input_element_desc, numElements);
+//
+//	//// 入力レイアウト設定
+//	//device_context->IASetInputLayout(*Ia.get());
+//	create_vs_from_cso(device, fullname, VS.GetAddressOf(), InputLayout.GetAddressOf(), input_element_desc, numElements);
+//	device_context->IASetInputLayout(InputLayout.Get());
+//
+//
+//	return false;
+//
+//}
+
+// 頂点シェーダの引数構造体と同じ要素になるようにILの要素数とILの構造体を渡す
+bool ShaderEx::CreateVS(const WCHAR* vsfilename, const UINT IL_NUM, D3D11_INPUT_ELEMENT_DESC ia_desc[])
 {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
 	ID3D11DeviceContext* device_context = FRAMEWORK->GetDeviceContext();
-	UINT numElements = sizeof(input_element_desc) / sizeof(input_element_desc[0]);
+	UINT numElements = 0;
+
 	//ワイド文字からマルチバイト文字へ変換
 	char fullname[256];
 
 	memset(fullname, NULL, sizeof(fullname));
 	wcstombs(fullname, vsfilename, wcslen(vsfilename));
 	sprintf(fullname, "%s%s", fullname, ".cso");
-	create_vs_from_cso(device, fullname, VS.GetAddressOf(), InputLayout.GetAddressOf(), input_element_desc, numElements);
 
 	// 入力レイアウト設定
+	if(ia_desc != nullptr)	// descが指定されていればそれに応じて作成
+	{
+		create_vs_from_cso(device, fullname, VS.GetAddressOf(), InputLayout.GetAddressOf(), ia_desc, IL_NUM);
+	}
+	else	// 未指定であればデフォルトのdescを使用
+	{
+		numElements = sizeof(input_element_desc) / sizeof(input_element_desc[0]);
+		create_vs_from_cso(device, fullname, VS.GetAddressOf(), InputLayout.GetAddressOf(), input_element_desc, numElements);
+	}
+
 	device_context->IASetInputLayout(InputLayout.Get());
 
 
@@ -288,8 +316,6 @@ bool ShaderEx::CreateVS(const WCHAR* vsfilename)
 bool ShaderEx::CreateDS(const WCHAR* dsfilename)
 {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
-	ID3D11DeviceContext* device_context = FRAMEWORK->GetDeviceContext();
-	UINT numElements = sizeof(input_element_desc) / sizeof(input_element_desc[0]);
 	//ワイド文字からマルチバイト文字へ変換
 	char fullname[256];
 
@@ -305,8 +331,6 @@ bool ShaderEx::CreateDS(const WCHAR* dsfilename)
 bool ShaderEx::CreateHS(const WCHAR* hsfilename)
 {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
-	ID3D11DeviceContext* device_context = FRAMEWORK->GetDeviceContext();
-	UINT numElements = sizeof(input_element_desc) / sizeof(input_element_desc[0]);
 	//ワイド文字からマルチバイト文字へ変換
 	char fullname[256];
 
@@ -322,8 +346,6 @@ bool ShaderEx::CreateHS(const WCHAR* hsfilename)
 bool ShaderEx::CreateGS(const WCHAR* gsfilename)
 {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
-	ID3D11DeviceContext* device_context = FRAMEWORK->GetDeviceContext();
-	UINT numElements = sizeof(input_element_desc) / sizeof(input_element_desc[0]);
 	//ワイド文字からマルチバイト文字へ変換
 	char fullname[256];
 
@@ -339,8 +361,6 @@ bool ShaderEx::CreateGS(const WCHAR* gsfilename)
 bool ShaderEx::CreateCS(const WCHAR* csfilename)
 {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
-	ID3D11DeviceContext* device_context = FRAMEWORK->GetDeviceContext();
-	UINT numElements = sizeof(input_element_desc) / sizeof(input_element_desc[0]);
 	//ワイド文字からマルチバイト文字へ変換
 	char fullname[256];
 

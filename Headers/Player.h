@@ -21,7 +21,8 @@ private:
 
 	// カプセル型で当たり判定取るために可視化する
 	std::unique_ptr<Geometric_Capsule> Capcule;
-	std::unique_ptr<Geometric_Sphere> testSphere;
+	std::unique_ptr<Geometric_Sphere> playerHitSphere;
+	std::unique_ptr<Geometric_Sphere> testSphere2;
 
 	std::unique_ptr<ShotManager> ShotsManager;
 	inline static Player* instance;
@@ -40,10 +41,10 @@ public:
 	void Update();
 	void Render();
 
-	void ImguiPlayer();
 	ShotManager* getShotManager() { return ShotsManager.get(); }
-	static Player* getInstance()
-	{
-		return instance;
-	}
+	static Player* getInstance() { return instance; }
+
+	void ImguiPlayer();
+
+	int Damage();	// ダメージ加算、ダメ計算後のHPを返す。死亡処理に使えると思って
 };

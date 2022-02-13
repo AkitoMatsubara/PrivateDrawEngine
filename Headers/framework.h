@@ -45,8 +45,12 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView>		render_target_view;
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilView>		depth_stencil_view;
 
+
 	static const int DEPTH_STENCIL_TYPE = 9;
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilState>		depth_stencil_state[DEPTH_STENCIL_TYPE];
+
+	static const int RATERIZER_TYPE = 6;
+	Microsoft::WRL::ComPtr<ID3D11RasterizerState>	rasterizer_state[RATERIZER_TYPE];
 
 	static const int BLEND_TYPE = 9;
 	Microsoft::WRL::ComPtr<ID3D11BlendState> bd_states[BLEND_TYPE];
@@ -61,6 +65,8 @@ public:
 	enum { DS_FALSE, DS_TRUE, DS_FALSE_WRITE, DS_TRUE_WRITE, DS_END };
 	// DlendState
 	enum { BS_NONE, BS_ALPHA, BS_ADD, BS_SUBTRACT, BS_REPLACE, BS_MULTIPLY, BS_LIGHTEN, BS_DARKEN, BS_SCREEN, BS_END };
+	// RasterizerState
+	enum { RS_SOLID_NONE, RS_WIRE_NONE, RS_SOLID_BACK, RS_WIRE_BACK, RS_SOLID_BACK_CCW, RS_END};
 
 	// ä÷êî
 private:
@@ -71,6 +77,7 @@ private:
 	bool CreateRenderTargetView();		// RenderTargetViewÇÃçÏê¨
 	bool CreateDepthStencileView();		// DepthStencilViewÇÃçÏê¨
 	bool CreateDepthStencileState();	// DepthStencilStateÇÃçÏê¨
+	bool CreateRasterizerState();		// RasterizerStateÇÃçÏê¨
 	bool CreateBlendState();			// BlendStateÇÃçÏê¨
 
 public:
@@ -96,6 +103,7 @@ public:
 	ID3D11DeviceContext* GetDeviceContext() { return immediate_context.Get(); }
 	ID3D11BlendState* GetBlendState(int state) { return bd_states[state].Get(); }
 	ID3D11DepthStencilState* GetDepthStencileState(int state) { return depth_stencil_state[state].Get(); }
+	ID3D11RasterizerState* GetRasterizerState(int state) { return rasterizer_state[state].Get(); }
 
 	const float GetElapsedTime() { return tictoc.time_interval(); }
 };

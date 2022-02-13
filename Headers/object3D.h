@@ -26,7 +26,7 @@ protected:
 	// 関数
 private:
 public:
-	// コンストラクタで初期化しておく 使うのにそもそも値入ってなかったらおかしいもんねぇ？
+	// コンストラクタで初期化しておく コンストラクタだけで描画できる値(可視)は揃うと思う
 	Object3d()
 	{
 		Position     = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };

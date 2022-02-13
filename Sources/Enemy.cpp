@@ -25,6 +25,7 @@ void Enemy::Initialize() {
 
 void Enemy::Update() {
 	Move();	// うごかすところ
+	Parameters->Color = DirectX::SimpleMath::Vector4{ 1.0f,1.0f,1.0f,1.0f };
 
 	// モデルに描画系パラメーターを渡す
 	Model->getParameters()->CopyParam(Parameters.get());
@@ -53,14 +54,12 @@ void Enemy::Move()
 	static constexpr float MOVE_SPEED = 0.02f;
 
 	//--------------------------------------------------------
-	if (StageManager::getInstance().RideParts(*Parameters))	// ステージに乗っているかどうか、乗っていれば行動する
+	if (StageManager::getInstance().RideParts(*Parameters, Parameters->Scale.x * 0.5f))	// ステージに乗っているかどうか、乗っていれば行動する
 	{
 		switch (state)
 		{
 		case ENEMYSTATE::GOTARGET:
-			//// Targetの方に向く処理 敵の挙動に組み込もうと思ってるのでとりあえず作った次第
-			//FocusTarget(360.0f, 100.0f);
-			//Parameters->Velocity += Model->getWorld().Backward() * MOVE_SPEED;	// モデル前方に移動
+			// Targetの方に向く処理 敵の挙動に組み込もうと思ってるのでとりあえず作った次第
 			GoStraight();
 			break;
 		case ENEMYSTATE::SHOT:
@@ -128,7 +127,7 @@ void Enemy::Shot()
 	if (!shoted)
 	{
 		EnemyManager::getInstance().getShotManager()->newSet(Parameters.get());
-		StageManager::getInstance().Check(*Parameters);	// 床にダメージ
+		StageManager::getInstance().Check(*Parameters, Parameters->Scale.x * 0.5f);	// 床にダメージ
 		shoted = true;
 	}
 	else
@@ -163,6 +162,7 @@ void EnemyManager::Initialize()
 void EnemyManager::Update()
 {
 	// 存在フラグの立っていない要素は削除する
+	// 順番を操作しているので範囲forでは無理そうなのでこんなfor文になった
 	for (auto enem = Enemys.begin(); enem != Enemys.end();)
 	{
 		if (!enem->get()->getExist())
@@ -175,7 +175,6 @@ void EnemyManager::Update()
 			++enem;	// 次へ
 		}
 	}
-
 	shotsManager->Update();
 }
 

@@ -7,7 +7,7 @@
 #include "imgui_impl_win32.h"
 std::unique_ptr<ShaderEx> Geometric_Primitive::GeometricShader = nullptr;
 
-Geometric_Primitive::Geometric_Primitive(const WCHAR* vs_name, const WCHAR* ps_name) {
+Geometric_Primitive::Geometric_Primitive() {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
 
 	HRESULT hr{ S_OK };
@@ -16,8 +16,8 @@ Geometric_Primitive::Geometric_Primitive(const WCHAR* vs_name, const WCHAR* ps_n
 	if (!GeometricShader)
 	{
 		GeometricShader = std::make_unique<ShaderEx>();
-		GeometricShader->CreateVS(vs_name);
-		GeometricShader->CreatePS(ps_name);
+		GeometricShader->CreateVS(L"Shaders\\geometric_primitive_vs");
+		GeometricShader->CreatePS(L"Shaders\\geometric_primitive_ps");
 	}
 	// コンスタントバッファ作成
 	D3D11_BUFFER_DESC buffer_desc{};
@@ -26,9 +26,6 @@ Geometric_Primitive::Geometric_Primitive(const WCHAR* vs_name, const WCHAR* ps_n
 	buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	hr = device->CreateBuffer(&buffer_desc, nullptr, constant_buffer.GetAddressOf());
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-
-	// ラスタライザオブジェクトの生成
-	rasterizer.SetRasterizer(device);
 
 	// 各種パラメータの初期化
 	Parameters = std::make_unique<Object3d>();
@@ -68,7 +65,7 @@ void Geometric_Primitive::Create_com_buffers(Vertex* vertices, size_t vertex_cou
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 }
 
-void Geometric_Primitive::Render(bool wireframe) {
+void Geometric_Primitive::Render(int rs_state) {
 	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();
 	uint32_t stride{ sizeof(Vertex) };
 	uint32_t offset{ 0 };
@@ -104,7 +101,7 @@ void Geometric_Primitive::Render(bool wireframe) {
 	immediate_context->VSSetConstantBuffers(0, 1, constant_buffer.GetAddressOf());
 
 	// ラスタライザステートの設定
-	immediate_context->RSSetState(rasterizer.states[wireframe].Get());
+	immediate_context->RSSetState(FRAMEWORK->getInstance()->GetRasterizerState(rs_state));
 
 
 	D3D11_BUFFER_DESC buffer_desc{};

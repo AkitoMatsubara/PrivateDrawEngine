@@ -70,7 +70,7 @@ void SceneLoading::Render() {
 
 	// 2Dオブジェクトの描画設定
 	{
-		immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(DS_TRUE), 1);	// 3Dオブジェクトの後ろに出すため一旦
+		immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(FRAMEWORK->DS_TRUE), 1);	// 3Dオブジェクトの後ろに出すため一旦
 		loadingImage->Render();
 	}
 	// 3Dオブジェクトの描画設定
@@ -117,8 +117,10 @@ void SceneLoading::Render() {
 }
 
 void SceneLoading::LoadingThread(SceneLoading* scene) {
+	HRESULT hr;
 	//	COM関連の初期化でスレッド毎に呼ぶ必要がある
-	CoInitialize(nullptr);
+	hr = CoInitialize(nullptr);
+	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 
 	// 次のシーンの初期化
 	scene->nextScene->Initialize();

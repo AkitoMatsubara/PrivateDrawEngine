@@ -1,7 +1,6 @@
 ﻿#include "framework.h"
-#include "SceneManager.h"
-#include "SceneTitle.h"	// 初回起動シーン指定用
-#include "SceneGame.h"	// 初回起動シーン指定用
+
+#include "SceneGame.h"	// 初期シーンセット用 初期シーンには必須
 
 #include "FrameRateCalculator.h"
 
@@ -49,6 +48,9 @@ bool framework::initialize()
 		// サンプラーステートの生成
 		CreateDepthStencileState();
 
+		// ラスタライザステートの生成
+		CreateRasterizerState();
+
 		// RenderTargetの設定
 		immediate_context->OMSetRenderTargets(1, render_target_view.GetAddressOf(), depth_stencil_view.Get());
 
@@ -66,24 +68,6 @@ framework::~framework() {}
 bool framework::uninitialize()
 {
 	/*ComPtrに切り替えたのでRelease処理は必要なくなった*/
-	//device->Release();
-	//immediate_context->Release();
-	//swap_chain->Release();
-	//render_target_view->Release();
-	//depth_stencil_view->Release();
-
-	//for (auto& b : blender.states) {
-	//	b->Release();
-	//}
-
-	//for (auto& dss : depth_stencil_state) {
-	//	dss->Release();
-	//}
-
-	//for (Sprite* p : sprites) {
-	//	delete p;
-	//}
-
 	return true;
 }
 
@@ -187,6 +171,56 @@ bool framework::CreateDepthStencileState() {
 	return true;
 }
 
+bool framework::CreateRasterizerState()
+{
+	HRESULT hr = { S_OK };
+
+	// ラスタライザオブジェクトの生成
+	D3D11_RASTERIZER_DESC rasterizer_desc{};
+	rasterizer_desc.FrontCounterClockwise = FALSE;	// 三角形が前面か背面かを決定する TRUEの時、頂点が反対周りだと前向きとみなされる
+	rasterizer_desc.DepthBias = 0;					// 深度バイアス 同一深度上に表示するときに優先度を決めるのに使用したりする
+	rasterizer_desc.DepthBiasClamp = 0;			    // 上記同様     ピクセルの最大深度バイアス
+	rasterizer_desc.SlopeScaledDepthBias = 0;		// 上記同様     特定のピクセルの傾きのスカラー
+	rasterizer_desc.DepthClipEnable = TRUE;		    // 距離に基づいてクリッピングを有効にするか
+	rasterizer_desc.ScissorEnable = FALSE;			// シザー矩形カリングを使用するか シザー矩形：描画領域の指定によく使われる
+	rasterizer_desc.MultisampleEnable = FALSE;		// マルチサンプリングアンチエイリアス(MSAA)のRTVを使用している時、tureで四辺形ラインアンチエイリアス、falseでアルファラインアンチエイリアスを使用
+													// MSAAを使用するにはリソース生成時にDX11_SAMPLE_DESC::Countを1より上の値を設定する必要がある
+	if (FAILED(hr))  assert("Create RasterizerState Failde.");
+	/*-----塗り潰し 両面描画-----*/
+	rasterizer_desc.FillMode = D3D11_FILL_SOLID;
+	rasterizer_desc.CullMode = D3D11_CULL_NONE;
+	rasterizer_desc.AntialiasedLineEnable = TRUE;
+	hr = device->CreateRasterizerState(&rasterizer_desc, rasterizer_state[RS_SOLID_NONE].GetAddressOf());
+	if (FAILED(hr))  assert("Create RasterizerState Failde.");
+	/*-----ワイヤーフレーム 両面描画-----*/
+	rasterizer_desc.FillMode = D3D11_FILL_WIREFRAME;
+	rasterizer_desc.CullMode = D3D11_CULL_NONE;
+	rasterizer_desc.AntialiasedLineEnable = TRUE;
+	hr = device->CreateRasterizerState(&rasterizer_desc, rasterizer_state[RS_WIRE_NONE].GetAddressOf());
+	if (FAILED(hr))  assert("Create RasterizerState Failde.");
+	/*-----塗りつぶし 前面描画-----*/
+	rasterizer_desc.FillMode = D3D11_FILL_SOLID;	// レンダリングに使う塗りつぶしモード D3D11_FILL_SOLID|D3D11_FILL_WIREFRAME
+	rasterizer_desc.CullMode = D3D11_CULL_BACK;	    // 描画する法線方向 D3D11_CULL_NONE(両面描画)|D3D11_CULL_FRONT(後面描画)|D3D11_CULL_BACK(前面描画)
+	rasterizer_desc.AntialiasedLineEnable = FALSE;	// MSAAのRTVを使用している時、線分描画でMultisampleEnableがfalseの時にアンチエイリアスを有効にする
+	hr = device->CreateRasterizerState(&rasterizer_desc, rasterizer_state[RS_SOLID_BACK].GetAddressOf());
+	if (FAILED(hr))  assert("Create RasterizerState Failde.");
+	/*-----ワイヤーフレーム 前面描画-----*/
+	rasterizer_desc.FillMode = D3D11_FILL_WIREFRAME;
+	rasterizer_desc.CullMode = D3D11_CULL_BACK;
+	rasterizer_desc.AntialiasedLineEnable = TRUE;
+	hr = device->CreateRasterizerState(&rasterizer_desc, rasterizer_state[RS_WIRE_BACK].GetAddressOf());
+	if (FAILED(hr))  assert("Create RasterizerState Failde.");
+	/*-----塗り潰し 前面描画 反時計回りの面-----*/
+	rasterizer_desc.FillMode = D3D11_FILL_SOLID;
+	rasterizer_desc.CullMode = D3D11_CULL_BACK;
+	rasterizer_desc.AntialiasedLineEnable = TRUE;
+	rasterizer_desc.FrontCounterClockwise = TRUE;
+	hr = device->CreateRasterizerState(&rasterizer_desc, rasterizer_state[RS_SOLID_BACK_CCW].GetAddressOf());
+	if (FAILED(hr))  assert("Create RasterizerState Failde.");
+	return true;
+}
+
+
 // ブレンドステートの作成
 bool framework::CreateBlendState() {
 	HRESULT hr = { S_OK };
@@ -209,7 +243,7 @@ bool framework::CreateBlendState() {
 	if (FAILED(hr))assert("NONE_BLEND ERROR");
 
 	/*----------[BS_ALPHA] 透過----------*/
-	blend_desc.AlphaToCoverageEnable = FALSE;
+	blend_desc.AlphaToCoverageEnable = TRUE;
 	blend_desc.IndependentBlendEnable = FALSE;
 	blend_desc.RenderTarget[0].BlendEnable = TRUE;
 	blend_desc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;					// 今回はピクセルシェーダのアルファデータを指定、ブレンディング前の処理は無し
@@ -221,7 +255,7 @@ bool framework::CreateBlendState() {
 	blend_desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 	hr = device->CreateBlendState(&blend_desc, bd_states[BS_ALPHA].GetAddressOf());
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-	if (FAILED(hr))assert("NONE_BLEND ERROR");
+	if (FAILED(hr))assert("ALPHA_BLEND ERROR");
 
 	/*----------[BS_ADD] 加算----------*/
 	blend_desc.AlphaToCoverageEnable = FALSE;
@@ -236,7 +270,7 @@ bool framework::CreateBlendState() {
 	blend_desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 	hr = device->CreateBlendState(&blend_desc, bd_states[BS_ADD].GetAddressOf());
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-	if (FAILED(hr))assert("NONE_BLEND ERROR");
+	if (FAILED(hr))assert("ADD_BLEND ERROR");
 
 	/*----------[BS_SUBTRACT] 減算----------*/
 	blend_desc.AlphaToCoverageEnable = FALSE;
@@ -264,13 +298,13 @@ bool framework::CreateBlendState() {
 	blend_desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
 	blend_desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 	hr = device->CreateBlendState(&blend_desc, bd_states[BS_REPLACE].GetAddressOf());
-	if (FAILED(hr))assert("NONE_BLEND ERROR");
+	if (FAILED(hr))assert("REPLACE_BLEND ERROR");
 
 	/*----------[BS_MULTIPLY]----------*/
 	ZeroMemory(&blend_desc, sizeof(blend_desc));
-	blend_desc.IndependentBlendEnable = false;
-	blend_desc.AlphaToCoverageEnable = false;
-	blend_desc.RenderTarget[0].BlendEnable = true;
+	blend_desc.IndependentBlendEnable = FALSE;
+	blend_desc.AlphaToCoverageEnable = FALSE;
+	blend_desc.RenderTarget[0].BlendEnable = TRUE;
 	blend_desc.RenderTarget[0].SrcBlend = D3D11_BLEND_DEST_COLOR;
 	blend_desc.RenderTarget[0].DestBlend = D3D11_BLEND_ZERO;
 	blend_desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
@@ -279,7 +313,7 @@ bool framework::CreateBlendState() {
 	blend_desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
 	blend_desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 	hr = device->CreateBlendState(&blend_desc, bd_states[BS_MULTIPLY].GetAddressOf());
-	if (FAILED(hr))assert("NONE_BLEND ERROR");
+	if (FAILED(hr))assert("MULTIPLY_BLEND ERROR");
 
 	/*----------[BS_LIGHTEN]----------*/
 	blend_desc.AlphaToCoverageEnable = FALSE;
@@ -293,7 +327,7 @@ bool framework::CreateBlendState() {
 	blend_desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_MAX;
 	blend_desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 	hr = device->CreateBlendState(&blend_desc, bd_states[BS_LIGHTEN].GetAddressOf());
-	if (FAILED(hr))assert("NONE_BLEND ERROR");
+	if (FAILED(hr))assert("LIGHTEN_BLEND ERROR");
 
 	/*----------[BS_DARKEN]----------*/
 	blend_desc.AlphaToCoverageEnable = FALSE;
@@ -307,7 +341,7 @@ bool framework::CreateBlendState() {
 	blend_desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_MIN;
 	blend_desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 	hr = device->CreateBlendState(&blend_desc, &bd_states[BS_DARKEN]);
-	if (FAILED(hr))assert("NONE_BLEND ERROR");
+	if (FAILED(hr))assert("DARKEN_BLEND ERROR");
 
 	/*----------[BS_SCREEN]----------*/
 	blend_desc.AlphaToCoverageEnable = FALSE;
@@ -321,7 +355,7 @@ bool framework::CreateBlendState() {
 	blend_desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
 	blend_desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 	hr = device->CreateBlendState(&blend_desc, bd_states[BS_SCREEN].GetAddressOf());
-	if (FAILED(hr))assert("NONE_BLEND ERROR");
+	if (FAILED(hr))assert("SCREEN_BLEND ERROR");
 
 	// (ちなみに「Src」はSource(元)の略称らしい)
 	// (SrcとDestで元と先を表す変数に使われたり？2要素って感じみたい)
