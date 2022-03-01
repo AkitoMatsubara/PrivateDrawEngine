@@ -33,7 +33,7 @@ dcl_temps 2
 //   o1.x <- <main return value>.Tex.x; o1.y <- <main return value>.Tex.y; 
 //   o0.x <- <main return value>.Pos.x; o0.y <- <main return value>.Pos.y; o0.z <- <main return value>.Pos.z; o0.w <- <main return value>.Pos.w
 //
-#line 7 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine AIパテコピE"
+#line 7 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine vsメモリリーク\Shaders\GPUParticle_vs.hlsl"
 mov r0.x, v0.x  // r0.x <- Out1.Pos.x
 
 #line 8

@@ -56,7 +56,7 @@ dcl_thread_group 1, 1, 1
 // Initial variable locations:
 //   vThreadID.x <- DTid.x; vThreadID.y <- DTid.y; vThreadID.z <- DTid.z
 //
-#line 33 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine AIパテコピE"
+#line 33 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine vsメモリリーク\Shaders\ComputeShader_cs.hlsl"
 sincos r0.x, null, cb2[0].x
 mov r0.y, l(1)
 iadd r0.y, r0.y, vThreadID.x

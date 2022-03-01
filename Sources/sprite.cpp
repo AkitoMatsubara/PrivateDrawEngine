@@ -21,17 +21,13 @@ Vertex vertices[]
 
 
 // 頂点バッファオブジェクトの生成
-Sprite::Sprite(const wchar_t* filename)
+Sprite::Sprite()
 {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
 	HRESULT hr{ S_OK };
 
-
-	// テクスチャのロード(上記処理をモジュール化)
-	load_texture_from_file(filename, shader_resource_view.GetAddressOf(), &texture2d_desc);
-
 	// ByteWidth,BindFlags,StructuerByteStrideは可変情報、その他情報はあまり変化することはない
-	D3D11_BUFFER_DESC buffer_desc{};			// バッファの使われ方を設定する構造体
+	D3D11_BUFFER_DESC buffer_desc{};					// バッファの使われ方を設定する構造体
 	buffer_desc.ByteWidth = sizeof(vertices);			// バッファの大きさ
 	buffer_desc.Usage = D3D11_USAGE_DYNAMIC;			// バッファへの各項目でのアクセス許可を指定 現在はGPU（読み取り専用）とCPU（書き込み専用）の両方からアクセスできる設定
 	buffer_desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;	// バインド方法 この設定頂点バッファやコンスタントバッファとして使用することを決める
@@ -47,35 +43,6 @@ Sprite::Sprite(const wchar_t* filename)
 	hr = device->CreateBuffer(&buffer_desc, &subresource_data, vertex_buffer.GetAddressOf());		// 作成するバッファ情報、作成するバッファの初期化情報、作成したバッファを保存するポインタ
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));	// _ASSERT_EXPR：第一引数条件が満たされなければ第二引数のメッセージを表示する
 
-	// ラスタライザオブジェクトの生成
-	D3D11_RASTERIZER_DESC rasterizer_desc{};
-	/*-----塗りつぶし 前面描画-----*/
-	rasterizer_desc.FillMode = D3D11_FILL_SOLID;	// レンダリングに使う塗りつぶしモード D3D11_FILL_SOLID|D3D11_FILL_WIREFRAME
-	rasterizer_desc.CullMode = D3D11_CULL_BACK;	// 描画する法線方向 D3D11_CULL_NONE(両面描画)|D3D11_CULL_FRONT(後面描画)|D3D11_CULL_BACK(前面描画)
-	rasterizer_desc.FrontCounterClockwise = FALSE;	// 三角形が前面か背面かを決定する TRUEの時、頂点が反対周りだと前向きとみなされる
-	rasterizer_desc.DepthBias = 0;					// 深度バイアス 同一深度上に表示するときに優先度を決めるのに使用したりする
-	rasterizer_desc.DepthBiasClamp = 0;			// 上記同様     ピクセルの最大深度バイアス
-	rasterizer_desc.SlopeScaledDepthBias = 0;		// 上記同様     特定のピクセルの傾きのスカラー
-	rasterizer_desc.DepthClipEnable = TRUE;		// 距離に基づいてクリッピングを有効にするか
-	rasterizer_desc.ScissorEnable = FALSE;			// シザー矩形カリングを使用するか シザー矩形：描画領域の指定によく使われる
-	rasterizer_desc.MultisampleEnable = FALSE;		// マルチサンプリングアンチエイリアス(MSAA)のRTVを使用している時、tureで四辺形ラインアンチエイリアス、falseでアルファラインアンチエイリアスを使用
-													// MSAAを使用するにはリソース生成時にDX11_SAMPLE_DESC::Countを1より上の値を設定する必要がある
-	rasterizer_desc.AntialiasedLineEnable = FALSE;	// MSAAのRTVを使用している時、線分描画でMultisampleEnableがfalseの時にアンチエイリアスを有効にする
-	hr = device->CreateRasterizerState(&rasterizer_desc, rasterizer_states[0].GetAddressOf());
-	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-	/*-----ワイヤーフレーム 前面描画-----*/
-	rasterizer_desc.FillMode = D3D11_FILL_WIREFRAME;
-	rasterizer_desc.CullMode = D3D11_CULL_BACK;
-	rasterizer_desc.AntialiasedLineEnable = TRUE;
-	hr = device->CreateRasterizerState(&rasterizer_desc, rasterizer_states[1].GetAddressOf());
-	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-	/*-----ワイヤーフレーム 両面描画-----*/
-	rasterizer_desc.FillMode = D3D11_FILL_WIREFRAME;
-	rasterizer_desc.CullMode = D3D11_CULL_NONE;
-	rasterizer_desc.AntialiasedLineEnable = TRUE;
-	hr = device->CreateRasterizerState(&rasterizer_desc, rasterizer_states[2].GetAddressOf());
-	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
-
 	if (!SpriteShader)	// 一回だけ生成
 	{
 		SpriteShader = std::make_unique<ShaderEx>();
@@ -86,15 +53,34 @@ Sprite::Sprite(const wchar_t* filename)
 	param = std::make_unique<Object2d>();
 
 	param->Pos =DirectX::SimpleMath::Vector2(0.0f, 0.0f);
-	param->Size = DirectX::SimpleMath::Vector2(static_cast<float>(texture2d_desc.Width), static_cast<float>(texture2d_desc.Height));
 	param->TexPos  =DirectX::SimpleMath::Vector2(0.0f, 0.0f);
-	param->TexSize = DirectX::SimpleMath::Vector2(static_cast<float>(texture2d_desc.Width), static_cast<float>(texture2d_desc.Height));
 	param->Angle   = 0.0f;
 	param->Color   =DirectX::SimpleMath::Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
-Sprite::~Sprite() {}
+Sprite::~Sprite()
+{
+	for (auto& path : FontList)
+	{
+		// システムからフォントを削除する
+		if (RemoveFontResourceEx(path, FR_PRIVATE, NULL) == 0)
+		{
+			_ASSERT_EXPR_A(false, "Delete Font Failed.");	// フォント削除失敗
+		}
+	}
+	FontList.clear();
+}
 
+void Sprite::LoadImages(const wchar_t* filename)
+{
+	HRESULT hr;
+	// テクスチャのロード
+	hr = load_texture_from_file(filename, shader_resource_view.GetAddressOf(), &texture2d_desc);
+	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));	// _ASSERT_EXPR：第一引数条件が満たされなければ第二引数のメッセージを表示する
+	// サイズなどは画像から取得しているためここで設定する
+	param->Size = DirectX::SimpleMath::Vector2(static_cast<float>(texture2d_desc.Width), static_cast<float>(texture2d_desc.Height));
+	param->TexSize = DirectX::SimpleMath::Vector2(static_cast<float>(texture2d_desc.Width), static_cast<float>(texture2d_desc.Height));
+}
 
 void Sprite::CreateVertexData(Shader* shader,DirectX::SimpleMath::Vector2 pos,DirectX::SimpleMath::Vector2 size, float angle,
 	DirectX::SimpleMath::Vector4 color,DirectX::SimpleMath::Vector2 TexPos,DirectX::SimpleMath::Vector2 TexSize) {
@@ -111,19 +97,19 @@ void Sprite::CreateVertexData(Shader* shader,DirectX::SimpleMath::Vector2 pos,Di
 	/*					| /  |						*/
 	/*		left_bottom	*----*	right_bottom		*/
 
-	DirectX::SimpleMath::Vector3 left_top    { pos.x         ,pos.y          ,0 };	// 左上
-	DirectX::SimpleMath::Vector3 right_top   { pos.x + size.x,pos.y          ,0 };	// 右上
-	DirectX::SimpleMath::Vector3 left_bottom { pos.x         ,pos.y + size.y ,0 };	// 左下
-	DirectX::SimpleMath::Vector3 right_bottom{ pos.x + size.x,pos.y + size.y ,0 };	// 右下
+	DirectX::SimpleMath::Vector3 left_top    { pos.x         ,pos.y          ,1.0f };	// 左上
+	DirectX::SimpleMath::Vector3 right_top   { pos.x + size.x,pos.y          ,1.0f };	// 右上
+	DirectX::SimpleMath::Vector3 left_bottom { pos.x         ,pos.y + size.y ,1.0f };	// 左下
+	DirectX::SimpleMath::Vector3 right_bottom{ pos.x + size.x,pos.y + size.y ,1.0f };	// 右下
 
 	// 回転の中心を矩形の中心点に
 	DirectX::SimpleMath::Vector2 center{ 0,0 };
 	center.x = pos.x + size.x * 0.5f;	// 位置-(大きさ/2)で頂点位置から半サイズ分動く=半分になる
 	center.y = pos.y + size.y * 0.5f;
 	// 頂点回転
-	SpriteMath::rotate(left_top, center, angle);
-	SpriteMath::rotate(left_bottom, center, angle);
-	SpriteMath::rotate(right_top, center, angle);
+	SpriteMath::rotate(left_top    , center, angle);
+	SpriteMath::rotate(left_bottom , center, angle);
+	SpriteMath::rotate(right_top   , center, angle);
 	SpriteMath::rotate(right_bottom, center, angle);
 
 	// スクリーン座標系からNDC(正規化デバイス座標)への座標変換を行う
@@ -172,6 +158,10 @@ void Sprite::CreateVertexData(Shader* shader,DirectX::SimpleMath::Vector2 pos,Di
 	}
 	immediate_context->Unmap(vertex_buffer.Get(), 0);	// マッピング解除 頂点バッファを上書きしたら必ず実行。Map&Unmapはセットで使用する
 
+
+	// シェーダの有効化
+	shader->Activate();
+
 	// SRVバインド
 	immediate_context->PSSetShaderResources(0, 1, shader_resource_view.GetAddressOf());	// レジスタ番号、シェーダリソースの数、SRVのポインタ
 
@@ -186,13 +176,10 @@ void Sprite::CreateVertexData(Shader* shader,DirectX::SimpleMath::Vector2 pos,Di
 		&offset);				// 頂点バッファの開始位置をずらすオフセットの配列
 
 	//プリミティブタイプ及びデータの順序に関する情報のバインド
-	immediate_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);	// プリミティブの形状を指定できる？ 今回は連続三角形に変更
-
-	// シェーダの有効化
-	shader->Activate();
+	immediate_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);	// プリミティブの形状を指定できる 今回は連続三角形に変更
 
 	// ラスタライザステートの設定
-	immediate_context->RSSetState(rasterizer_states[0].Get());
+	immediate_context->RSSetState(FRAMEWORK->GetRasterizerState(FRAMEWORK->RS_SOLID_BACK));
 	// プリミティブの描画
 	immediate_context->Draw(4, 0);	// 頂点の数、描画開始時点で使う頂点バッファの最初のインデックス
 	// シェーダの無効化
@@ -245,4 +232,61 @@ DirectX::SimpleMath::Vector2 Sprite::Division(DirectX::SimpleMath::Vector2 val1,
 	valOut.x = val1.x / val2.x;
 	valOut.y = val1.y / val2.y;
 	return valOut;
+}
+
+
+void FontRender(float x, float y, std::string string, int size, DirectX::XMFLOAT4 color)
+{
+	/* 型変換 */
+	std::wstring w_str;
+	size_t wcs_buff_size = string.length() + 1;	// 文字列長算出
+	wchar_t* wcs = new wchar_t[wcs_buff_size];	// 文字列長分のcharを確保
+
+	// 出力先、文字列長、文字列
+	mbstowcs_s(nullptr, wcs, wcs_buff_size, string.c_str(), _TRUNCATE);
+
+	w_str = wcs;	// 保存
+	delete[] wcs;	// いらないので削除
+
+	// 描画・文字生成
+	float rx = x;
+	float ry = y;
+	int rw = 0, rh = 0;
+	int before_char_rw = 0, y_cnt = 0;
+	std::wstring now_char;	// 描画する文字
+
+	for (int i = 0; i < w_str.length(); ++i)
+	{
+		// そもそも末端であれば実行しない
+		if (w_str[i] == '\0') return;
+
+		if (w_str[i] == '\n')	// 改行コードであれば
+		{
+			before_char_rw = 0;
+			++y_cnt;
+
+			rx = 0.0f;
+			ry = y + (y_cnt * rh);
+			continue;
+		}
+
+		//文字スプライトを取得
+		now_char = w_str[i];	// 今描画対象の文字
+		//// 文字列の画像を保持したクラスを呼び出す
+		//スプライトclass* spr = Get_FontData(now_char.c_str(), size);	// 描画文字、サイズ
+
+		////描画サイズ調整
+		//float exrate = size / static_cast<float>(font_data_[now_char].font_size_);	// フォントサイズによって調整
+
+		////描画幅、高さ
+		//rw = static_cast<int>(spr->TextureWidth() * exrate);	// ズレ修正
+		//rh = static_cast<int>(spr->TextureHeight() * exrate);
+
+		////描画位置
+		//rx += before_char_rw; // 横幅を確保した座標
+
+		//spr->描画(rx, ry, rw, rh, color);	// 文字描画
+
+		//before_char_rw = rw; //変更
+	}
 }

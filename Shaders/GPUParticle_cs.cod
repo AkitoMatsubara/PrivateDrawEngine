@@ -4,19 +4,6 @@
 //
 // Buffer Definitions: 
 //
-// cbuffer global
-// {
-//
-//   float4x4 View;                     // Offset:    0 Size:    64 [unused]
-//   float4x4 Projection;               // Offset:   64 Size:    64 [unused]
-//   float2 ParticleSize;               // Offset:  128 Size:     8 [unused]
-//   int ParticleNo;                    // Offset:  136 Size:     4
-//   float dummy;                       // Offset:  140 Size:     4 [unused]
-//   float4 EyePos;                     // Offset:  144 Size:    16 [unused]
-//   float4 FogColor;                   // Offset:  160 Size:    16 [unused]
-//
-// }
-//
 // Resource bind info for Input
 // {
 //
@@ -45,19 +32,6 @@
 //
 // }
 //
-// Resource bind info for Result2
-// {
-//
-//   struct ReturnBuffer
-//   {
-//       
-//       int toCpuNo;                   // Offset:    0
-//       float3 toCpuPosition;          // Offset:    4
-//
-//   } $Element;                        // Offset:    0 Size:    16
-//
-// }
-//
 //
 // Resource Bindings:
 //
@@ -65,8 +39,6 @@
 // ------------------------------ ---------- ------- ----------- -------------- ------
 // Input                             texture  struct         r/o             t0      1 
 // Result                                UAV  struct         r/w             u0      1 
-// Result2                               UAV  struct         r/w             u1      1 
-// global                            cbuffer      NA          NA            cb0      1 
 //
 //
 //
@@ -83,339 +55,67 @@
 // no Output
 cs_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
-dcl_constantbuffer CB0[9], immediateIndexed
 dcl_resource_structured t0, 36
 dcl_uav_structured u0, 36
-dcl_uav_structured u1, 16
 dcl_input vThreadGroupID.x
 dcl_input vThreadIDInGroup.x
-dcl_temps 10
-dcl_thread_group 200, 1, 1
+dcl_temps 4
+dcl_thread_group 400, 1, 1
 //
 // Initial variable locations:
 //   vThreadGroupID.x <- Gid.x; vThreadGroupID.y <- Gid.y; vThreadGroupID.z <- Gid.z; 
 //   vThreadIDInGroup.x <- GTid.x; vThreadIDInGroup.y <- GTid.y; vThreadIDInGroup.z <- GTid.z
 //
-#line 81 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine AIパテコピE"
-mov r0.x, cb0[8].z  // r0.x <- THG_X
+#line 48 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine vsメモリリーク\Shaders\GPUParticle_cs.hlsl"
+mov r0.x, vThreadIDInGroup.x  // r0.x <- x
 
-#line 83
-mov r0.y, vThreadIDInGroup.x  // r0.y <- x
+#line 49
+mov r0.y, vThreadGroupID.x  // r0.y <- y
 
-#line 84
-mov r0.z, vThreadGroupID.x  // r0.z <- y
-
-#line 87
-mov r0.w, l(200)
-imul null, r0.z, r0.z, r0.w
-iadd r0.y, r0.y, r0.z  // r0.y <- node
-
-#line 89
-ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r1.x, r0.y, l(0), t0.xxxx  // r1.x <- myLocation.x
-ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r1.y, r0.y, l(4), t0.xxxx  // r1.y <- myLocation.y
-ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r1.z, r0.y, l(8), t0.xxxx  // r1.z <- myLocation.z
-
-#line 91
-mov r0.z, l(0)  // r0.z <- count
-
-#line 93
-mov r0.w, l(9999999.000000)  // r0.w <- nearest_Length
-
-#line 94
-itof r2.xyz, l(0, 0, 0, 0)  // r2.x <- nearest_Pos.x; r2.y <- nearest_Pos.y; r2.z <- nearest_Pos.z
-
-#line 95
-itof r3.xyz, l(0, 0, 0, 0)  // r3.x <- Total_Pos.x; r3.y <- Total_Pos.y; r3.z <- Total_Pos.z
-
-#line 96
-itof r4.xyz, l(0, 0, 0, 0)  // r4.x <- Total_Direction.x; r4.y <- Total_Direction.y; r4.z <- Total_Direction.z
-
-#line 99
-mov r1.w, l(0.001000)  // r1.w <- MAX_ACCEL
-
-#line 100
-mov r2.w, l(0.050000)  // r2.w <- MAX_SPEED
-
-#line 103
-mov r3.w, l(0)  // r3.w <- i
-mov r5.xyz, r2.xyzx  // r5.x <- nearest_Pos.x; r5.y <- nearest_Pos.y; r5.z <- nearest_Pos.z
-mov r6.xyz, r3.xyzx  // r6.x <- Total_Pos.x; r6.y <- Total_Pos.y; r6.z <- Total_Pos.z
-mov r7.xyz, r4.xyzx  // r7.x <- Total_Direction.x; r7.y <- Total_Direction.y; r7.z <- Total_Direction.z
-mov r4.w, r0.z  // r4.w <- count
-mov r5.w, r0.w  // r5.w <- nearest_Length
-mov r6.w, r3.w  // r6.w <- i
-loop 
-  imul null, r7.w, r0.x, l(200)
-  ilt r7.w, r6.w, r7.w
-  breakc_z r7.w
-
-#line 105
-  ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r8.x, r6.w, l(0), t0.xxxx  // r8.x <- near_Location.x
-  ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r8.y, r6.w, l(4), t0.xxxx  // r8.y <- near_Location.y
-  ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r8.z, r6.w, l(8), t0.xxxx  // r8.z <- near_Location.z
-
-#line 108
-  mov r9.xyz, -r1.xyzx
-  add r8.xyz, r8.xyzx, r9.xyzx
-  dp3 r7.w, r8.xyzx, r8.xyzx
-  sqrt r7.w, r7.w  // r7.w <- ans
-
-#line 112
-  itof r8.x, l(0)
-  ne r8.x, r7.w, r8.x
-  if_nz r8.x
-
-#line 114
-    lt r8.x, r7.w, r5.w
-    if_nz r8.x
-
-#line 116
-      mov r5.w, r7.w
-
-#line 117
-      ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r5.x, r6.w, l(0), t0.xxxx
-      ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r5.y, r6.w, l(4), t0.xxxx
-      ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r5.z, r6.w, l(8), t0.xxxx
-
-#line 119
-    endif 
-
-#line 120
-  endif 
-
-#line 121
-  ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r8.x, r6.w, l(0), t0.xxxx
-  ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r8.y, r6.w, l(4), t0.xxxx
-  ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r8.z, r6.w, l(8), t0.xxxx
-  add r6.xyz, r6.xyzx, r8.xyzx
-
-#line 122
-  ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r8.x, r6.w, l(12), t0.xxxx
-  ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r8.y, r6.w, l(16), t0.xxxx
-  ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r8.z, r6.w, l(20), t0.xxxx
-  add r7.xyz, r7.xyzx, r8.xyzx
-
-#line 124
-  iadd r4.w, r4.w, l(1)
-
-#line 126
-  iadd r6.w, r6.w, l(1)
-endloop 
-
-#line 127
-if_nz r4.w
-
-#line 129
-  itof r0.x, r4.w
-  div r0.xzw, r6.xxyz, r0.xxxx  // r0.x <- centerPos.x; r0.z <- centerPos.y; r0.w <- centerPos.z
-
-#line 130
-  mov r2.xyz, -r1.xyzx
-  add r0.xzw, r0.xxzw, r2.xxyz
-  dp3 r2.x, r0.xzwx, r0.xzwx
-  rsq r2.x, r2.x
-  mul r0.xzw, r0.xxzw, r2.xxxx
-  mul r0.xzw, r0.xxzw, l(0.040000, 0.000000, 0.040000, 0.040000)  // r0.x <- answer.x; r0.z <- answer.y; r0.w <- answer.z
-
-#line 131
-  dp3 r2.x, r7.xyzx, r7.xyzx
-  rsq r2.x, r2.x
-  mul r2.xyz, r2.xxxx, r7.xyzx
-  mul r2.xyz, r2.xyzx, l(0.020000, 0.020000, 0.020000, 0.000000)
-  add r0.xzw, r0.xxzw, r2.xxyz
-
-#line 132
-  mov r2.xyz, -r1.xyzx
-  add r2.xyz, r2.xyzx, r5.xyzx
-  dp3 r3.x, r2.xyzx, r2.xyzx
-  rsq r3.x, r3.x
-  mul r2.xyz, r2.xyzx, r3.xxxx
-  mul r2.xyz, r2.xyzx, l(-0.120000, -0.120000, -0.120000, 0.000000)
-  add r0.xzw, r0.xxzw, r2.xxyz
-
-#line 134
-else   // Prior locations: r0.x <- THG_X
+#line 51
+mov r0.z, l(400)
+imul null, r0.y, r0.y, r0.z
+iadd r0.x, r0.x, r0.y  // r0.x <- node
 
 #line 137
-  itof r0.xzw, l(0, 0, 0, 0)  // r0.x <- answer.x; r0.z <- answer.y; r0.w <- answer.z
+ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r0.y, r0.x, l(24), t0.xxxx
+ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r0.z, r0.x, l(28), t0.xxxx
+ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r0.w, r0.x, l(32), t0.xxxx
+store_structured u0.x, r0.x, l(24), r0.y
+store_structured u0.x, r0.x, l(28), r0.z
+store_structured u0.x, r0.x, l(32), r0.w
 
-#line 138
-endif 
+#line 140
+ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r1.x, r0.x, l(0), t0.xxxx  // r1.x <- pos.x
+ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r1.y, r0.x, l(4), t0.xxxx  // r1.y <- pos.y
+ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r1.z, r0.x, l(8), t0.xxxx  // r1.z <- pos.z
+
+#line 141
+ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r2.x, r0.x, l(12), t0.xxxx  // r2.x <- vel.x
+ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r2.y, r0.x, l(16), t0.xxxx  // r2.y <- vel.y
+ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r2.z, r0.x, l(20), t0.xxxx  // r2.z <- vel.z
 
 #line 142
-ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r2.x, r0.y, l(24), t0.xxxx  // r2.x <- F.x
-ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r2.y, r0.y, l(28), t0.xxxx  // r2.y <- F.y
-ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r2.z, r0.y, l(32), t0.xxxx  // r2.z <- F.z
+ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r3.x, r0.x, l(24), t0.xxxx  // r3.x <- force.x
+ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r3.y, r0.x, l(28), t0.xxxx  // r3.y <- force.y
+ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r3.z, r0.x, l(32), t0.xxxx  // r3.z <- force.z
 
 #line 143
-add r0.xzw, r0.xxzw, r2.xxyz  // r0.x <- F.x; r0.z <- F.y; r0.w <- F.z
+add r0.yzw, r1.xxyz, r2.xxyz  // r0.y <- pos.x; r0.z <- pos.y; r0.w <- pos.z
 
 #line 144
-dp3 r2.x, r0.xzwx, r0.xzwx
-sqrt r2.x, r2.x
-lt r2.x, r1.w, r2.x
-if_nz r2.x
+add r1.xyz, r2.xyzx, r3.xyzx  // r1.x <- vel.x; r1.y <- vel.y; r1.z <- vel.z
 
 #line 146
-  dp3 r2.x, r0.xzwx, r0.xzwx
-  rsq r2.x, r2.x
-  mul r2.xyz, r0.xzwx, r2.xxxx  // r2.x <- F.x; r2.y <- F.y; r2.z <- F.z
+store_structured u0.x, r0.x, l(12), r1.x
+store_structured u0.x, r0.x, l(16), r1.y
+store_structured u0.x, r0.x, l(20), r1.z
 
 #line 147
-  mul r0.xzw, r1.wwww, r2.xxyz  // r0.x <- F.x; r0.z <- F.y; r0.w <- F.z
-
-#line 148
-endif 
+store_structured u0.x, r0.x, l(0), r0.y
+store_structured u0.x, r0.x, l(4), r0.z
+store_structured u0.x, r0.x, l(8), r0.w
 
 #line 149
-ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r2.x, r0.y, l(12), t0.xxxx  // r2.x <- V.x
-ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r2.y, r0.y, l(16), t0.xxxx  // r2.y <- V.y
-ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r2.z, r0.y, l(20), t0.xxxx  // r2.z <- V.z
-
-#line 150
-add r2.xyz, r0.xzwx, r2.xyzx
-
-#line 151
-dp3 r1.w, r2.xyzx, r2.xyzx
-sqrt r1.w, r1.w
-lt r1.w, r2.w, r1.w
-if_nz r1.w
-
-#line 153
-  dp3 r1.w, r2.xyzx, r2.xyzx
-  rsq r1.w, r1.w
-  mul r3.xyz, r1.wwww, r2.xyzx  // r3.x <- V.x; r3.y <- V.y; r3.z <- V.z
-
-#line 154
-  mul r2.xyz, r2.wwww, r3.xyzx  // r2.x <- V.x; r2.y <- V.y; r2.z <- V.z
-
-#line 155
-endif 
-
-#line 156
-ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r3.x, r0.y, l(0), t0.xxxx  // r3.x <- P.x
-ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r3.y, r0.y, l(4), t0.xxxx  // r3.y <- P.y
-ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r3.z, r0.y, l(8), t0.xxxx  // r3.z <- P.z
-
-#line 157
-add r3.xyz, r2.xyzx, r3.xyzx
-
-#line 159
-mov r1.w, l(0.150000)  // r1.w <- val
-
-#line 161
-itof r2.w, l(-8)
-lt r2.w, r3.x, r2.w
-if_nz r2.w
-
-#line 162
-  mov r4.xyz, -r1.xyzx
-  dp3 r2.w, r4.xyzx, r4.xyzx
-  rsq r2.w, r2.w
-  mul r2.w, r2.w, r4.x
-  mul r0.x, r1.w, r2.w
-endif 
-
-#line 163
-itof r2.w, l(2)
-lt r2.w, r3.y, r2.w
-if_nz r2.w
-
-#line 164
-  mov r4.xyz, -r1.xyzx
-  dp3 r2.w, r4.xyzx, r4.xyzx
-  rsq r2.w, r2.w
-  mul r2.w, r2.w, r4.y
-  mul r0.z, r1.w, r2.w
-endif 
-
-#line 165
-itof r2.w, l(-8)
-lt r2.w, r3.z, r2.w
-if_nz r2.w
-
-#line 166
-  mov r4.xyz, -r1.xyzx
-  dp3 r2.w, r4.xyzx, r4.xyzx
-  rsq r2.w, r2.w
-  mul r2.w, r2.w, r4.z
-  mul r0.w, r1.w, r2.w
-endif 
-
-#line 167
-itof r2.w, l(8)
-lt r2.w, r2.w, r3.x
-if_nz r2.w
-
-#line 168
-  mov r4.xyz, -r1.xyzx
-  dp3 r2.w, r4.xyzx, r4.xyzx
-  rsq r2.w, r2.w
-  mul r2.w, r2.w, r4.x
-  mul r0.x, r1.w, r2.w
-endif 
-
-#line 169
-itof r2.w, l(3)
-lt r2.w, r2.w, r3.y
-if_nz r2.w
-
-#line 170
-  mov r4.xyz, -r1.xyzx
-  dp3 r2.w, r4.xyzx, r4.xyzx
-  rsq r2.w, r2.w
-  mul r2.w, r2.w, r4.y
-  mul r0.z, r1.w, r2.w
-endif 
-
-#line 171
-itof r2.w, l(8)
-lt r2.w, r2.w, r3.z
-if_nz r2.w
-
-#line 172
-  mov r1.xyz, -r1.xyzx
-  dp3 r1.x, r1.xyzx, r1.xyzx
-  rsq r1.x, r1.x
-  mul r1.x, r1.x, r1.z
-  mul r0.w, r1.w, r1.x
-endif 
-
-#line 173
-store_structured u0.x, r0.y, l(24), r0.x
-store_structured u0.x, r0.y, l(28), r0.z
-store_structured u0.x, r0.y, l(32), r0.w
-
-#line 174
-store_structured u0.x, r0.y, l(12), r2.x
-store_structured u0.x, r0.y, l(16), r2.y
-store_structured u0.x, r0.y, l(20), r2.z
-
-#line 175
-store_structured u0.x, r0.y, l(0), r3.x
-store_structured u0.x, r0.y, l(4), r3.y
-store_structured u0.x, r0.y, l(8), r3.z
-
-#line 177
-mov r0.x, l(1)
-ieq r0.x, r0.x, r0.y
-if_nz r0.x
-
-#line 179
-  mov r0.x, l(0)
-  store_structured u1.x, r0.x, l(0), l(123)
-
-#line 180
-  mov r0.x, l(0)
-  itof r0.y, r4.w
-  div r0.yzw, r6.xxyz, r0.yyyy
-  store_structured u1.x, r0.x, l(4), r0.y
-  store_structured u1.x, r0.x, l(8), r0.z
-  store_structured u1.x, r0.x, l(12), r0.w
-
-#line 184
-endif 
-
-#line 185
 ret 
-// Approximately 187 instruction slots used
+// Approximately 29 instruction slots used

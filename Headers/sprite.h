@@ -9,46 +9,28 @@
 #include <wrl.h>
 
 
-//// 頂点フォーマット
-//struct Vertex {
-//	XMFLOAT3 position;
-//	XMFLOAT3 normal;
-//	XMFLOAT2 texcoord;	// TextuerCoordinateの略、UV座標の取得などによく使われる様子
-//	XMFLOAT4 color;
-//};
-
-//// 矩形用のステータス
-//struct SpriteParam {
-//	DirectX::SimpleMath::Vector2 Pos;		// 描画位置
-//	DirectX::SimpleMath::Vector2 Size;		// 描画サイズ
-//	DirectX::SimpleMath::Vector2 TexPos;	// テクスチャの開始位置
-//	DirectX::SimpleMath::Vector2 TexSize;	// テクスチャの使用サイズ
-//	float Angle = 0.0f;		// 回転角度
-//	DirectX::SimpleMath::Vector4 Color;		// 加算色
-//};
-
 class Sprite {
-private:
+protected:
 	// メンバ変数
-	Microsoft::WRL::ComPtr<ID3D11VertexShader>			vertex_shader;
-	Microsoft::WRL::ComPtr<ID3D11PixelShader>			pixel_shader;
 	Microsoft::WRL::ComPtr<ID3D11Buffer>				vertex_buffer;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>	shader_resource_view;
-	Microsoft::WRL::ComPtr<ID3D11RasterizerState>		rasterizer_states[3];	// 0:片面塗りつぶし,1:片面ワイヤーフレーム,2:両面ワイヤーフレーム
 
 
 	D3D11_TEXTURE2D_DESC	texture2d_desc;
-
-	//SpriteParam Parameters;
 	std::unique_ptr<Object2d> param;
 	static inline std::unique_ptr<ShaderEx> SpriteShader;	// デフォルトで使用するシェーダ
 
+	std::vector<const wchar_t*> FontList;	// 読み込んだフォントのパスを保持するコンテナ
+
 public:
 	// コンストラクタ、デストラクタ
-	Sprite(const wchar_t* filename);
-	~Sprite();	// すべてのCOMオブジェクトを解放する
+	Sprite();
+	virtual ~Sprite();	// すべてのCOMオブジェクトを解放する
 
 	// メンバ関数
+
+	// 画像の読み込み
+	void LoadImages(const wchar_t* filename);
 
 	// 頂点情報の生成、更新
 	void CreateVertexData(Shader* shader, DirectX::SimpleMath::Vector2 pos, DirectX::SimpleMath::Vector2 size, float angle, DirectX::SimpleMath::Vector4 color
@@ -99,7 +81,7 @@ public:
 
 namespace SpriteMath
 {
-	// render内で使う頂点回転用関数 sprite_Batchでも使用するのでclass Sprite外ヘッダーに記述
+	// Render内で使う頂点回転用関数 sprite_Batchでも使用するのでclass Sprite外ヘッダーに記述
 	inline void rotate(DirectX::SimpleMath::Vector3& pos, DirectX::SimpleMath::Vector2 center, float angle) {
 		pos.x -= center.x;	// 一度中心点分ずらす
 		pos.y -= center.y;
@@ -118,7 +100,7 @@ namespace SpriteMath
 	// スクリーン座標系からNDC(正規化デバイス座標)への座標変換を行う
 	// 矩形の左上のスクリーン座標と矩形サイズを渡す
 	inline DirectX::SimpleMath::Vector3 ConvertToNDC(DirectX::SimpleMath::Vector3 pos, D3D11_VIEWPORT viewport) {
-		pos.x = (pos.x * 2 / viewport.Width) - 1.0f;	// x値を２倍、その後スクリーンサイズで割って１を引くと正規化される
+		pos.x = (pos.x * 2 / viewport.Width) - 1.0f;		// x値を２倍、その後スクリーンサイズで割って１を引くと正規化される
 		pos.y = 1.0f - (pos.y * 2.0f / viewport.Height);	// y値を２倍、スクリーンサイズで割ったもので１を引くと正規化	xと違うのはおそらく左手右手座標系の関係
 		// 今回はsprite(画像)なのでz値は変更する必要なし
 		return pos;

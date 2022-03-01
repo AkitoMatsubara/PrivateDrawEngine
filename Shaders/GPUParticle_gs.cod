@@ -13,7 +13,6 @@
 //   int ParticleNo;                    // Offset:  136 Size:     4 [unused]
 //   float dummy;                       // Offset:  140 Size:     4 [unused]
 //   float4 EyePos;                     // Offset:  144 Size:    16 [unused]
-//   float4 FogColor;                   // Offset:  160 Size:    16 [unused]
 //
 // }
 //
@@ -61,7 +60,7 @@ dcl_maxout 4
 //   v[0][0].x <- In[0].Pos.x; v[0][0].y <- In[0].Pos.y; v[0][0].z <- In[0].Pos.z; v[0][0].w <- In[0].Pos.w; 
 //   v[0][1].x <- In[0].Tex.x; v[0][1].y <- In[0].Tex.y
 //
-#line 8 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine AIパテコピE"
+#line 8 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine vsメモリリーク\Shaders\GPUParticle_gs.hlsl"
 mov r0.xyz, v[0][0].xyzx  // r0.x <- pos.x; r0.y <- pos.y; r0.z <- pos.z
 
 #line 9

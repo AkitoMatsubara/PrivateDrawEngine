@@ -22,7 +22,8 @@ bool SceneClear::Initialize() {
 		camera = std::make_unique<Camera>();
 
 		// spriteオブジェクトを生成(今回は先頭の１つだけを生成する)
-		sprites = std::make_unique<Sprite>(L".\\Resources\\clear.jpg");
+		sprites = std::make_unique<Sprite>();
+		sprites->LoadImages(L".\\Resources\\clear.jpg");
 		sprites->setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
 
 
@@ -64,7 +65,7 @@ bool SceneClear::Initialize() {
 }
 
 void SceneClear::Update() {
-	gpu_particle_->Update();
+	gpu_particle_->Update(camera.get());
 	const float elapsed_time = FRAMEWORK->GetElapsedTime();
 	// シーン切り替え
 	if (GetAsyncKeyState('G') & 1)
@@ -185,7 +186,7 @@ void SceneClear::Render() {
 			player->Render();
 			EnemyManager::getInstance().Render();
 			gpu_particle_->SetSceneConstantBuffer(constant_buffer[0].Get());
-			//gpu_particle_->Draw();
+			gpu_particle_->Draw();
 		}
 	}
 

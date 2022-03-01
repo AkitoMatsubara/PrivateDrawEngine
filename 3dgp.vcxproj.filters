@@ -79,6 +79,9 @@
     <Filter Include="imGui">
       <UniqueIdentifier>{84d01fef-4c85-496c-8319-d6704909a54e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders\SkyBox">
+      <UniqueIdentifier>{147cd3a3-7415-480e-8378-17210f33017a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\sprite_ps.hlsl">
@@ -114,6 +117,12 @@
     <FxCompile Include="Shaders\GPUParticle_gs.hlsl">
       <Filter>Shaders\GPUParticle</Filter>
     </FxCompile>
+    <FxCompile Include="Shaders\SkyBox_ps.hlsl">
+      <Filter>Shaders\SkyBox</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\SkyBox_vs.hlsl">
+      <Filter>Shaders\SkyBox</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\sprite.hlsli">
@@ -128,6 +137,9 @@
     <None Include="packages.config" />
     <None Include="Shaders\GPUParticle.hlsli">
       <Filter>Shaders\GPUParticle</Filter>
+    </None>
+    <None Include="Shaders\SkyBox.hlsli">
+      <Filter>Shaders\SkyBox</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -245,6 +257,12 @@
     <ClInclude Include="Headers\SceneClear.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="Headers\Font.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\SkyBox.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui\imgui.cpp">
@@ -351,6 +369,12 @@
     </ClCompile>
     <ClCompile Include="Sources\SceneClear.cpp">
       <Filter>Sources\Scenes</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\Font.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\SkyBox.cpp">
+      <Filter>Sources</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

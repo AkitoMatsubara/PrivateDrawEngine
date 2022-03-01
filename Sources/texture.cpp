@@ -39,7 +39,7 @@ bool Texture::Load(const wchar_t* filename)
 
 	assert(SUCCEEDED(hr));
 
-	// 画像からシェーダリソースView
+	// 画像からSRV作成
 	hr = DirectX::CreateShaderResourceView(device, image.GetImages(), image.GetImageCount(), image.GetMetadata(), &ShaderResourceView);
 	assert(SUCCEEDED(hr));
 

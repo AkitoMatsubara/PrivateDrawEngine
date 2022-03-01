@@ -24,7 +24,8 @@ bool SceneTitle::Initialize() {
 	// 各種クラス設定
 	{
 		// spriteオブジェクトを生成(今回は先頭の１つだけを生成する)
-		TitleImage = std::make_unique<Sprite>(L".\\Resources\\screenshot.jpg");	// シェーダーはコンストラクタ内で指定しているため、別を使うには改良が必要
+		TitleImage = std::make_unique<Sprite>();
+		TitleImage->LoadImages(L".\\Resources\\screenshot.jpg");
 		TitleImage->setSize(1280, 720);
 
 		// Geometric_primitiveオブジェクトの生成
@@ -57,7 +58,7 @@ void SceneTitle::Update() {
 	//if (GetKeyState('G') < 0) {
 	//	setScene(std::make_unique<SceneLoading>(std::make_unique<SceneGame>()));
 	//}
-	if (GetAsyncKeyState('G') & 1)
+	if (GetAsyncKeyState(VK_RETURN) & 1)
 	{
 		setScene(std::make_unique<SceneLoading>(std::make_unique<SceneGame>()));
 	}

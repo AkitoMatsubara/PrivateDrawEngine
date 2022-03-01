@@ -2,7 +2,9 @@
 #include "SceneManager.h"
 
 #include "Player.h"
+#include "SkyBox.h"
 #include "GPUParticle.h"
+#include "Font.h"
 
 class SceneGame :public SceneBase {
 
@@ -39,13 +41,15 @@ private:
 
 	BUFIN_TYPE vBufInArray[NUM_ELEMENTS];               // 入力用バッファーの配列を宣言
 
-	std::unique_ptr<GPUParticle> gpu_particle_;
+	std::unique_ptr<GPUParticle> GpuParticle;
 	// てすとしめ---------------------------------------------------------------------
 
 public:
 	// Sprite型 画像描画用
 	std::unique_ptr<Sprite> sprites;
 	std::unique_ptr<sprite_Batch> sprite_batches[8];
+	std::unique_ptr<Font> test;
+	std::unique_ptr<SkyBox> skybox;
 
 	// シーン定数バッファ
 	//struct scene_constants {

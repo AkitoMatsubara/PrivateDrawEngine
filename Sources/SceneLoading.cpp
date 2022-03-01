@@ -26,7 +26,8 @@ bool SceneLoading::Initialize() {
 	{
 
 		// ロード画像の初期化
-		loadingImage = std::make_unique<Sprite>(L".\\Resources\\black-metal-texture.jpg");	// シェーダーはコンストラクタ内で指定しているため、別を使うには改良が必要
+		loadingImage = std::make_unique<Sprite>();
+		loadingImage->LoadImages(L".\\Resources\\black-metal-texture.jpg");
 	}
 
 	 // スレッド開始

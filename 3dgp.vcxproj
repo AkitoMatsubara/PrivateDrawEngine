@@ -202,6 +202,7 @@
     <None Include="Shaders\geometric_primitive.hlsli" />
     <None Include="Shaders\GPUParticle.hlsli" />
     <None Include="Shaders\skinned_mesh.hlsli" />
+    <None Include="Shaders\SkyBox.hlsli" />
     <None Include="Shaders\sprite.hlsli" />
   </ItemGroup>
   <ItemGroup>
@@ -267,6 +268,18 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
     </FxCompile>
+    <FxCompile Include="Shaders\SkyBox_ps.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="Shaders\SkyBox_vs.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+    </FxCompile>
     <FxCompile Include="Shaders\sprite_ps.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
@@ -296,11 +309,13 @@
     <ClInclude Include="External\imgui\imstb_textedit.h" />
     <ClInclude Include="External\imgui\imstb_truetype.h" />
     <ClInclude Include="Headers\Camera.h" />
+    <ClInclude Include="Headers\Font.h" />
     <ClInclude Include="Headers\FrameRateCalculator.h" />
     <ClInclude Include="Headers\GPUParticle.h" />
     <ClInclude Include="Headers\Object2d.h" />
     <ClInclude Include="Headers\SceneClear.h" />
     <ClInclude Include="Headers\Score.h" />
+    <ClInclude Include="Headers\SkyBox.h" />
     <ClInclude Include="Headers\UseComputeShader.h" />
     <ClInclude Include="Headers\Enemy.h" />
     <ClInclude Include="Headers\framework.h" />
@@ -341,6 +356,7 @@
     <ClCompile Include="External\imgui\imgui_widgets.cpp" />
     <ClCompile Include="Sources\Camera.cpp" />
     <ClCompile Include="Sources\Enemy.cpp" />
+    <ClCompile Include="Sources\Font.cpp" />
     <ClCompile Include="Sources\FrameRateCalculator.cpp" />
     <ClCompile Include="Sources\framework.cpp" />
     <ClCompile Include="Sources\geometric_capsule.cpp" />
@@ -369,6 +385,7 @@
     <ClCompile Include="Sources\shaderEx.cpp" />
     <ClCompile Include="Sources\Shot.cpp" />
     <ClCompile Include="Sources\skinned_mesh.cpp" />
+    <ClCompile Include="Sources\SkyBox.cpp" />
     <ClCompile Include="Sources\sprite.cpp" />
     <ClCompile Include="Sources\sprite_Batch.cpp" />
     <ClCompile Include="Sources\Stages.cpp">

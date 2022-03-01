@@ -2,6 +2,30 @@
 #include "framework.h"
 #include "UseComputeShader.h"
 
+// TODO 適当 書き込み可能構造化バッファを作成する
+HRESULT CreateWriteStructuredBuffer(UINT uElementSize, UINT uCount, ID3D11Buffer** ppBuf)
+{
+	ID3D11Device* pD3DDevice = FRAMEWORK->GetDevice();
+	HRESULT hr = E_FAIL;
+	*ppBuf = nullptr;
+
+	// 構造化バッファーを作成する
+	D3D11_BUFFER_DESC BufferDesc;
+	ZeroMemory(&BufferDesc, sizeof(D3D11_BUFFER_DESC));
+
+	BufferDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	BufferDesc.ByteWidth = uElementSize * uCount;					// バッファサイズ
+	BufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+	BufferDesc.StructureByteStride = uElementSize;					// 構造化バッファーのサイズ (バイト単位)
+	BufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	BufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+	hr = pD3DDevice->CreateBuffer(&BufferDesc, nullptr, ppBuf);
+
+	if (FAILED(hr))_ASSERT_EXPR_A(false, "FAILED CreateStructuredBuffer");
+
+	return hr;
+}
 
 bool GPUParticle::Init()
 {
@@ -10,241 +34,138 @@ bool GPUParticle::Init()
 	{
 		//コンピュート計算のワークをセット
 
-		DispathNo = 10;  /*ディスパッチ数*/
-		PerticleAmount = 2000;        // パーティクルの数
-		chainA = 0;
-		chainB = 1;
+		DispathNo = 500;  /*ディスパッチ数*/
+		ParticleAmount = DispathNo * 400;        // パーティクルの数 (CSnumthread * DispatchNo)
 		HRESULT hr = { S_OK };
 
 		// 描画用リソース・ビュー
 		{
+			VerticesBuffer = nullptr;	// バッファを作るので中身があっては大変、消します
+
 			// 頂点バッファの定義　（書き込みにも対応）
 			D3D11_BUFFER_DESC vBufferDesc;
 			vBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-			vBufferDesc.ByteWidth = sizeof(VBuffer) * PerticleAmount;
+			vBufferDesc.ByteWidth = sizeof(VBuffer) * ParticleAmount;
 			vBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER; // 頂点バッファとストリーム出力として使う
 			vBufferDesc.CPUAccessFlags = 0;
 			vBufferDesc.MiscFlags = 0;
 			vBufferDesc.StructureByteStride = 0;
 
 			// 頂点バッファのサブリソースの初期値(頂点座標)
-			struct VBuffer* vBuf = new VBuffer[PerticleAmount];
+			VBuffer* vBuf = new VBuffer[ParticleAmount];
 
 			// 頂点バッファのサブリソースの定義(バッファーリソースでも一つだけ持てる）
 			D3D11_SUBRESOURCE_DATA vSubData;//初期化用データを作成
 			vSubData.pSysMem = vBuf;  // バッファ・データの初期値
 			vSubData.SysMemPitch = 0;
 			vSubData.SysMemSlicePitch = 0;
-
 			// 描画用頂点入力バッファの作成　　初期化用データを送っている
 			device->CreateBuffer(&vBufferDesc, &vSubData, VerticesBuffer.GetAddressOf());
-			//delete[] vBuf;
+			delete[] vBuf;	// お片付け
 
+			for (int i = 0; i < ParticleAmount; ++i) {
+				VBuffer data;
+				// 初期位置の設定
+				DirectX::XMFLOAT3 InitPos{};
+				InitPos.x = ((i % DispathNo) - (DispathNo / 2.0f)) / (float)DispathNo * 0.005f;
+				InitPos.z = ((i / DispathNo) - (DispathNo / 2.0f)) / (float)DispathNo * 0.005f;
+				InitPos.y = 0.1f;
+				//vBuf[i].Position = InitPos;
+				data.Position = InitPos;
+
+				DirectX::XMFLOAT3 InitVel{};
+				InitVel.x = ((rand() % 2000) - 1000) * 0.00005f;
+				InitVel.y = ((rand() % 2000) - 1000) * 0.00005f;
+				InitVel.z = ((rand() % 2000) - 1000) * 0.00005f;
+				data.Velocity = InitVel;//速度
+
+				data.Force = DirectX::XMFLOAT3(0, -0.0005f, 0);//加速度
+				vVecBuf.emplace_back(data);	// 格納
+			}
 			// 動的な定数バッファの定義
 			CreateConstantBuffer(DynamicCBuffer.GetAddressOf(), sizeof(cbCBuffer), true);
 
-			//初期化用データ
-			//struct VBuffer* vBuf = new VBuffer[PerticleAmount];
-			float fx = 0;
-			float fy = 0;
-			float fz = 0;
-			float theta = 0;
-			float x = 0;
-			float y = 0;
-			for (int i = 0; i < PerticleAmount; ++i) {
-
-				fx = ((i % DispathNo) - (DispathNo / 2.0f))/* / (float)DispathNo * 0.005f*/;
-				fz = ((i / DispathNo) - (DispathNo / 2.0f))/* / (float)DispathNo * 0.005f*/;
-				fy = 0.1f;
-				vBuf[i].Position = DirectX::XMFLOAT3(fx, fy, fz);
-
-
-				theta = 0.1f;
- 				x = fx * cosf(theta) - fy * sinf(theta);
-				y = fx * sinf(theta) + fy * cosf(theta);
-				//x = fx * cosf(theta) - fy * sinf(theta) + (((float)rand() / RAND_MAX) - 0.5)*20;
-				//y = fx * sinf(theta) + fy * cosf(theta) + (((float)rand() / RAND_MAX) - 0.5)*20;
-				vBuf[i].Velocity = DirectX::XMFLOAT3(x / 10000.0f, y / 10000.0f, 0);//速度
-				vBuf[i].Force = DirectX::XMFLOAT3(0, 0, 0);//加速度
-			}
-
 			// リソースの設定
-			// 最初の入力リソース
-			UseComputeShader::CreateStructuredBuffer(sizeof(VBuffer), PerticleAmount, vBuf, InBuffer.GetAddressOf());
+			// 入力リソース
 			// SRVの作成
-			UseComputeShader::CreateSRVfromStructuredBuffer(InBuffer.Get(), g_pSRV[0].GetAddressOf());
+			UseComputeShader::CreateWritableStructuredBufferAndSRV(sizeof(VBuffer), ParticleAmount, vVecBuf.data(), InputBuffer.GetAddressOf(), g_pSRV.GetAddressOf());
+
+			// 出力リソース
 			// UAVの作成
-			UseComputeShader::CreateUAVfromStructuredBuffer(InBuffer.Get(), g_pUAV[0].GetAddressOf());
-
-
-			// 最初の出力リソース
-			UseComputeShader::CreateStructuredBuffer(sizeof(VBuffer), PerticleAmount, nullptr, OutBuffer.GetAddressOf());
-			// SRVの作成
-			UseComputeShader::CreateSRVfromStructuredBuffer(OutBuffer.Get(), g_pSRV[1].GetAddressOf());
-			// UAVの作成
-			UseComputeShader::CreateUAVfromStructuredBuffer(OutBuffer.Get(), g_pUAV[1].GetAddressOf());
-
-			delete[] vBuf;
-
-			// CPUへのデータ書き込み用バッファとCPU転送用UAVの設定
-			UseComputeShader::CreateStructuredBufferAndUAV(sizeof(ReturnBuffer), 1, nullptr, ToCpuBuffer.GetAddressOf(), ToCpuUAV.GetAddressOf());
-
+			UseComputeShader::CreateStructuredBufferAndUAV(sizeof(VBuffer), ParticleAmount, nullptr,OutputBuffer.GetAddressOf(), g_pUAV.GetAddressOf());
 
 			// リードバック用バッファ リソースの作成
-			UseComputeShader::CreateAndCopyToBuffer(ToCpuBuffer.Get(), CPUReadBackBuffer.GetAddressOf());
+			UseComputeShader::CreateAndCopyToBuffer(OutputBuffer.Get(), CPUReadBackBuffer.GetAddressOf());
 		}
-		//アルファブレンド用ブレンドステート作成
-		//pngファイル内にアルファ情報がある。アルファにより透過するよう指定している
-		D3D11_BLEND_DESC blend_desc;
-		ZeroMemory(&blend_desc, sizeof(D3D11_BLEND_DESC));
-		blend_desc.IndependentBlendEnable = false;
-		blend_desc.AlphaToCoverageEnable = false;
-		blend_desc.RenderTarget[0].BlendEnable = true;
-		blend_desc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-		blend_desc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
-		blend_desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-		blend_desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-		blend_desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
-		blend_desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-		blend_desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-
-
-		//hr = device->CreateBlendState(&bd, &pBlendState.p);
-		hr = device->CreateBlendState(&blend_desc, bd_states.GetAddressOf());
-
-
-
 	}
 	// Compute Shaderセッティング
 	{
 		// シーンコンスタントバッファの作成と型の設定
 		CreateConstantBuffer(ConstantBuffer.GetAddressOf(), sizeof(scene_constants));
-		// オブジェクトコンスタントバッファの作成
-		CreateConstantBuffer(obj_ConstantBuffer.GetAddressOf(), sizeof(obj_constants));
-		// CSコンスタントバッファの作成と型の設定
-		CreateConstantBuffer(cs_ConstantBuffer.GetAddressOf(), sizeof(cs_constants));
 		// Samplerの設定
-		sample = std::make_shared<Sampler>(D3D11_FILTER_MIN_MAG_MIP_LINEAR, D3D11_TEXTURE_ADDRESS_CLAMP);
-
-		//描画用シェーダ
-		// 入力要素
-		static constexpr UINT IL_NUM = 3;
-		D3D11_INPUT_ELEMENT_DESC layout[IL_NUM] = {
-			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			{ "VELOCITY", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			{ "FORCE",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		};
-
-		// シェーダの作成
-		ParticleShader = std::make_unique<ShaderEx>();
-		ParticleShader->CreateCS(L"Shaders\\GPUParticle_cs");	// ファイル指定
-		ParticleShader->CreateVS(L"Shaders\\GPUParticle_vs", IL_NUM, layout);
-		ParticleShader->CreateGS(L"Shaders\\GPUParticle_gs");
-		ParticleShader->CreatePS(L"Shaders\\GPUParticle_ps");
-
-		// 入力用バッファーに初期値を設定する
-		for (int i = 0; i < NUM_ELEMENTS; i++)
+		if (sample == nullptr)
 		{
-			vBufInArray[i].Position = DirectX::SimpleMath::Vector3{ 0.0f, 0.0f, 0.0f };
+			sample = std::make_shared<Sampler>(D3D11_FILTER_MIN_MAG_MIP_LINEAR, D3D11_TEXTURE_ADDRESS_CLAMP);
 		}
+		//描画用シェーダ
+		if (ParticleShader == nullptr)
+		{
+			// 入力要素
+			static constexpr UINT IL_NUM = 3;
+			D3D11_INPUT_ELEMENT_DESC layout[IL_NUM] = {
+				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,
+					D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "VELOCITY", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,
+					D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "FORCE",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0,
+					D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			};
 
-		// コンピュートシェーダーへの入力時に使用するSRVを作成する
-		UseComputeShader::CreateStructuredBufferAndSRV(sizeof(BUFIN_TYPE), NUM_ELEMENTS, &vBufInArray[0], pBufInput.GetAddressOf(), pBufInputSRV.GetAddressOf());
-
-		// コンピュートシェーダーからの出力時に使用するUAVを作成する
-		UseComputeShader::CreateStructuredBufferAndUAV(sizeof(BUFOUT_TYPE), NUM_ELEMENTS, NULL, pBufResult.GetAddressOf(), pBufResultUAV.GetAddressOf());
+			// シェーダの作成
+			ParticleShader = std::make_unique<ShaderEx>();
+			ParticleShader->CreateCS(L"Shaders\\GPUParticle_cs");	// ファイル指定
+			ParticleShader->CreateVS(L"Shaders\\GPUParticle_vs", IL_NUM, layout);
+			ParticleShader->CreateGS(L"Shaders\\GPUParticle_gs");
+			ParticleShader->CreatePS(L"Shaders\\GPUParticle_ps");
+		}
 	}
-	texture = std::make_shared<Texture>();
-	texture->Load(L".\\Resources\\particle.png");
+	if (texture == nullptr)
+	{
+		texture = std::make_shared<Texture>();
+		texture->Load(L".\\Resources\\particle_G.png");
+	}
 	return true;
 }
 
-void GPUParticle::Update()
+void GPUParticle::Update(Camera* camera)
 {
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext> immediate_context = FRAMEWORK->GetDeviceContext();
 	Microsoft::WRL::ComPtr<ID3D11Device> device = FRAMEWORK->GetDevice();
 	HRESULT hr = { S_OK };
-	//	// コンピュートシェーダーを実行する
-	//	{
-	//
-	//		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	//		static float theta = 0.0f;
-	//		theta = (theta <= 1.0f) ? theta + 0.01f : 0.0f;	// チカチカすりゅ～！(色が)
-	//#if 0
-	//		D3D11_MAPPED_SUBRESOURCE subRes;	// 別の更新方法 のはず。未完成
-	//		immediate_context->Map(pBufInput.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &subRes);
-	//		BUFIN_TYPE* pBufType = (BUFIN_TYPE*)subRes.pData;
-	//		if (GetAsyncKeyState(VK_SPACE) & 1) { pBufType->Position.x += 1.0f; }	// TODO : おためし
-	//		//memcpy(コピー先, pBufType, sizeof(BUFIN_TYPE) * NUM_ELEMENTS);	// 入力前のデータ保持？
-	//		immediate_context->Unmap(pBufInput.Get(), 0);
-	//#else
-	//		// シーンコンスタントバッファ更新
-	//		immediate_context->PSSetConstantBuffers(0, 1, ConstantBuffer.GetAddressOf());
-	//		immediate_context->VSSetConstantBuffers(0, 1, ConstantBuffer.GetAddressOf());
-	//		// オブジェクトコンスタントバッファ更新
-	//		{
-	//			DirectX::SimpleMath::Matrix world;
-	//			DirectX::XMMATRIX S{ DirectX::XMMatrixScaling(sprite[0]->getSize().x,sprite[0]->getSize().y,1.0f) };	// 拡縮
-	//			DirectX::XMMATRIX R = DirectX::XMMatrixRotationAxis({ 0.0f,0.0f,1.0f }, sprite[0]->getAngle());
-	//			DirectX::XMMATRIX T{ DirectX::XMMatrixTranslation(sprite[0]->getPos().x,sprite[0]->getPos().y,0.0f) };	// 平行移動
-	//
-	//			XMStoreFloat4x4(&world, S * R * T);	// ワールド変換行列作成
-	//			obj_constants objData{};
-	//			objData.world = world;
-	//
-	//			immediate_context->UpdateSubresource(obj_ConstantBuffer.Get(), 0, 0, &objData, 0, 0);
-	//			immediate_context->PSSetConstantBuffers(1, 1, obj_ConstantBuffer.GetAddressOf());
-	//			immediate_context->VSSetConstantBuffers(1, 1, obj_ConstantBuffer.GetAddressOf());
-	//
-	//		}// CSコンスタントバッファ更新
-	//		static cs_constants csData{};
-	//		//if (GetAsyncKeyState(VK_SPACE) & 1)
-	//		//{
-	//		//	csData.Size.x += 1.0f;
-	//		//	csData.Size.y += 1.0f;
-	//		//	csData.Size.z += 1.0f;
-	//		//}	// TODO : おためし
-	//		//if (GetAsyncKeyState(VK_SHIFT) & 1)
-	//		//{
-	//		//	csData.Size.x -= 1.0f;
-	//		//	csData.Size.y -= 1.0f;
-	//		//	csData.Size.z -= 1.0f;
-	//		//}	// TODO : おためし
-	//		immediate_context->UpdateSubresource(cs_ConstantBuffer.Get(), 0, 0, &csData, 0, 0);
-	//		immediate_context->CSSetConstantBuffers(3, 1, cs_ConstantBuffer.GetAddressOf());
-	//#endif
-	//		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	//
-	//		// いろいろ設定、Dispatch数を指定してCSを実行
-	//		UseComputeShader::RunComputeShader(ParticleShader->GetCS(), pBufInputSRV.Get(), 1, pBufResultUAV.Get(), 1, 1, 1, 1);
-	//
-	//		// アンオーダードアクセスビューのバッファの内容を CPU から読み込み可能なバッファへコピーする
-	//		UseComputeShader::CreateAndCopyToBuffer(pBufResult.Get(), ReadBackBuffer.GetAddressOf());
-	//
-	//		D3D11_MAPPED_SUBRESOURCE MappedResource = { 0 };
-	//		hr = immediate_context->Map(ReadBackBuffer.Get(), 0, D3D11_MAP_READ, 0, &MappedResource);	// 読み取り専用でマップ
-	//		{	// マッピング中の処理
-	//			BUFOUT_TYPE* p;	// 受け取る型の変数を用意する
-	//			// "p,配列要素数"とウォッチ式に入力すると値が見れる これ便利
-	//			p = (BUFOUT_TYPE*)MappedResource.pData;	// 型指定して代入
-	//			obj->setScale(p->Size);
-	//		}
-	//		immediate_context->Unmap(ReadBackBuffer.Get(), 0);	// マップ解除
-	//		ReadBackBuffer.Reset();	// 解放 メモリリーク回避のため
-	//
-	//	}
 
-	// サンプルコピー-------------------------------------
+	D3D11_MAPPED_SUBRESOURCE subRes;
+	immediate_context->Map(InputBuffer.Get(), NULL, D3D11_MAP_WRITE_DISCARD, NULL, &subRes);	// subResにInputBufferをマップ
+	VBuffer* pBufType = static_cast<VBuffer*>(subRes.pData);	// 型を明示する?
+	memcpy(subRes.pData, vVecBuf.data(), sizeof(VBuffer) * ParticleAmount);	// SRVのバッファに初期化情報をコピー
+	immediate_context->Unmap(InputBuffer.Get(), 0);
+
 	// **********************************************************
 	// コンピュート・シェーダを使った演算
 	// **********************************************************
 	// シェーダを設定
 	g_cbCBuffer.No = DispathNo;
 
+	g_cbCBuffer.Projection = DirectX::XMMatrixTranspose(camera->GetProjection());
+	g_cbCBuffer.View = DirectX::XMMatrixTranspose(camera->GetView());	// 行列をシェーダに渡すには転置行列にする
+	g_cbCBuffer.ParticleSize.x = 0.02f;
+	g_cbCBuffer.ParticleSize.y = 0.02f;
+	g_cbCBuffer.EyePos = DirectX::SimpleMath::Vector4(camera->GetPos().x, camera->GetPos().y, camera->GetPos().z, 1.0f);
+
 	// ***************************************
 	// 定数バッファのマップ取得
 
 	D3D11_MAPPED_SUBRESOURCE MappedResource;
+	// D3D11_MAP_WRITE_DISCARD:もとのデータを無効にして書き込む
 	immediate_context->Map(DynamicCBuffer.Get(), NULL, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource);
 	 // 動的コンスタントバッファの値にコピーする
 	CopyMemory(MappedResource.pData, &g_cbCBuffer, sizeof(cbCBuffer));
@@ -255,72 +176,52 @@ void GPUParticle::Update()
 	immediate_context->CSSetConstantBuffers(0, 1, DynamicCBuffer.GetAddressOf());
 	immediate_context->CSSetShader(ParticleShader->GetCS(), 0, 0);
 
-	//// 現在のSRVを解除
-	//ID3D11ShaderResourceView* SRVNULL = NULL;
-	//immediate_context->CSSetShaderResources(0, 1, &SRVNULL);
+	// CPUを介さずやり取りを行うため、２つのバッファで位置等を交互に出し入れしている
+	// 0の情報をもとに計算、結果を1に → 1の情報をもとに計算、結果を0に…  というように
+
 	// SRVの設定
-	immediate_context->CSSetShaderResources(0, 1, g_pSRV[chainA].GetAddressOf());
+	immediate_context->CSSetShaderResources(0, 1, g_pSRV.GetAddressOf());
 
 	// UAVの設定
-	immediate_context->CSSetUnorderedAccessViews(0, 1, g_pUAV[chainB].GetAddressOf(), 0);
-	immediate_context->CSSetUnorderedAccessViews(1, 1, ToCpuUAV.GetAddressOf(), 0);
+	immediate_context->CSSetUnorderedAccessViews(0, 1, g_pUAV.GetAddressOf(), 0);
 	// CSの実行
-	immediate_context->Dispatch(DispathNo, 1, 1);
+	if(runCS) immediate_context->Dispatch(DispathNo, 1, 1);
 
-	immediate_context->CopyResource(VerticesBuffer.Get(), InBuffer.Get());
-	immediate_context->CopyResource(CPUReadBackBuffer.Get(), ToCpuBuffer.Get());
+	immediate_context->CopyResource(VerticesBuffer.Get(), InputBuffer.Get());	// 描画前に計算した値を頂点バッファに入れる
 
 	// 結果をCPUから読み込む
+
+	immediate_context->CopyResource(CPUReadBackBuffer.Get(), OutputBuffer.Get());
+
 	hr = immediate_context->Map(CPUReadBackBuffer.Get(), 0, D3D11_MAP_READ, 0, &MappedResource);
-	ReturnBuffer* pt = (ReturnBuffer*)MappedResource.pData;
-	// 取り出したデータをコピー
-	memcpy(&CpuGpuBuffer, pt, sizeof(ReturnBuffer));
+	VBuffer* pt = static_cast<VBuffer*>(MappedResource.pData);
+	// 取り出したデータをコピー 現状CpuGpuBufferは使っていない
+	memcpy(vVecBuf.data(), pt, sizeof(VBuffer) * ParticleAmount);
 	// マップ解除
 	immediate_context->Unmap(CPUReadBackBuffer.Get(), 0);
-
-	chainA = chainA ? 0 : 1; // バッファーの切り替え
-	chainB = chainB ? 0 : 1; // バッファーの切り替え
 	//----------------------------------------------------
 }
 
-void GPUParticle::Draw(Camera* camera)
+void GPUParticle::Draw()
 {
-	//ParticleShader->Activate();
-	//texture->Set(0);
-	//FRAMEWORK->GetDeviceContext()->Draw(4, 0);
-	//ParticleShader->Inactivate();
+	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();
 
-	//----------------------------------------------------
-	ID3D11DeviceContext* immadiate_context = FRAMEWORK->GetDeviceContext();
-
-
-	g_cbCBuffer.Projection = DirectX::XMMatrixTranspose(camera->GetProjection());
-	g_cbCBuffer.View = DirectX::XMMatrixTranspose(camera->GetView());	// 行列をシェーダに渡すには転置行列にする
-	g_cbCBuffer.ParticleSize.x = 0.08f;
-	g_cbCBuffer.ParticleSize.y = 0.08f;
-	g_cbCBuffer.EyePos = DirectX::SimpleMath::Vector4(camera->GetPos().x, camera->GetPos().y, camera->GetPos().z, 1.0f);
-	//g_cbCBuffer.FogNear = 10.0f;	//霧の始まる位置
-	//g_cbCBuffer.FogFar = 60.0f;		//霧の終わる位置
-	g_cbCBuffer.FogColor = DirectX::SimpleMath::Vector4{ 0.0f,0.0f,0.0f,1.0f };	//霧の終わる位置
-
-	immadiate_context->UpdateSubresource(DynamicCBuffer.Get(), 0, 0, &g_cbCBuffer, 0, 0);
-	D3D11_BUFFER_DESC desc;
-	DynamicCBuffer->GetDesc(&desc);
 	// ***************************************
 	// VSに定数バッファを設定
-	immadiate_context->VSSetConstantBuffers(0, 1, DynamicCBuffer.GetAddressOf());
+	immediate_context->VSSetConstantBuffers(0, 1, DynamicCBuffer.GetAddressOf());
 	// PSに定数バッファを設定
-	immadiate_context->PSSetConstantBuffers(0, 1, DynamicCBuffer.GetAddressOf());
-	immadiate_context->GSSetConstantBuffers(0, 1, DynamicCBuffer.GetAddressOf());
+	immediate_context->PSSetConstantBuffers(0, 1, DynamicCBuffer.GetAddressOf());
+	immediate_context->GSSetConstantBuffers(0, 1, DynamicCBuffer.GetAddressOf());
 
 	// ***************************************
 
 	// IAに頂点バッファを設定
 	UINT strides[1] = { sizeof(VBuffer) };
 	UINT offsets[1] = { 0 };
-	immadiate_context->IASetVertexBuffers(0, 1, VerticesBuffer.GetAddressOf(), strides, offsets);
+	immediate_context->IASetVertexBuffers(0, 1, VerticesBuffer.GetAddressOf(), strides, offsets);
+
 	// IAにプリミティブの種類を設定
-	//immadiate_context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
+	immediate_context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
 
 	// 各シェーダのセット
 	ParticleShader->Activate();
@@ -329,26 +230,81 @@ void GPUParticle::Draw(Camera* camera)
 	sample->Set(0);
 
 	UINT mask = 0xffffffff;
-	immadiate_context->OMSetBlendState(FRAMEWORK->GetBlendState(FRAMEWORK->BS_ALPHA), nullptr, mask);
-	immadiate_context->RSSetState(FRAMEWORK->GetRasterizerState(FRAMEWORK->RS_SOLID_NONE));
-
+	immediate_context->OMSetBlendState(FRAMEWORK->GetBlendState(FRAMEWORK->BS_ALPHA), nullptr, mask);
+	immediate_context->RSSetState(FRAMEWORK->GetRasterizerState(FRAMEWORK->RS_SOLID_NONE));
+	sample->Set(0);
 	// ***************************************
 	// 描画する
-	immadiate_context->Draw(PerticleAmount, 0);
+	immediate_context->Draw(ParticleAmount, 0);
 	// シェーダの無効化
 	ParticleShader->Inactivate();
 	//----------------------------------------------------
 }
+
+void GPUParticle::SetParticle()
+{
+	// 頂点バッファのサブリソースの初期値(頂点座標)
+	VBuffer* vBuf = new VBuffer[ParticleAmount];
+
+	ID3D11Buffer* ReadBuffer;
+	{
+		D3D11_BUFFER_DESC BufferDesc;
+		ZeroMemory(&BufferDesc, sizeof(D3D11_BUFFER_DESC));
+		InputBuffer->GetDesc(&BufferDesc);	// 引数のBUFFER_DESCを取得
+
+		// 中身をCPUで読み込むめるようににDESCを再設定
+		BufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;  // CPU から読み込みできるように設定する
+		BufferDesc.Usage = D3D11_USAGE_DYNAMIC;             // GPU から CPU へのデータ転送 (コピー) をサポートするリソース CPU読み書き専用
+		BufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+		BufferDesc.MiscFlags = 0;
+
+		// 再設定したDESCでbufferを作成
+		FRAMEWORK->GetDevice()->CreateBuffer(&BufferDesc, nullptr, &ReadBuffer);
+
+		// 引数bufferのデータを作成したbufferにコピー
+		FRAMEWORK->GetDeviceContext()->CopyResource(ReadBuffer, InputBuffer.Get());
+
+	}
+
+	//初期化用データ
+	float theta = 0.1f;
+	for (int i = 0; i < ParticleAmount; ++i) {
+		// 初期位置の設定
+		float x = ((i % DispathNo) - (DispathNo / 2.0f)) / (float)DispathNo * 0.005f;
+		float z = ((i / DispathNo) - (DispathNo / 2.0f)) / (float)DispathNo * 0.005f;
+		float y = 0.1f;
+		vBuf[i].Position = DirectX::XMFLOAT3(x, y, z);
+
+
+		float vx = ((rand() % 2000) - 1000) * 0.00001f;
+		float vy = ((rand() % 2000) - 1000) * 0.00001f;
+		float vz = ((rand() % 2000) - 1000) * 0.00001f;
+		vBuf[i].Velocity = DirectX::XMFLOAT3(vx, vy, vz);//速度
+		vBuf[i].Force = DirectX::XMFLOAT3(0, -0.005f, 0);//加速度
+	}
+
+	// パーティクルの資料をバッファに入れる
+	D3D11_MAPPED_SUBRESOURCE subRes;
+	FRAMEWORK->GetDeviceContext()->Map(InputBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &subRes);
+	memcpy(subRes.pData, vBuf, sizeof(VBuffer) * ParticleAmount);
+	FRAMEWORK->GetDeviceContext()->Unmap(InputBuffer.Get(), 0);
+
+	delete[] vBuf;
+	memcpy(InputBuffer.Get(), ReadBuffer, sizeof(VBuffer) * ParticleAmount);
+}
+
 
 void GPUParticle::SetSceneConstantBuffer(const ID3D11Buffer* cbBuf)
 {
 	memcpy(ConstantBuffer.Get(), cbBuf, sizeof(ID3D11Buffer));
 }
 
+// GPUParticleに限らないと思うので今回はメンバ関数として定義
 void GPUParticle::CreateConstantBuffer(ID3D11Buffer** dstBuf, size_t size, bool dynamicFlg)
 {
 	Microsoft::WRL::ComPtr<ID3D11Device> device = FRAMEWORK->GetDevice();
 
+	*dstBuf = nullptr;
 	D3D11_BUFFER_DESC buffer_desc{};
 	ZeroMemory(&buffer_desc, sizeof(D3D11_BUFFER_DESC));	// 一旦初期化
 	buffer_desc.ByteWidth = static_cast<UINT>(size);	// 型指定
@@ -358,7 +314,7 @@ void GPUParticle::CreateConstantBuffer(ID3D11Buffer** dstBuf, size_t size, bool 
 	if (dynamicFlg)
 	{
 		buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
-		buffer_desc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE;
+		buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	}
 	else
 	{
@@ -368,4 +324,8 @@ void GPUParticle::CreateConstantBuffer(ID3D11Buffer** dstBuf, size_t size, bool 
 	HRESULT hr = device->CreateBuffer(&buffer_desc, nullptr, dstBuf);	// バッファ作成
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 
+}
+
+GPUParticle::~GPUParticle()
+{
 }

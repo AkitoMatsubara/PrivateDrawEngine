@@ -20,7 +20,6 @@ D3D11_INPUT_ELEMENT_DESC input_element_desc[] =
 	{ "NORMAL"  , 0, DXGI_FORMAT_R32G32B32_FLOAT,	 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA	, 0 },
 	{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,		 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA	, 0 },
 	{ "COLOR"   , 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA	, 0 },
-	{ "PARAM"   , 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA	, 0 },
 };
 
 
@@ -251,35 +250,6 @@ bool ShaderEx::CreatePS(const WCHAR* psfilename)
 	return false;
 
 }
-
-//bool ShaderEx::CreateVS(const WCHAR* vsfilename, ID3D11InputLayout* ia)
-//{
-//	ID3D11Device* device = FRAMEWORK->GetDevice();
-//	ID3D11DeviceContext* device_context = FRAMEWORK->GetDeviceContext();
-//	UINT numElements = sizeof(input_element_desc) / sizeof(input_element_desc[0]);
-//	//ワイド文字からマルチバイト文字へ変換
-//	char fullname[256];
-//
-//	memset(fullname, NULL, sizeof(fullname));
-//	wcstombs(fullname, vsfilename, wcslen(vsfilename));
-//	sprintf(fullname, "%s%s", fullname, ".cso");
-//
-//	//Microsoft::WRL::ComPtr<ID3D11InputLayout> Ia;
-//	std::unique_ptr<ID3D11InputLayout*> Ia = std::make_unique<ID3D11InputLayout*>();
-//	//const ID3D11InputLayout* Ia;
-//	(ia == nullptr) ? Ia.reset(InputLayout.GetAddressOf()) : Ia.reset(&ia);	// TODO 2/2 関数抜けたときにエラー出る。引数でIAほしいから頑張って治す
-//
-//	//create_vs_from_cso(device, fullname, VS.GetAddressOf(), Ia.get(), input_element_desc, numElements);
-//
-//	//// 入力レイアウト設定
-//	//device_context->IASetInputLayout(*Ia.get());
-//	create_vs_from_cso(device, fullname, VS.GetAddressOf(), InputLayout.GetAddressOf(), input_element_desc, numElements);
-//	device_context->IASetInputLayout(InputLayout.Get());
-//
-//
-//	return false;
-//
-//}
 
 // 頂点シェーダの引数構造体と同じ要素になるようにILの要素数とILの構造体を渡す
 bool ShaderEx::CreateVS(const WCHAR* vsfilename, const UINT IL_NUM, D3D11_INPUT_ELEMENT_DESC ia_desc[])

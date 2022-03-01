@@ -40,10 +40,10 @@ dcl_temps 1
 //   v2.x <- Input.wPosition.x; v2.y <- Input.wPosition.y; v2.z <- Input.wPosition.z; 
 //   o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
 //
-#line 22 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine AIパテコピE"
+#line 8 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine vsメモリリーク\Shaders\GPUParticle_ps.hlsl"
 sample_indexable(texture2d)(float,float,float,float) r0.xyzw, v1.xyxx, t0.xyzw, s0  // r0.x <- color.x; r0.y <- color.y; r0.z <- color.z; r0.w <- color.w
 
-#line 25
+#line 10
 mov o0.xyzw, r0.xyzw
 ret 
 // Approximately 3 instruction slots used

@@ -63,7 +63,10 @@ bool framework::initialize()
 	return true;
 }
 
-framework::~framework() {}
+framework::~framework()
+{
+	debug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
+}
 
 bool framework::uninitialize()
 {
@@ -95,6 +98,8 @@ bool framework::CreateDeviceAndSwapCain() {
 	HRESULT hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, creat_device_flags,
 		&feature_levels, 1, D3D11_SDK_VERSION, &swap_chain_desc, &swap_chain, &device, NULL, &immediate_context);	// DeviceとSwapChainの設定を同時に行う 参考→ https://yttm-work.jp/directx/directx_0012.html
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));	// _ASSERT_EXPRはおそらくメッセージ表示が可能なassert。SUCCEEDEDで成功判定、hr_traceはおそらくエラーメッセージの表示？
+	// デバイスをもとに作成
+	device->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast<void**>(debug.GetAddressOf()));
 
 	return true;
 }
@@ -408,16 +413,8 @@ int framework::run() {
 	ImGui_ImplDX11_Init(device.Get(), immediate_context.Get());
 	ImGui::StyleColorsDark();
 #endif
-	//[-------------------------------------------------------------------------------
 
-	// メインループに入る前に精度を取得しておく
-	//if (QueryPerformanceFrequency(&timeFreq) == FALSE) { // この関数で0(FALSE)が帰る時はハードウェア的に未対応(よっぽど古くない限り問題なはず)
-	//	return static_cast<int>(msg.wParam); // 出来ないんでおわり
-	//}
-	//QueryPerformanceCounter(&timeStart); // 処理開始前に1度取得しておく(初回計算用)
 	FrameRateCalculator::getInstance().Init();
-
-	//-------------------------------------------------------------------------------]
 	SceneManager::getInstance().ChangeScene(new SceneGame());
 
 	while (WM_QUIT != msg.message)

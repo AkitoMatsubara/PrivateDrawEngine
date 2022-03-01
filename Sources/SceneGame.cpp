@@ -26,7 +26,8 @@ bool SceneGame::Initialize() {
 		camera = std::make_unique<Camera>();
 
 		// spriteオブジェクトを生成(今回は先頭の１つだけを生成する)
-		sprites = std::make_unique<Sprite>(L".\\Resources\\screenshot.jpg");	// シェーダーはコンストラクタ内で指定しているため、別を使うには改良が必要
+		sprites = std::make_unique<Sprite>();
+		sprites->LoadImages(L".\\Resources\\screenshot.jpg");
 		sprites->setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
 
 		// Geometric_primitiveオブジェクトの生成
@@ -68,19 +69,24 @@ bool SceneGame::Initialize() {
 
 	camera->SetProjection(DirectX::XMConvertToRadians(30), camera->GetWidth() / camera->GetHeight(), camera->GetNear(), camera->GetFar());
 
-	gpu_particle_ = std::make_unique<GPUParticle>();
-	gpu_particle_->Init();
+	GpuParticle = std::make_unique<GPUParticle>();
+	GpuParticle->Init();
+
+	skybox = std::make_unique<SkyBox>(L".\\Resources\\SkyBox.png");
+
+	test = std::make_unique<Font>();
+	test->LoadFont(L".\\Resources\\fonts\\APJapanesefontF.ttf", L"あんずもじ湛");
+	test->CreateFontTexture(L"D");
 	return true;
 }
 
 void SceneGame::Update() {
-	gpu_particle_->Update();
 	const float elapsed_time = FRAMEWORK->GetElapsedTime();
-	//// シーン切り替え
-	//if (GetAsyncKeyState('G') & 1)
-	//{
-	//	setScene(std::make_unique<SceneLoading>(std::make_unique<SceneTitle>()));
-	//}
+	// シーン切り替え
+	if (GetAsyncKeyState('L') & 1)
+	{
+		setScene(std::make_unique<SceneLoading>(std::make_unique<SceneTitle>()));
+	}
 	//if (GetAsyncKeyState('C') & 1)
 	//{
 	//	setScene(std::make_unique<SceneLoading>(std::make_unique<SceneClear>()));
@@ -94,17 +100,19 @@ void SceneGame::Update() {
 	// カメラ操作
 	camera->Operate();
 
+	GpuParticle->Update(camera.get());
+
 	// 敵関連
 	{
 		// お試し右クリックでランダム位置に敵を生成
 		// TODO デバッグ用
 		if (GetAsyncKeyState(VK_RBUTTON) < 0)
 		{
-			Object3d desc;
-			desc.CopyParam(player->Parameters.get());
-			desc.Position = DirectX::SimpleMath::Vector3((rand() % 25) - 12.0f, 0.0f, (rand() % 25) - 12.0f);
-			desc.Orientation *= DirectX::SimpleMath::Quaternion::CreateFromAxisAngle({ 0.0f,1.0f,0.0f }, DirectX::XMConvertToRadians(static_cast<float>(rand() % 180)));
-			EnemyManager::getInstance().newSet(&desc);
+			Object3d obj3d_desc;
+			obj3d_desc.CopyParam(player->Parameters.get());
+			obj3d_desc.Position = DirectX::SimpleMath::Vector3((rand() % 25) - 12.0f, 0.0f, (rand() % 25) - 12.0f);
+			obj3d_desc.Orientation *= DirectX::SimpleMath::Quaternion::CreateFromAxisAngle({ 0.0f,1.0f,0.0f }, DirectX::XMConvertToRadians(static_cast<float>(rand() % 180)));
+			EnemyManager::getInstance().newSet(&obj3d_desc);
 			//EnemyManager::getInstance().newSet(player->Parameters.get());
 		}
 		for (auto it = EnemyManager::getInstance().getEnemys()->begin(); it != EnemyManager::getInstance().getEnemys()->end(); ++it)
@@ -179,6 +187,8 @@ void SceneGame::Render() {
 	{
 		immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(FRAMEWORK->DS_TRUE), 1);		// 3Dオブジェクトの後ろに出すため一旦
 		sprites->Render();
+		skybox->Render(camera.get());
+		test->Render();
 		immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(FRAMEWORK->DS_TRUE_WRITE), 1);	// 2Dオブジェクトとの前後関係をしっかりするため再設定
 	}
 	// 3Dオブジェクトの描画設定
@@ -199,11 +209,11 @@ void SceneGame::Render() {
 
 		{
 			grid->Render(true);
-			StageManager::getInstance().Render();
-			player->Render();
-			EnemyManager::getInstance().Render();
-			gpu_particle_->SetSceneConstantBuffer(constant_buffer[0].Get());
-			gpu_particle_->Draw(camera.get());
+			//StageManager::getInstance().Render();
+			//player->Render();
+			//EnemyManager::getInstance().Render();
+			GpuParticle->SetSceneConstantBuffer(constant_buffer[0].Get());
+			GpuParticle->Draw();
 		}
 	}
 
@@ -230,20 +240,30 @@ void SceneGame::imguiUpdate() {
 	// 3D用パラメータ
 	player->ImguiPlayer();
 	// ライト調整等グローバル設定
-	ImGui::Begin("SceneImGui Object Counts");
-	//ImGui::SliderFloat3("Light_Direction", light_dir, -10.0f, 10.0f);
-	ImGui::Separator();
-	ImGui::Text("PlayerShots: %d", player->getShotManager()->getSize());
-	ImGui::Text("EnemyShots: %d", EnemyManager::getInstance().getShotManager()->getSize());
-	ImGui::Text("Enemys: %d", EnemyManager::getInstance().getSize());
-	ImGui::Text("StageParts: %d", StageManager::getInstance().getSize());
-	ImGui::Separator();	// 分割線
-	ImGui::Text("Total Objects: %d", StageManager::getInstance().getSize() + EnemyManager::getInstance().getEnemys()->size()
-		+ player->getShotManager()->getSize() + EnemyManager::getInstance().getShotManager()->getSize());
-	if (ImGui::Button("Stage Initialize")) { StageManager::getInstance().Initialize(); }
-	if (ImGui::Button("Player Initialize")) { player->Initialize(); }
-
-	ImGui::PopStyleColor(2);	// ImGui::PushStyleColor一つにつき引数一つ増えるっぽい
-	ImGui::End();
+	ImGui::Begin("SceneImGui");
+	{
+		//ImGui::SliderFloat3("Light_Direction", light_dir, -10.0f, 10.0f);
+		if (ImGui::CollapsingHeader("Object Counts"))
+		{
+			ImGui::Text("PlayerShots: %d", player->getShotManager()->getSize());
+			ImGui::Text("EnemyShots: %d", EnemyManager::getInstance().getShotManager()->getSize());
+			ImGui::Text("Enemys: %d", EnemyManager::getInstance().getSize());
+			ImGui::Text("StageParts: %d", StageManager::getInstance().getSize());
+			ImGui::Separator();	// 分割線
+			ImGui::Text("Total Objects: %d", StageManager::getInstance().getSize() + EnemyManager::getInstance().getEnemys()->size()
+				+ player->getShotManager()->getSize() + EnemyManager::getInstance().getShotManager()->getSize());
+		}
+		if (ImGui::CollapsingHeader("Initializes"),true)
+		{
+			ImGui::Checkbox("RunGPUParticle", &GpuParticle->runCS);
+			if (ImGui::Button("Stage Initialize")) { StageManager::getInstance().Initialize(); }
+			if (ImGui::Button("Player Initialize")) { player->Initialize(); }
+			if (ImGui::Button("Scene Initialize")) { Initialize(); }
+			//if (ImGui::Button("Particle Initialize")) { GpuParticle->Init(); }	// TODO メモリリーク 想定していない使い方なのであまり気にしなくても…？
+			if (ImGui::Button("Particle Initialize")) { GpuParticle->SetParticle(); }
+		}
+		ImGui::PopStyleColor(2);	// ImGui::PushStyleColor一つにつき引数一つ増えるっぽい
+		ImGui::End();
+	}
 #endif
 }

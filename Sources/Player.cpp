@@ -92,7 +92,7 @@ void Player::Render() {
 	if (Parameters->Exist) { Model->Render(); }
 	ShotsManager->Render();
 #ifdef _DEBUG
-	Capcule->Render        (FRAMEWORK->RS_WIRE_NONE);
+	//Capcule->Render        (FRAMEWORK->RS_WIRE_NONE);
 	testSphere2->Render    (FRAMEWORK->RS_WIRE_NONE);
 	playerHitSphere->Render(FRAMEWORK->RS_WIRE_NONE);
 #endif

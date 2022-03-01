@@ -16,8 +16,6 @@ private:
 
 	// 自分で考えた必要そうな変数-----------------------------------------------------
 	Microsoft::WRL::ComPtr<ID3D11Buffer> ConstantBuffer;	// 毎フレーム更新のために送るあれ
-	Microsoft::WRL::ComPtr<ID3D11Buffer> obj_ConstantBuffer;// オブジェクトのワールド行列を送るためのバッファ
-	Microsoft::WRL::ComPtr<ID3D11Buffer> cs_ConstantBuffer;	// CSに送るコンスタントバッファ
 	Microsoft::WRL::ComPtr<ID3D11Buffer> ReadBackBuffer;	// GPUから読み込むためのバッファ
 	std::unique_ptr<Object3d> Parameters;	// パラメータ
 	std::shared_ptr<Texture> texture;
@@ -30,20 +28,16 @@ private:
 
 	const static UINT NUM_ELEMENTS = 128;
 	int DispathNo;
-	int PerticleAmount;
-	int chainA = 0;//バッファーの切り替え
-	int chainB = 1;//バッファーの切り替え
-	Microsoft::WRL::ComPtr<ID3D11BlendState> bd_states;
+	int ParticleAmount;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> VerticesBuffer;	// 頂点バッファ
-	Microsoft::WRL::ComPtr<ID3D11Buffer> DynamicCBuffer;	// 定数バッファ
+	Microsoft::WRL::ComPtr<ID3D11Buffer> DynamicCBuffer;	// CPUで書き換えることが可能な定数バッファ
 	Microsoft::WRL::ComPtr <ID3D11ComputeShader> g_pComputeShader2;  // コンピュート・シェーダ
-	Microsoft::WRL::ComPtr<ID3D11Buffer> InBuffer  = NULL; // バッファ リソース
-	Microsoft::WRL::ComPtr<ID3D11Buffer> OutBuffer = NULL; // バッファ リソース
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>  g_pSRV[2] = { NULL, NULL }; // シェーダ リソース ビュー
-	Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView> g_pUAV[2] = { NULL, NULL }; // アンオーダード アクセス ビュー
+	Microsoft::WRL::ComPtr<ID3D11Buffer> InputBuffer  = NULL; // バッファ リソース
+	Microsoft::WRL::ComPtr<ID3D11Buffer> OutputBuffer = NULL; // バッファ リソース
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>  g_pSRV = NULL; // シェーダ リソース ビュー
+	Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView> g_pUAV = NULL; // アンオーダード アクセス ビュー
 
 	Microsoft::WRL::ComPtr<ID3D11Buffer> ToCpuBuffer = NULL; // CPUへの書き込み用バッファ リソース
-	Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView> ToCpuUAV = NULL;// アンオーダード アクセス ビュー
 	Microsoft::WRL::ComPtr<ID3D11Buffer> CPUReadBackBuffer = NULL; // リードバック用バッファ リソース
 
 
@@ -54,6 +48,7 @@ private:
 		DirectX::SimpleMath::Vector3 Velocity; // 速度
 		DirectX::SimpleMath::Vector3 Force;    // 加速度
 	};
+	std::vector<VBuffer> vVecBuf;
 
 	struct cbCBuffer {
 		DirectX::SimpleMath::Matrix View;           // ビュー変換行列
@@ -62,7 +57,6 @@ private:
 		INT32      No;             //
 		FLOAT      dummy;          // ダミー
 		DirectX::SimpleMath::Vector4	EyePos;  //カメラ座標
-		DirectX::SimpleMath::Vector4	FogColor; //霧の色
 	};
 
 	struct ReturnBuffer
@@ -70,25 +64,10 @@ private:
 		INT32 No;  //一番多い場所
 		DirectX::SimpleMath::Vector3 Position; // 座標値
 	};
-	ReturnBuffer CpuGpuBuffer;	// CSから返ってくる構造体
+	VBuffer CpuGpuBuffer;	// CSから返ってくる構造体
 
 	// 定数バッファのデータ
 	struct cbCBuffer g_cbCBuffer;
-
-
-	struct BUFIN_TYPE
-	{
-		DirectX::SimpleMath::Vector3 Position;	// 計算前位置
-		float dummy;
-	};
-
-	struct BUFOUT_TYPE
-	{
-		DirectX::SimpleMath::Vector3 Position; // 計算後位置
-		float dummy;
-		DirectX::SimpleMath::Vector3 Size;	// 大きさ変えてみようかと
-		float dummy2;
-	};
 
 	// シーン定数バッファ
 	struct scene_constants {
@@ -103,16 +82,6 @@ private:
 		int ParticleNo;
 		float dummy;
 	};
-	// オブジェクトコンスタントバッファ
-	struct obj_constants
-	{
-		DirectX::SimpleMath::Matrix world;	// ワールド行列
-	};
-	// CSコンスタントバッファ
-	struct cs_constants {
-		DirectX::SimpleMath::Vector3 Size;	// 大きさ変えてみようかと
-		float dummy;
-	};
 
 	Microsoft::WRL::ComPtr<ID3D11Buffer> pBufInput = nullptr;  // 入力用の構造化バッファー
 	Microsoft::WRL::ComPtr<ID3D11Buffer> pBufResult = nullptr; // 出力用の構造化バッファー
@@ -120,16 +89,22 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>	pBufInputSRV = nullptr;        // 入力用の構造化バッファーから作成されるシェーダーリソースビュー
 	Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView>	pBufResultUAV = nullptr;        // 出力用の構造化バッファーから作成されるアンオーダード アクセス ビュー
 
-	BUFIN_TYPE vBufInArray[NUM_ELEMENTS];               // 入力用バッファーの配列を宣言
+	//BUFIN_TYPE vBufInArray[NUM_ELEMENTS];               // 入力用バッファーの配列を宣言
 
 	// てすとしめ---------------------------------------------------------------------
 public:
+	~GPUParticle();
+
 	bool Init();
-	void Update();
-	void Draw(Camera* camera);
+	void Update(Camera* camera);
+	void Draw();
+
+	void SetParticle();
 
 	void SetSceneConstantBuffer(const ID3D11Buffer* cbBuf);
 
 	void CreateConstantBuffer(ID3D11Buffer** dstBuf, size_t size, bool dynamicFlg = false);
 
+	// TODO Debug用
+	bool runCS = true;
 };
