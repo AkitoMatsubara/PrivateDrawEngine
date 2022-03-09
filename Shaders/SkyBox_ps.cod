@@ -55,7 +55,7 @@ dcl_temps 3
 //   v2.x <- pin.color.x; v2.y <- pin.color.y; v2.z <- pin.color.z; v2.w <- pin.color.w; 
 //   o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
 //
-#line 19 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine vsメモリリーク\Shaders\SkyBox_ps.hlsl"
+#line 19 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine\Shaders\SkyBox_ps.hlsl"
 mov r0.x, l(3.141593)  // r0.x <- PI
 
 #line 14

@@ -31,6 +31,8 @@
 // -------------------- ----- ------ -------- -------- ------- ------
 // SV_POSITION              0   xyzw        0      POS   float   xyz 
 // TEXTURE                  0   xy          1     NONE   float       
+// LIFE                     0     z         1     NONE   float     z 
+// COLOR                    0   xyzw        2     NONE   float   xyzw
 //
 //
 // Output signature:
@@ -39,28 +41,36 @@
 // -------------------- ----- ------ -------- -------- ------- ------
 // SV_POSITION              0   xyzw        0      POS   float   xyzw
 // TEXTURE                  0   xy          1     NONE   float   xy  
+// LIFE                     0     z         1     NONE   float     z 
 // TEXCOORD                 2   xyz         2     NONE   float   xyz 
+// COLOR                    0   xyzw        3     NONE   float   xyzw
 //
 gs_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
 dcl_constantbuffer CB0[9], immediateIndexed
 dcl_input_siv v[1][0].xyzw, position
 dcl_input v[1][1].xy
-dcl_temps 6
+dcl_input v[1][1].z
+dcl_input v[1][2].xyzw
+dcl_temps 7
 dcl_inputprimitive point 
 dcl_stream m0
 dcl_outputtopology trianglestrip 
 dcl_output_siv o0.xyzw, position
 dcl_output o1.xy
+dcl_output o1.z
 dcl_output o2.xyz
+dcl_output o3.xyzw
 dcl_maxout 4
 //
 // Initial variable locations:
 //   m0 <- Stream; 
 //   v[0][0].x <- In[0].Pos.x; v[0][0].y <- In[0].Pos.y; v[0][0].z <- In[0].Pos.z; v[0][0].w <- In[0].Pos.w; 
-//   v[0][1].x <- In[0].Tex.x; v[0][1].y <- In[0].Tex.y
+//   v[0][1].x <- In[0].Tex.x; v[0][1].y <- In[0].Tex.y; 
+//   v[0][2].x <- In[0].Color.x; v[0][2].y <- In[0].Color.y; v[0][2].z <- In[0].Color.z; v[0][2].w <- In[0].Color.w; 
+//   v[0][1].z <- In[0].Life
 //
-#line 8 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine vsメモリリーク\Shaders\GPUParticle_gs.hlsl"
+#line 8 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine\Shaders\GPUParticle_gs.hlsl"
 mov r0.xyz, v[0][0].xyzx  // r0.x <- pos.x; r0.y <- pos.y; r0.z <- pos.z
 
 #line 9
@@ -101,92 +111,106 @@ mul r3.xyzw, r1.wwww, r3.xwzz
 add r1.xyzw, r1.xyzw, r3.xyzw  // r1.x <- posRB.x; r1.y <- posRB.y; r1.z <- posRB.z; r1.w <- posRB.w
 
 #line 23
-dp4 r3.x, r0.xyzw, cb0[4].xyzw  // r3.x <- Out.Pos.x
-dp4 r3.y, r0.xyzw, cb0[5].xyzw  // r3.y <- Out.Pos.y
-dp4 r3.z, r0.xyzw, cb0[6].xyzw  // r3.z <- Out.Pos.z
-dp4 r3.w, r0.xyzw, cb0[7].xyzw  // r3.w <- Out.Pos.w
+mov r3.xyzw, v[0][2].xyzw  // r3.x <- Out.Color.x; r3.y <- Out.Color.y; r3.z <- Out.Color.z; r3.w <- Out.Color.w
 
 #line 24
-mov r5.xy, l(0,0,0,0)  // r5.x <- Out.Tex.x; r5.y <- Out.Tex.y
-
-#line 25
-mov r0.xyz, r0.xyzx  // r0.x <- wPos.x; r0.y <- wPos.y; r0.z <- wPos.z
+mov r5.x, v[0][1].z  // r5.x <- Out.Life
 
 #line 26
-mov r0.xyz, r0.xyzx  // r0.x <- Out.wPosition.x; r0.y <- Out.wPosition.y; r0.z <- Out.wPosition.z
+dp4 r6.x, r0.xyzw, cb0[4].xyzw  // r6.x <- Out.Pos.x
+dp4 r6.y, r0.xyzw, cb0[5].xyzw  // r6.y <- Out.Pos.y
+dp4 r6.z, r0.xyzw, cb0[6].xyzw  // r6.z <- Out.Pos.z
+dp4 r6.w, r0.xyzw, cb0[7].xyzw  // r6.w <- Out.Pos.w
+
+#line 27
+mov r5.yz, l(0,0,0,0)  // r5.y <- Out.Tex.x; r5.z <- Out.Tex.y
+
+#line 28
+mov r0.xyz, r0.xyzx  // r0.x <- wPos.x; r0.y <- wPos.y; r0.z <- wPos.z
 
 #line 29
-mov o0.xyzw, r3.xyzw
-mov o1.xy, r5.xyxx
+mov r0.xyz, r0.xyzx  // r0.x <- Out.wPosition.x; r0.y <- Out.wPosition.y; r0.z <- Out.wPosition.z
+
+#line 32
+mov o0.xyzw, r6.xyzw
+mov o1.xy, r5.yzyy
+mov o1.z, r5.x
 mov o2.xyz, r0.xyzx
+mov o3.xyzw, r3.xyzw
 emit_stream m0
 
-#line 33
+#line 36
 dp4 r0.x, r2.xyzw, cb0[4].xyzw  // r0.x <- Out.Pos.x
 dp4 r0.y, r2.xyzw, cb0[5].xyzw  // r0.y <- Out.Pos.y
 dp4 r0.z, r2.xyzw, cb0[6].xyzw  // r0.z <- Out.Pos.z
 dp4 r0.w, r2.xyzw, cb0[7].xyzw  // r0.w <- Out.Pos.w
 
-#line 34
-mov r3.xy, l(1.000000,0,0,0)  // r3.x <- Out.Tex.x; r3.y <- Out.Tex.y
-
-#line 35
-mov r2.xyz, r2.xyzx  // r2.x <- wPos.x; r2.y <- wPos.y; r2.z <- wPos.z
-
-#line 36
-mov r2.xyz, r2.xyzx  // r2.x <- Out.wPosition.x; r2.y <- Out.wPosition.y; r2.z <- Out.wPosition.z
+#line 37
+mov r5.yz, l(0,1.000000,0,0)
 
 #line 38
-mov o0.xyzw, r0.xyzw
-mov o1.xy, r3.xyxx
-mov o2.xyz, r2.xyzx
-emit_stream m0
+mov r2.xyz, r2.xyzx  // r2.x <- wPos.x; r2.y <- wPos.y; r2.z <- wPos.z
+
+#line 39
+mov r2.xyz, r2.xyzx  // r2.x <- Out.wPosition.x; r2.y <- Out.wPosition.y; r2.z <- Out.wPosition.z
 
 #line 41
+mov o0.xyzw, r0.xyzw
+mov o1.xy, r5.yzyy
+mov o1.z, r5.x
+mov o2.xyz, r2.xyzx
+mov o3.xyzw, r3.xyzw
+emit_stream m0
+
+#line 44
 dp4 r0.x, r4.xyzw, cb0[4].xyzw
 dp4 r0.y, r4.xyzw, cb0[5].xyzw
 dp4 r0.z, r4.xyzw, cb0[6].xyzw
 dp4 r0.w, r4.xyzw, cb0[7].xyzw
 
-#line 42
+#line 45
 mov r2.xy, l(0,1.000000,0,0)  // r2.x <- Out.Tex.x; r2.y <- Out.Tex.y
 
-#line 43
+#line 46
 mov r4.xyz, r4.xyzx  // r4.x <- wPos.x; r4.y <- wPos.y; r4.z <- wPos.z
 
-#line 44
+#line 47
 mov r4.xyz, r4.xyzx  // r4.x <- Out.wPosition.x; r4.y <- Out.wPosition.y; r4.z <- Out.wPosition.z
 
-#line 45
+#line 48
 mov o0.xyzw, r0.xyzw
 mov o1.xy, r2.xyxx
+mov o1.z, r5.x
 mov o2.xyz, r4.xyzx
+mov o3.xyzw, r3.xyzw
 emit_stream m0
 
-#line 48
+#line 51
 dp4 r0.x, r1.xyzw, cb0[4].xyzw
 dp4 r0.y, r1.xyzw, cb0[5].xyzw
 dp4 r0.z, r1.xyzw, cb0[6].xyzw
 dp4 r0.w, r1.xyzw, cb0[7].xyzw
 
-#line 49
+#line 52
 mov r2.xy, l(1.000000,1.000000,0,0)
 
-#line 50
+#line 53
 mov r1.xyz, r1.xyzx  // r1.x <- wPos.x; r1.y <- wPos.y; r1.z <- wPos.z
 
-#line 51
+#line 54
 mov r1.xyz, r1.xyzx  // r1.x <- Out.wPosition.x; r1.y <- Out.wPosition.y; r1.z <- Out.wPosition.z
 
-#line 52
+#line 55
 mov o0.xyzw, r0.xyzw
 mov o1.xy, r2.xyxx
+mov o1.z, r5.x
 mov o2.xyz, r1.xyzx
+mov o3.xyzw, r3.xyzw
 emit_stream m0
 
-#line 53
+#line 56
 cut_stream m0
 
-#line 54
+#line 57
 ret 
-// Approximately 70 instruction slots used
+// Approximately 80 instruction slots used

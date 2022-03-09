@@ -41,12 +41,15 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> CPUReadBackBuffer = NULL; // リードバック用バッファ リソース
 
 
-// 頂点構造体
+	// 頂点構造体 InputLayoutにも定義して頂点バッファを通して渡す
 	struct VBuffer
 	{
 		DirectX::SimpleMath::Vector3 Position; // 座標値
 		DirectX::SimpleMath::Vector3 Velocity; // 速度
 		DirectX::SimpleMath::Vector3 Force;    // 加速度
+		DirectX::SimpleMath::Vector4 Color;    // 色
+		bool Active;
+		float Life;
 	};
 	std::vector<VBuffer> vVecBuf;
 
@@ -93,7 +96,6 @@ private:
 
 	// てすとしめ---------------------------------------------------------------------
 public:
-	~GPUParticle();
 
 	bool Init();
 	void Update(Camera* camera);
@@ -106,5 +108,8 @@ public:
 	void CreateConstantBuffer(ID3D11Buffer** dstBuf, size_t size, bool dynamicFlg = false);
 
 	// TODO Debug用
+	void ImguiParticles();
+	float testColor[4] = { 1.0f,1.0f,1.0f,1.0f };
+	float testLife = 1.0f;
 	bool runCS = true;
 };

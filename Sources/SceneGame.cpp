@@ -239,6 +239,7 @@ void SceneGame::imguiUpdate() {
 	//sprites->ImguiWindow();
 	// 3D用パラメータ
 	player->ImguiPlayer();
+	GpuParticle->ImguiParticles();
 	// ライト調整等グローバル設定
 	ImGui::Begin("SceneImGui");
 	{
@@ -255,12 +256,11 @@ void SceneGame::imguiUpdate() {
 		}
 		if (ImGui::CollapsingHeader("Initializes"),true)
 		{
-			ImGui::Checkbox("RunGPUParticle", &GpuParticle->runCS);
 			if (ImGui::Button("Stage Initialize")) { StageManager::getInstance().Initialize(); }
 			if (ImGui::Button("Player Initialize")) { player->Initialize(); }
 			if (ImGui::Button("Scene Initialize")) { Initialize(); }
 			//if (ImGui::Button("Particle Initialize")) { GpuParticle->Init(); }	// TODO メモリリーク 想定していない使い方なのであまり気にしなくても…？
-			if (ImGui::Button("Particle Initialize")) { GpuParticle->SetParticle(); }
+			if (ImGui::Button("Particle Set")) { GpuParticle->SetParticle(); }
 		}
 		ImGui::PopStyleColor(2);	// ImGui::PushStyleColor一つにつき引数一つ増えるっぽい
 		ImGui::End();

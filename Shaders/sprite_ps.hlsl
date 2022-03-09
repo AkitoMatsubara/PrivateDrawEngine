@@ -10,7 +10,7 @@ SamplerState anisotropic_sampler_state : register(s2); // anisotropic：異方性
 
 float4 main(PS_IN pin) : SV_TARGET
 {
-#ifdef DRAW_JAPAN
+#ifdef DRAW_JAPAN   // 課題の残滓 日の丸を描けるコード
     {
     const float2 center = float2(1280 / 2, 720 / 2);    // ウィンドウサイズ(1280,720)の中心点
     float distance = length(center - pin.positon.xy);   // 中心からxyの距離

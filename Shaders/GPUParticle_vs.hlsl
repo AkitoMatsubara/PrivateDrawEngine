@@ -13,7 +13,8 @@ GS_INPUT main(GS_INPUT_GPU2 In)
     Out1.Tex.x = 0;
     Out1.Tex.y = 0;
 
-
+    Out1.Color = In.Color;
+    Out1.Life = In.Life;
 
     return Out1;
 

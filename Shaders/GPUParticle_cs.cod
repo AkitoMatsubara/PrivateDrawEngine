@@ -13,8 +13,11 @@
 //       float3 Position;               // Offset:    0
 //       float3 Velocity;               // Offset:   12
 //       float3 Force;                  // Offset:   24
+//       float4 Color;                  // Offset:   36
+//       bool Active;                   // Offset:   52
+//       float Life;                    // Offset:   56
 //
-//   } $Element;                        // Offset:    0 Size:    36
+//   } $Element;                        // Offset:    0 Size:    60
 //
 // }
 //
@@ -27,8 +30,11 @@
 //       float3 Position;               // Offset:    0
 //       float3 Velocity;               // Offset:   12
 //       float3 Force;                  // Offset:   24
+//       float4 Color;                  // Offset:   36
+//       bool Active;                   // Offset:   52
+//       float Life;                    // Offset:   56
 //
-//   } $Element;                        // Offset:    0 Size:    36
+//   } $Element;                        // Offset:    0 Size:    60
 //
 // }
 //
@@ -55,8 +61,8 @@
 // no Output
 cs_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
-dcl_resource_structured t0, 36
-dcl_uav_structured u0, 36
+dcl_resource_structured t0, 60
+dcl_uav_structured u0, 60
 dcl_input vThreadGroupID.x
 dcl_input vThreadIDInGroup.x
 dcl_temps 4
@@ -66,56 +72,90 @@ dcl_thread_group 400, 1, 1
 //   vThreadGroupID.x <- Gid.x; vThreadGroupID.y <- Gid.y; vThreadGroupID.z <- Gid.z; 
 //   vThreadIDInGroup.x <- GTid.x; vThreadIDInGroup.y <- GTid.y; vThreadIDInGroup.z <- GTid.z
 //
-#line 48 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine vsメモリリーク\Shaders\GPUParticle_cs.hlsl"
+#line 40 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine\Shaders\GPUParticle_cs.hlsl"
 mov r0.x, vThreadIDInGroup.x  // r0.x <- x
 
-#line 49
+#line 41
 mov r0.y, vThreadGroupID.x  // r0.y <- y
 
-#line 51
+#line 43
 mov r0.z, l(400)
 imul null, r0.y, r0.y, r0.z
 iadd r0.x, r0.x, r0.y  // r0.x <- node
 
-#line 137
-ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r0.y, r0.x, l(24), t0.xxxx
-ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r0.z, r0.x, l(28), t0.xxxx
-ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r0.w, r0.x, l(32), t0.xxxx
+#line 129
+ld_structured_indexable(structured_buffer, stride=60)(mixed,mixed,mixed,mixed) r0.y, r0.x, l(24), t0.xxxx
+ld_structured_indexable(structured_buffer, stride=60)(mixed,mixed,mixed,mixed) r0.z, r0.x, l(28), t0.xxxx
+ld_structured_indexable(structured_buffer, stride=60)(mixed,mixed,mixed,mixed) r0.w, r0.x, l(32), t0.xxxx
 store_structured u0.x, r0.x, l(24), r0.y
 store_structured u0.x, r0.x, l(28), r0.z
 store_structured u0.x, r0.x, l(32), r0.w
 
-#line 140
-ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r1.x, r0.x, l(0), t0.xxxx  // r1.x <- pos.x
-ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r1.y, r0.x, l(4), t0.xxxx  // r1.y <- pos.y
-ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r1.z, r0.x, l(8), t0.xxxx  // r1.z <- pos.z
+#line 132
+ld_structured_indexable(structured_buffer, stride=60)(mixed,mixed,mixed,mixed) r1.x, r0.x, l(0), t0.xxxx  // r1.x <- pos.x
+ld_structured_indexable(structured_buffer, stride=60)(mixed,mixed,mixed,mixed) r1.y, r0.x, l(4), t0.xxxx  // r1.y <- pos.y
+ld_structured_indexable(structured_buffer, stride=60)(mixed,mixed,mixed,mixed) r1.z, r0.x, l(8), t0.xxxx  // r1.z <- pos.z
 
-#line 141
-ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r2.x, r0.x, l(12), t0.xxxx  // r2.x <- vel.x
-ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r2.y, r0.x, l(16), t0.xxxx  // r2.y <- vel.y
-ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r2.z, r0.x, l(20), t0.xxxx  // r2.z <- vel.z
+#line 133
+ld_structured_indexable(structured_buffer, stride=60)(mixed,mixed,mixed,mixed) r2.x, r0.x, l(12), t0.xxxx  // r2.x <- vel.x
+ld_structured_indexable(structured_buffer, stride=60)(mixed,mixed,mixed,mixed) r2.y, r0.x, l(16), t0.xxxx  // r2.y <- vel.y
+ld_structured_indexable(structured_buffer, stride=60)(mixed,mixed,mixed,mixed) r2.z, r0.x, l(20), t0.xxxx  // r2.z <- vel.z
 
-#line 142
-ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r3.x, r0.x, l(24), t0.xxxx  // r3.x <- force.x
-ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r3.y, r0.x, l(28), t0.xxxx  // r3.y <- force.y
-ld_structured_indexable(structured_buffer, stride=36)(mixed,mixed,mixed,mixed) r3.z, r0.x, l(32), t0.xxxx  // r3.z <- force.z
+#line 134
+ld_structured_indexable(structured_buffer, stride=60)(mixed,mixed,mixed,mixed) r3.x, r0.x, l(24), t0.xxxx  // r3.x <- force.x
+ld_structured_indexable(structured_buffer, stride=60)(mixed,mixed,mixed,mixed) r3.y, r0.x, l(28), t0.xxxx  // r3.y <- force.y
+ld_structured_indexable(structured_buffer, stride=60)(mixed,mixed,mixed,mixed) r3.z, r0.x, l(32), t0.xxxx  // r3.z <- force.z
 
-#line 143
+#line 135
 add r0.yzw, r1.xxyz, r2.xxyz  // r0.y <- pos.x; r0.z <- pos.y; r0.w <- pos.z
 
-#line 144
+#line 136
 add r1.xyz, r2.xyzx, r3.xyzx  // r1.x <- vel.x; r1.y <- vel.y; r1.z <- vel.z
 
-#line 146
+#line 138
 store_structured u0.x, r0.x, l(12), r1.x
 store_structured u0.x, r0.x, l(16), r1.y
 store_structured u0.x, r0.x, l(20), r1.z
 
-#line 147
+#line 139
 store_structured u0.x, r0.x, l(0), r0.y
 store_structured u0.x, r0.x, l(4), r0.z
 store_structured u0.x, r0.x, l(8), r0.w
 
+#line 141
+ld_structured_indexable(structured_buffer, stride=60)(mixed,mixed,mixed,mixed) r0.y, r0.x, l(36), t0.xxxx
+ld_structured_indexable(structured_buffer, stride=60)(mixed,mixed,mixed,mixed) r0.z, r0.x, l(40), t0.xxxx
+ld_structured_indexable(structured_buffer, stride=60)(mixed,mixed,mixed,mixed) r0.w, r0.x, l(44), t0.xxxx
+ld_structured_indexable(structured_buffer, stride=60)(mixed,mixed,mixed,mixed) r1.x, r0.x, l(48), t0.xxxx
+store_structured u0.x, r0.x, l(36), r0.y
+store_structured u0.x, r0.x, l(40), r0.z
+store_structured u0.x, r0.x, l(44), r0.w
+store_structured u0.x, r0.x, l(48), r1.x
+
+#line 142
+ld_structured_indexable(structured_buffer, stride=60)(mixed,mixed,mixed,mixed) r0.y, r0.x, l(52), t0.xxxx
+store_structured u0.x, r0.x, l(52), r0.y
+
+#line 143
+ld_structured_indexable(structured_buffer, stride=60)(mixed,mixed,mixed,mixed) r0.y, r0.x, l(56), t0.xxxx
+mov r0.z, l(-0.001000)
+add r0.y, r0.z, r0.y
+store_structured u0.x, r0.x, l(56), r0.y
+
+#line 144
+ld_structured_indexable(structured_buffer, stride=60)(mixed,mixed,mixed,mixed) r0.y, r0.x, l(56), u0.xxxx
+ne r0.y, l(0.000000, 0.000000, 0.000000, 0.000000), r0.y
+not r0.y, r0.y
+and r0.y, r0.y, l(0x3f800000)
+ge r0.y, l(0.000000), r0.y
+if_nz r0.y
+
+#line 146
+  store_structured u0.x, r0.x, l(52), l(0)
+
+#line 147
+endif 
+
 #line 149
 ret 
-// Approximately 29 instruction slots used
+// Approximately 51 instruction slots used

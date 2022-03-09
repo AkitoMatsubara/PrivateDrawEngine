@@ -20,6 +20,9 @@ void main(point GS_INPUT In[1], inout TriangleStream<PS_INPUT> Stream)
 
 	// 左上の点の位置(射影座標系)を計算して出力
     PS_INPUT Out;
+    Out.Color = In[0].Color;
+    Out.Life = In[0].Life;  // ライフは試しに全共通
+
     Out.Pos = mul(posLT, Projection);
     Out.Tex = float2(0.0, 0.0);
     float3 wPos = posLT.xyz;

@@ -1,18 +1,10 @@
-//[numthreads(1, 1, 1)] // 列、行、枚数
-//void main(uint3 DTid : SV_DispatchThreadID) // SV_DispatchThreadID：SV_GroupID * Numthreads と groupthreadid の合計
-//{
-//    BufferOut[DTid.x].Size = Size;
-
-//}
-
 //// http://maverickproj.web.fc2.com/d3d11_17.html
 
 //// SV_GroupThreadID    : x      , y       , z
 //// SV_GroupID          : x'     , y'      , z'
 //// SV_DispatchThreadID : x'* X + x , y'* Y+y , z'* Y+ z
 //// SV_GroupIndex       : z * X * Y + y * X + x
-///
-///
+
 #include "GPUParticle.hlsli"
 
 
@@ -131,19 +123,27 @@ void main(uint3 Gid : SV_GroupID, //グループID　ディスパッチ側で指定
 //    Result[node].Velocity = V;
 //    Result[node].Position = P;
 
-    {
-        Result[node].Position = Input[node].Position;
-        Result[node].Velocity= Input[node].Velocity;
-        Result[node].Force= Input[node].Force;
+	{
+		Result[node].Position = Input[node].Position;
+    	Result[node].Velocity = Input[node].Velocity;
+    	Result[node].Force = Input[node].Force;
 
-        // 見やすいように一度変数に
-        float3 pos = Input[node].Position;
-        float3 vel = Input[node].Velocity;
-        float3 force = Input[node].Force;
-        pos += vel;   // 位置更新
-        vel += force; // 速度更新
-        // CPUに返す
-        Result[node].Velocity = vel;
-        Result[node].Position = pos;
-    }
+    	// 見やすいように一度変数に
+    	float3 pos = Input[node].Position;
+    	float3 vel = Input[node].Velocity;
+    	float3 force = Input[node].Force;
+    	pos += vel; // 位置更新
+    	vel += force; // 速度更新
+    	// CPUに返す
+    	Result[node].Velocity = vel;
+    	Result[node].Position = pos;
+    	// 横流し
+    	Result[node].Color = Input[node].Color;
+    	Result[node].Active = Input[node].Active;
+    	Result[node].Life = Input[node].Life - 0.001f;
+    	if (!Result[node].Life <= 0.0f)
+    	{
+    		Result[node].Active = false;
+    	}
+	}
 }
