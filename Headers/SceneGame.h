@@ -48,7 +48,7 @@ public:
 	// Sprite型 画像描画用
 	std::unique_ptr<Sprite> sprites;
 	std::unique_ptr<sprite_Batch> sprite_batches[8];
-	std::unique_ptr<Font> test;
+	std::unique_ptr<Font> font;
 	std::unique_ptr<SkyBox> skybox;
 
 	// シーン定数バッファ
@@ -61,12 +61,11 @@ public:
 	struct scene_constants
 	{
 		DirectX::SimpleMath::Matrix view_projection;
-
 		DirectX::SimpleMath::Vector4 light_direction;
 		DirectX::SimpleMath::Vector4 camera_position;
-
 		DirectX::SimpleMath::Matrix  View;
 		DirectX::SimpleMath::Matrix  Projection;
+
 		DirectX::SimpleMath::Vector2 ParticleSize; // パーティクルの大きさ
 		float dummy; // ダミー
 		float dummy2;

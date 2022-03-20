@@ -95,6 +95,9 @@ private:
 	//BUFIN_TYPE vBufInArray[NUM_ELEMENTS];               // 入力用バッファーの配列を宣言
 
 	// てすとしめ---------------------------------------------------------------------
+
+	void CreateConstantBuffer(ID3D11Buffer** dstBuf, size_t size, bool dynamicFlg = false);
+
 public:
 
 	bool Init();
@@ -105,11 +108,9 @@ public:
 
 	void SetSceneConstantBuffer(const ID3D11Buffer* cbBuf);
 
-	void CreateConstantBuffer(ID3D11Buffer** dstBuf, size_t size, bool dynamicFlg = false);
-
 	// TODO Debug用
 	void ImguiParticles();
 	float testColor[4] = { 1.0f,1.0f,1.0f,1.0f };
-	float testLife = 1.0f;
+	float testLife;
 	bool runCS = true;
 };

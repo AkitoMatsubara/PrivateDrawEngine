@@ -34,8 +34,9 @@ bool GPUParticle::Init()
 	{
 		//コンピュート計算のワークをセット
 
-		DispathNo = 500;  /*ディスパッチ数*/
-		ParticleAmount = DispathNo * 400;        // パーティクルの数 (DispatchNo * CSnumthread)
+		DispathNo = 500;  // ディスパッチ数
+		const int CSnumthreadNo = 500;	// CSの実行数
+		ParticleAmount = DispathNo * CSnumthreadNo;        // パーティクルの数 (DispatchNo * CSnumthread)
 		HRESULT hr = { S_OK };
 
 		// 描画用リソース・ビュー
@@ -78,9 +79,11 @@ bool GPUParticle::Init()
 
 				data.Force = DirectX::XMFLOAT3(0, -0.0005f, 0);//加速度
 
+				// その他
 				data.Color = DirectX::XMFLOAT4(testColor[0], testColor[1], testColor[2], testColor[3]);
 				data.Active = true;
-				data.Life = testLife;
+				testLife = 50;
+				data.Life = testLife * (rand() % 10 + 1);
 
 				vVecBuf.emplace_back(data);	// 格納
 			}
@@ -238,8 +241,8 @@ void GPUParticle::Draw()
 	texture->Set(0);
 	sample->Set(0);
 
-	UINT mask = 0xffffffff;
-	immediate_context->OMSetBlendState(FRAMEWORK->GetBlendState(FRAMEWORK->BS_ALPHA), nullptr, mask);
+	const UINT MASK = 0xffffffff;
+	immediate_context->OMSetBlendState(FRAMEWORK->GetBlendState(FRAMEWORK->BS_ALPHA), nullptr, MASK);
 	immediate_context->RSSetState(FRAMEWORK->GetRasterizerState(FRAMEWORK->RS_SOLID_NONE));
 	sample->Set(0);
 	// ***************************************
@@ -252,20 +255,22 @@ void GPUParticle::Draw()
 
 void GPUParticle::SetParticle()
 {
-	// TODO パーティクル一括削除。応急処置なだけ
-	vVecBuf.clear();
 
+	//// forで回してActiveでなければ消す処理…なんだけどあまりにもforが多すぎて動作しない
 	//for (std::vector<VBuffer>::iterator itr = vVecBuf.begin(); itr != vVecBuf.end();)
 	//{
-	//	if(!itr->Active)
-	//	{
-	//		itr = vVecBuf.erase(itr);
-	//	}
-	//	else
+	//	if(itr->Active)
 	//	{
 	//		++itr;
 	//	}
+	//	else
+	//	{
+	//		itr = vVecBuf.erase(itr);
+	//	}
 	//}
+
+	// TODO パーティクル一括削除。応急処置なだけ
+	vVecBuf.clear();
 
 	for (int i = 0; i < ParticleAmount; ++i) {
 		VBuffer data;
@@ -281,9 +286,11 @@ void GPUParticle::SetParticle()
 
 		data.Force = DirectX::XMFLOAT3(0, -0.0005f, 0);//加速度
 
+		// その他
 		data.Color = DirectX::XMFLOAT4(testColor[0], testColor[1], testColor[2], testColor[3]);
 		data.Active = true;
-		data.Life = testLife;
+		testLife = 50;
+		data.Life = testLife * (rand() % 10 + 1);
 		vVecBuf.emplace_back(data);	// 格納
 	}
 }
@@ -336,7 +343,7 @@ void GPUParticle::ImguiParticles()
 	if (ImGui::Button("Particle Set")) { SetParticle(); }
 
 	ImGui::Separator();
-	ImGui::Text("DispathNo: %d", DispathNo);
+	ImGui::Text("DispatchNo: %d", DispathNo);
 	ImGui::Text("ParticleAmount: %d", ParticleAmount);
 
 	ImGui::PopStyleColor(2);

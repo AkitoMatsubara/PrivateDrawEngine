@@ -1,7 +1,7 @@
 //// http://maverickproj.web.fc2.com/d3d11_17.html
 
-//// SV_GroupThreadID    : x      , y       , z
-//// SV_GroupID          : x'     , y'      , z'
+//// SV_GroupThreadID    : x      , y       , z      //スレッドID　ここで指定
+//// SV_GroupID          : x'     , y'      , z'     //グループID　ディスパッチ側で指定
 //// SV_DispatchThreadID : x'* X + x , y'* Y+y , z'* Y+ z
 //// SV_GroupIndex       : z * X * Y + y * X + x
 
@@ -12,28 +12,20 @@
 static float3 Acceleration = float3(0.0, -4.8, 0.0); // 加速度(m/s^2)
 
 // 入力バッファ(構造化バッファ。読み込み専用)
-StructuredBuffer<GS_INPUT_GPU2> Input : register(t0);
+StructuredBuffer<VS_INPUT_GPU> Input : register(t0);
 // 出力バッファ(構造化バッファ。読み書き可能)
-RWStructuredBuffer<GS_INPUT_GPU2> Result : register(u0);
+RWStructuredBuffer<VS_INPUT_GPU> Result : register(u0);
 
-
-//スレッドグループの数（CPU側でディスパッチした数）
-//#define THG_X 10
 
 //スレッドの数
-#define TH_X 400
+#define TH_X 500
 #define TH_Y 1
 #define TH_Z 1
 
 
-
 // シェーダ関数
-[numthreads(TH_X, TH_Y, TH_Z)] // スレッド グループのスレッド数
-void main(uint3 Gid : SV_GroupID, //グループID　ディスパッチ側で指定
-//	uint3 DTid : SV_DispatchThreadID,
-	uint3 GTid : SV_GroupThreadID //スレッドID　ここで指定
-//	uint GI : SV_GroupIndex
-)
+[numthreads(TH_X, TH_Y, TH_Z)]
+void main(uint3 Gid : SV_GroupID, uint3 GTid : SV_GroupThreadID)
 {
     int THG_X = ParticleNo; // dispatch数
 
@@ -124,26 +116,32 @@ void main(uint3 Gid : SV_GroupID, //グループID　ディスパッチ側で指定
 //    Result[node].Position = P;
 
 	{
-		Result[node].Position = Input[node].Position;
-    	Result[node].Velocity = Input[node].Velocity;
-    	Result[node].Force = Input[node].Force;
-
-    	// 見やすいように一度変数に
-    	float3 pos = Input[node].Position;
-    	float3 vel = Input[node].Velocity;
-    	float3 force = Input[node].Force;
-    	pos += vel; // 位置更新
-    	vel += force; // 速度更新
-    	// CPUに返す
-    	Result[node].Velocity = vel;
-    	Result[node].Position = pos;
-    	// 横流し
-    	Result[node].Color = Input[node].Color;
-    	Result[node].Active = Input[node].Active;
-    	Result[node].Life = Input[node].Life - 0.001f;
-    	if (!Result[node].Life <= 0.0f)
+        // 生存時のみ情報を更新する
+    	if (Input[node].Active)
     	{
-    		Result[node].Active = false;
-    	}
-	}
+    		// 見やすいように一度変数に
+    		float3 pos = Input[node].Position;
+    		float3 vel = Input[node].Velocity;
+    		float3 force = Input[node].Force;
+            float life = Input[node].Life;
+    		pos += vel; // 位置更新
+    		vel += force; // 速度更新
+    		// CPUに返す
+    		Result[node].Velocity = vel;
+    		Result[node].Position = pos;
+            Result[node].Color = Input[node].Color;
+
+            // ライフ計算、死んだら非生存に
+            Result[node].Life = life - 1.0f;
+    		if (Result[node].Life <= 0.0f)
+    		{
+    			Result[node].Active = false;
+                Result[node].Color = float4(1, 0, 0, 0.6);
+            }
+            else
+            {
+                Result[node].Active = true;
+            }
+        }
+    }
 }

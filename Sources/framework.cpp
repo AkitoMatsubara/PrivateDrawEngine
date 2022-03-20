@@ -233,9 +233,9 @@ bool framework::CreateBlendState() {
 	D3D11_BLEND_DESC blend_desc{};
 
 	/*----------[BS_NONE] なし----------*/
-	blend_desc.AlphaToCoverageEnable = FALSE;	                                        // マスキングによりくりぬき処理を行ったポリゴンを不透明部分に対してのみ陰面処理に対応しつつレンダリングする手法？を有効にするか
-	blend_desc.IndependentBlendEnable = FALSE;	                                        // 複数のRenderTarget[1～]を使用する場合はTrueに
-	blend_desc.RenderTarget[0].BlendEnable = FALSE;	                                    // ブレンディングを有効にするかどうか
+	blend_desc.AlphaToCoverageEnable = FALSE;	        // マスキングによりくりぬき処理を行ったポリゴンを不透明部分に対してのみ陰面処理に対応しつつレンダリングする手法？を有効にするか
+	blend_desc.IndependentBlendEnable = FALSE;	        // 複数のRenderTarget[1～]を使用する場合はTrueに
+	blend_desc.RenderTarget[0].BlendEnable = FALSE;	    // ブレンディングを有効にするかどうか
 	blend_desc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;	                            // 最初のRGBデータソースの指定
 	blend_desc.RenderTarget[0].DestBlend = D3D11_BLEND_ZERO;	                        // 2番目のRGBデータソースの指定
 	blend_desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;	                        // RGBの組み合わせ方法を定義	今回はSrcBlendとDestBlendを加算
@@ -263,7 +263,7 @@ bool framework::CreateBlendState() {
 	if (FAILED(hr))assert("ALPHA_BLEND ERROR");
 
 	/*----------[BS_ADD] 加算----------*/
-	blend_desc.AlphaToCoverageEnable = FALSE;
+	blend_desc.AlphaToCoverageEnable = TRUE;
 	blend_desc.IndependentBlendEnable = FALSE;
 	blend_desc.RenderTarget[0].BlendEnable = TRUE;
 	blend_desc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
@@ -307,13 +307,13 @@ bool framework::CreateBlendState() {
 
 	/*----------[BS_MULTIPLY]----------*/
 	ZeroMemory(&blend_desc, sizeof(blend_desc));
-	blend_desc.IndependentBlendEnable = FALSE;
+	blend_desc.IndependentBlendEnable = TRUE;
 	blend_desc.AlphaToCoverageEnable = FALSE;
 	blend_desc.RenderTarget[0].BlendEnable = TRUE;
-	blend_desc.RenderTarget[0].SrcBlend = D3D11_BLEND_DEST_COLOR;
-	blend_desc.RenderTarget[0].DestBlend = D3D11_BLEND_ZERO;
+	blend_desc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
+	blend_desc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
 	blend_desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-	blend_desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_DEST_ALPHA;
+	blend_desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
 	blend_desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
 	blend_desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
 	blend_desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
@@ -445,8 +445,8 @@ int framework::run() {
 			ImGui::End();
 			ImGui::Render();
 			ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-#endif
 			Flip();	// ImGui用
+#endif
 
 			// fps計算
 			FrameRateCalculator::getInstance().Update();

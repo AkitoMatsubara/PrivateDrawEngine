@@ -74,9 +74,9 @@ bool SceneGame::Initialize() {
 
 	skybox = std::make_unique<SkyBox>(L".\\Resources\\SkyBox.png");
 
-	test = std::make_unique<Font>();
-	test->LoadFont(L".\\Resources\\fonts\\APJapanesefontF.ttf", L"あんずもじ湛");
-	test->CreateFontTexture(L"D");
+	font = std::make_unique<Font>();
+	font->LoadFont(L".\\Resources\\fonts\\APJapanesefontF.ttf", L"あんずもじ湛");
+	font->CreateFontTexture(L"D");
 	return true;
 }
 
@@ -183,12 +183,11 @@ void SceneGame::Render() {
 
 	immediate_context->OMSetBlendState(FRAMEWORK->GetBlendState(FRAMEWORK->BS_ALPHA), nullptr, 0xFFFFFFFF);	// ブレンドインターフェースのポインタ、ブレンドファクターの配列値、サンプルカバレッジ(今回はデフォルト指定)
 
-	// 2Dオブジェクトの描画設定
+	// 2D背景オブジェクトの描画設定
 	{
 		immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(FRAMEWORK->DS_TRUE), 1);		// 3Dオブジェクトの後ろに出すため一旦
 		sprites->Render();
 		skybox->Render(camera.get());
-		test->Render();
 		immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(FRAMEWORK->DS_TRUE_WRITE), 1);	// 2Dオブジェクトとの前後関係をしっかりするため再設定
 	}
 	// 3Dオブジェクトの描画設定
@@ -202,18 +201,26 @@ void SceneGame::Render() {
 		data.camera_position = DirectX::SimpleMath::Vector4{ camera->GetPos().x,camera->GetPos().y,camera->GetPos().z,0 };				// シェーダに渡すカメラの位置
 		data.View = camera->GetView();
 		data.Projection = camera->GetProjection();
-		data.ParticleSize = DirectX::SimpleMath::Vector2{ 1.0f,1.0f };
+		data.ParticleSize = DirectX::SimpleMath::Vector2{ 1.0f,1.0f };	 // TODO 削除忘れず
 		immediate_context->UpdateSubresource(constant_buffer[0].Get(), 0, 0, &data, 0, 0);
 		immediate_context->VSSetConstantBuffers(1, 1, constant_buffer[0].GetAddressOf());	// cBufferはドローコールのたびに消去されるので都度設定する必要がある
 		immediate_context->PSSetConstantBuffers(1, 1, constant_buffer[0].GetAddressOf());
 
+
 		{
+			// 3Dオブジェクト描画
 			grid->Render(true);
 			//StageManager::getInstance().Render();
 			//player->Render();
 			//EnemyManager::getInstance().Render();
 			GpuParticle->SetSceneConstantBuffer(constant_buffer[0].Get());
 			GpuParticle->Draw();
+
+			// UI想定 2Dオブジェクト描画
+			{
+				immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(FRAMEWORK->DS_FALSE), 1);		// 3Dオブジェクトの前に出すため
+				font->Render();
+			}
 		}
 	}
 

@@ -17,7 +17,7 @@
 // -------------------- ----- ------ -------- -------- ------- ------
 // SV_POSITION              0   xyzw        0      POS   float       
 // TEXTURE                  0   xy          1     NONE   float   xy  
-// LIFE                     0     z         1     NONE   float     z 
+// LIFE                     0     z         1     NONE   float       
 // TEXCOORD                 2   xyz         2     NONE   float       
 // COLOR                    0   xyzw        3     NONE   float   xyzw
 //
@@ -33,7 +33,6 @@ dcl_globalFlags refactoringAllowed | skipOptimization
 dcl_sampler s0, mode_default
 dcl_resource_texture2d (float,float,float,float) t0
 dcl_input_ps linear v1.xy
-dcl_input_ps linear v1.z
 dcl_input_ps linear v3.xyzw
 dcl_output o0.xyzw
 dcl_temps 1
@@ -50,11 +49,7 @@ dcl_temps 1
 sample_indexable(texture2d)(float,float,float,float) r0.xyzw, v1.xyxx, t0.xyzw, s0
 mul r0.xyzw, r0.xyzw, v3.xyzw  // r0.x <- color.x; r0.y <- color.y; r0.z <- color.z; r0.w <- color.w
 
-#line 9
-mul r0.w, r0.w, v1.z
-
 #line 11
-mov o0.xyz, r0.xyzx
-mov o0.w, r0.w
+mov o0.xyzw, r0.xyzw
 ret 
-// Approximately 6 instruction slots used
+// Approximately 4 instruction slots used

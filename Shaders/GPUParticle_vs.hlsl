@@ -1,7 +1,7 @@
 #include "GPUParticle.hlsli"
 
 // 頂点シェーダの関数
-GS_INPUT main(GS_INPUT_GPU2 In)
+GS_INPUT main(VS_INPUT_GPU In)
 {
     GS_INPUT Out1;
     Out1.Pos.x = In.Position.x;

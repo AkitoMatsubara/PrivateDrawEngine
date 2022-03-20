@@ -9,10 +9,9 @@ cbuffer global
 
     float4 EyePos;       //カメラ座標
 }
-//static float3 Acceleration = float3(0.0, -4.8, 0.0);  // 加速度(m/s^2)
 
 // VSシェーダの入力データ定義
-struct GS_INPUT_GPU2
+struct VS_INPUT_GPU
 {
     float3 Position : POSITION; // 頂点座標(ワールド座標系)
     float3 Velocity : VELOCITY; // 現在の速度ベクトル(ワールド座標系)
