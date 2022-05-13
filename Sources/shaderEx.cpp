@@ -266,7 +266,7 @@ bool ShaderEx::CreateVS(const WCHAR* vsfilename, const UINT IL_NUM, D3D11_INPUT_
 	sprintf(fullname, "%s%s", fullname, ".cso");
 
 	// 入力レイアウト設定
-	if(ia_desc != nullptr)	// descが指定されていればそれに応じて作成
+	if(ia_desc)	// descが指定されていればそれに応じて作成
 	{
 		create_vs_from_cso(device, fullname, VS.GetAddressOf(), InputLayout.GetAddressOf(), ia_desc, IL_NUM);
 	}
@@ -279,7 +279,7 @@ bool ShaderEx::CreateVS(const WCHAR* vsfilename, const UINT IL_NUM, D3D11_INPUT_
 	device_context->IASetInputLayout(InputLayout.Get());
 
 
-	return false;
+ 	return false;
 
 }
 

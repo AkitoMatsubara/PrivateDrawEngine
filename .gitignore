@@ -46,3 +46,5 @@ Cache/
 # *拡張子
 *.exp
 *.pdb
+
+DebugBuild.*

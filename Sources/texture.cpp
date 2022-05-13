@@ -40,7 +40,7 @@ bool Texture::Load(const wchar_t* filename)
 	assert(SUCCEEDED(hr));
 
 	// 画像からSRV作成
-	hr = DirectX::CreateShaderResourceView(device, image.GetImages(), image.GetImageCount(), image.GetMetadata(), &ShaderResourceView);
+	hr = DirectX::CreateShaderResourceView(device, image.GetImages(), image.GetImageCount(), image.GetMetadata(), ShaderResourceView.GetAddressOf());
 	assert(SUCCEEDED(hr));
 
 	//テクスチャデータ取得
@@ -73,7 +73,7 @@ bool Texture::LoadMipMap(const wchar_t* filename)
 		mipChain);
 
 	// 画像からシェーダリソースView
-	hr = CreateShaderResourceView(device, mipChain.GetImages(), mipChain.GetImageCount(), mipChain.GetMetadata(), &ShaderResourceView);
+	hr = CreateShaderResourceView(device, mipChain.GetImages(), mipChain.GetImageCount(), mipChain.GetMetadata(), ShaderResourceView.GetAddressOf());
 
 	assert(SUCCEEDED(hr));
 	//テクスチャデータ取得
@@ -84,7 +84,7 @@ bool Texture::LoadMipMap(const wchar_t* filename)
 }
 
 
-void Texture::Set(UINT Slot, BOOL flg)
+void Texture::Set(UINT slot, BOOL flg)
 {
 	ID3D11DeviceContext* device_context = FRAMEWORK->GetDeviceContext();
 
@@ -93,15 +93,15 @@ void Texture::Set(UINT Slot, BOOL flg)
 
 		ID3D11ShaderResourceView* rtv[1] = { NULL };
 		ID3D11SamplerState* ss[1] = { NULL };
-		device_context->PSSetShaderResources(Slot, 1, rtv);
-		device_context->PSSetSamplers(Slot, 1, ss);
-		device_context->DSSetShaderResources(Slot, 1, rtv);
-		device_context->DSSetSamplers(Slot, 1, ss);
+		device_context->PSSetShaderResources(slot, 1, rtv);
+		device_context->PSSetSamplers(slot, 1, ss);
+		device_context->DSSetShaderResources(slot, 1, rtv);
+		device_context->DSSetSamplers(slot, 1, ss);
 		return;
 	}
 	if (ShaderResourceView) {
-		device_context->PSSetShaderResources(Slot, 1, ShaderResourceView.GetAddressOf());
-		device_context->DSSetShaderResources(Slot, 1, ShaderResourceView.GetAddressOf());
+		device_context->PSSetShaderResources(slot, 1, ShaderResourceView.GetAddressOf());
+		device_context->DSSetShaderResources(slot, 1, ShaderResourceView.GetAddressOf());
 	}
 }
 
@@ -109,7 +109,7 @@ bool Texture::Create(u_int width, u_int height, DXGI_FORMAT format)
 {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
 
-	Microsoft::WRL::ComPtr<ID3D11Texture2D> Texture2D;
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> texture2d;
 	HRESULT hr = S_OK;
 	//	テクスチャ作成
 	ZeroMemory(&texture2d_desc, sizeof(texture2d_desc));
@@ -123,7 +123,7 @@ bool Texture::Create(u_int width, u_int height, DXGI_FORMAT format)
 	texture2d_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	texture2d_desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
 
-	hr = device->CreateTexture2D(&texture2d_desc, NULL, &Texture2D);
+	hr = device->CreateTexture2D(&texture2d_desc, NULL, &texture2d);
 	assert(SUCCEEDED(hr));
 
 	//	レンダーターゲットビュー作成
@@ -132,7 +132,7 @@ bool Texture::Create(u_int width, u_int height, DXGI_FORMAT format)
 	rtvd.Format = format;
 	rtvd.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
 	rtvd.Texture2D.MipSlice = 0;
-	hr = device->CreateRenderTargetView(Texture2D.Get(), &rtvd, &RenderTargetView);
+	hr = device->CreateRenderTargetView(texture2d.Get(), &rtvd, RenderTargetView.GetAddressOf());
 	assert(SUCCEEDED(hr));
 
 	//	シェーダーリソースビュー作成
@@ -142,7 +142,7 @@ bool Texture::Create(u_int width, u_int height, DXGI_FORMAT format)
 	srvd.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 	srvd.Texture2D.MostDetailedMip = 0;
 	srvd.Texture2D.MipLevels = 1;
-	hr = device->CreateShaderResourceView(Texture2D.Get(), &srvd, &ShaderResourceView);
+	hr = device->CreateShaderResourceView(texture2d.Get(), &srvd, ShaderResourceView.GetAddressOf());
 
 	assert(SUCCEEDED(hr));
 
@@ -153,7 +153,7 @@ bool Texture::CreateDepth(u_int width, u_int height, DXGI_FORMAT format)
 {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
 
-	Microsoft::WRL::ComPtr<ID3D11Texture2D> Texture2D;
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> texture2d;
 	HRESULT hr = S_OK;
 	//	テクスチャ作成
 	ZeroMemory(&texture2d_desc, sizeof(texture2d_desc));
@@ -169,7 +169,7 @@ bool Texture::CreateDepth(u_int width, u_int height, DXGI_FORMAT format)
 	texture2d_desc.MiscFlags = 0;
 	texture2d_desc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
 
-	hr = device->CreateTexture2D(&texture2d_desc, NULL, &Texture2D);
+	hr = device->CreateTexture2D(&texture2d_desc, NULL, texture2d.GetAddressOf());
 	assert(SUCCEEDED(hr));
 
 	// 深度ステンシルビュー設定
@@ -178,7 +178,7 @@ bool Texture::CreateDepth(u_int width, u_int height, DXGI_FORMAT format)
 	dsvd.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	dsvd.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 	dsvd.Texture2D.MipSlice = 0;
-	hr = device->CreateDepthStencilView(Texture2D.Get(), &dsvd, &DepthStencilView);
+	hr = device->CreateDepthStencilView(texture2d.Get(), &dsvd, DepthStencilView.GetAddressOf());
 	assert(SUCCEEDED(hr));
 
 	//	シェーダーリソースビュー作成
@@ -188,7 +188,7 @@ bool Texture::CreateDepth(u_int width, u_int height, DXGI_FORMAT format)
 	srvd.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 	srvd.Texture2D.MostDetailedMip = 0;
 	srvd.Texture2D.MipLevels = 1;
-	hr = device->CreateShaderResourceView(Texture2D.Get(), &srvd, &ShaderResourceView);
+	hr = device->CreateShaderResourceView(texture2d.Get(), &srvd, ShaderResourceView.GetAddressOf());
 
 	assert(SUCCEEDED(hr));
 
@@ -200,7 +200,7 @@ bool Texture::CreateShadowDepth(u_int width, u_int height)
 {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
 
-	Microsoft::WRL::ComPtr<ID3D11Texture2D> Texture2D;
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> texture2d;
 	HRESULT hr = S_OK;
 	//	テクスチャ作成
 	ZeroMemory(&texture2d_desc, sizeof(texture2d_desc));
@@ -216,7 +216,7 @@ bool Texture::CreateShadowDepth(u_int width, u_int height)
 	texture2d_desc.MiscFlags = 0;
 	texture2d_desc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
 
-	hr = device->CreateTexture2D(&texture2d_desc, NULL, &Texture2D);
+	hr = device->CreateTexture2D(&texture2d_desc, NULL, &texture2d);
 	assert(SUCCEEDED(hr));
 
 	// 深度ステンシルビュー設定
@@ -225,7 +225,7 @@ bool Texture::CreateShadowDepth(u_int width, u_int height)
 	dsvd.Format = DXGI_FORMAT_D32_FLOAT;
 	dsvd.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 	dsvd.Texture2D.MipSlice = 0;
-	hr = device->CreateDepthStencilView(Texture2D.Get(), &dsvd, &DepthStencilView);
+	hr = device->CreateDepthStencilView(texture2d.Get(), &dsvd, DepthStencilView.GetAddressOf());
 	assert(SUCCEEDED(hr));
 
 	//	シェーダーリソースビュー作成
@@ -235,7 +235,7 @@ bool Texture::CreateShadowDepth(u_int width, u_int height)
 	srvd.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 	srvd.Texture2D.MostDetailedMip = 0;
 	srvd.Texture2D.MipLevels = 1;
-	hr = device->CreateShaderResourceView(Texture2D.Get(), &srvd, &ShaderResourceView);
+	hr = device->CreateShaderResourceView(texture2d.Get(), &srvd, ShaderResourceView.GetAddressOf());
 
 	assert(SUCCEEDED(hr));
 
@@ -246,7 +246,7 @@ bool Texture::CreateMipMap(u_int width, u_int height, DXGI_FORMAT format)
 {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
 
-	Microsoft::WRL::ComPtr<ID3D11Texture2D> Texture2D;
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> texture2d;
 	HRESULT hr = S_OK;
 	//	テクスチャ作成
 	ZeroMemory(&texture2d_desc, sizeof(texture2d_desc));
@@ -260,7 +260,7 @@ bool Texture::CreateMipMap(u_int width, u_int height, DXGI_FORMAT format)
 	texture2d_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	texture2d_desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
 
-	hr = device->CreateTexture2D(&texture2d_desc, NULL, &Texture2D);
+	hr = device->CreateTexture2D(&texture2d_desc, NULL, &texture2d);
 	assert(SUCCEEDED(hr));
 
 	//	レンダーターゲットビュー作成
@@ -269,7 +269,7 @@ bool Texture::CreateMipMap(u_int width, u_int height, DXGI_FORMAT format)
 	rtvd.Format = format;
 	rtvd.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
 	rtvd.Texture2D.MipSlice = 0;
-	hr = device->CreateRenderTargetView(Texture2D.Get(), &rtvd, &RenderTargetView);
+	hr = device->CreateRenderTargetView(texture2d.Get(), &rtvd, RenderTargetView.GetAddressOf());
 	assert(SUCCEEDED(hr));
 
 	//	シェーダーリソースビュー作成
@@ -279,7 +279,7 @@ bool Texture::CreateMipMap(u_int width, u_int height, DXGI_FORMAT format)
 	srvd.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 	srvd.Texture2D.MostDetailedMip = 0;
 	srvd.Texture2D.MipLevels = 9;
-	hr = device->CreateShaderResourceView(Texture2D.Get(), &srvd, &ShaderResourceView);
+	hr = device->CreateShaderResourceView(texture2d.Get(), &srvd, ShaderResourceView.GetAddressOf());
 
 	assert(SUCCEEDED(hr));
 
@@ -288,8 +288,43 @@ bool Texture::CreateMipMap(u_int width, u_int height, DXGI_FORMAT format)
 	return true;
 }
 
+bool Texture::CreateFontImage(u_int width, u_int height, ID3D11Texture2D* texture2d) {
+	ID3D11Device* device = FRAMEWORK->GetDevice();
+	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();
+
+	HRESULT hr = S_OK;
+	
+	//// CPUで書き込みができるテクスチャを作成 ////
+	ZeroMemory(&texture2d_desc, sizeof(D3D11_TEXTURE2D_DESC));
+	texture2d_desc.Width  = width;
+	texture2d_desc.Height = height;
+	texture2d_desc.MipLevels = 1;
+	texture2d_desc.ArraySize = 1;
+	texture2d_desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;		// RGBA(255,255,255,255)タイプ
+	texture2d_desc.Usage = D3D11_USAGE_DYNAMIC;				// 動的 CPU書き込み可能
+	texture2d_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;	// シェーダリソース
+	texture2d_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;	// CPUから書き込みアクセス可
+	texture2d_desc.SampleDesc.Count = 1;					// サンプリングは1ピクセルのみ
+
+	hr = device->CreateTexture2D(&texture2d_desc, NULL, &texture2d);
+	if (FAILED(hr)) { MessageBox(0, L"Font Texture Create Failure", NULL, MB_OK); }
+
+	//	シェーダーリソースビュー作成
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvd;
+	ZeroMemory(&srvd, sizeof(srvd));
+	srvd.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	srvd.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	srvd.Texture2D.MostDetailedMip = 0;
+	srvd.Texture2D.MipLevels = texture2d_desc.MipLevels;
+	hr = device->CreateShaderResourceView(texture2d, &srvd, ShaderResourceView.GetAddressOf());	// SRVの作成 これでシェーダに渡せるようになる
+
+	assert(SUCCEEDED(hr));
+
+	return true;
+
+}
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-HRESULT load_texture_from_file(const wchar_t* filename, ID3D11ShaderResourceView** shader_resource_view, D3D11_TEXTURE2D_DESC* texture2d_desc) {
+HRESULT Texture::LoadTextureFromFile(const wchar_t* filename, ID3D11ShaderResourceView** shader_resource_view, D3D11_TEXTURE2D_DESC* texture2d_desc) {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
 
 	HRESULT hr{ S_OK };
@@ -321,7 +356,7 @@ HRESULT load_texture_from_file(const wchar_t* filename, ID3D11ShaderResourceView
 }
 
 // ダミーテクスチャの作成
-HRESULT make_dummy_texture(ID3D11ShaderResourceView** shader_resource_view, DWORD value/*0xAABBGGRR*/, UINT dimension) {
+HRESULT Texture::MakeDummyTexture(ID3D11ShaderResourceView** shader_resource_view, DWORD value/*0xAABBGGRR*/, UINT dimension) {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
 
 	HRESULT hr{ S_OK };

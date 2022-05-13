@@ -25,16 +25,16 @@
 class SceneBase {
 	// 変数
 private:
-	bool ready = false;
+	bool GameReady = false;
 
 protected:
-	std::unique_ptr<SceneBase> newScene;
+	std::unique_ptr<SceneBase> NewScene;
 	//コンスタントバッファ
 	Microsoft::WRL::ComPtr<ID3D11Buffer> ConstantBuffer;
 
-	std::shared_ptr<Sampler> sampleClamp;
+	std::shared_ptr<Sampler> DefaultSampleClamp;
 
-	FLOAT ClearColor[4] = { 0.2f,0.2f,0.2f,1.0f };
+	FLOAT ClearColor[4] = { 0.2f,0.2f,0.2f,1.0f };	// 画面をまっさらに戻す色
 
 public:
 	// 関数
@@ -42,7 +42,7 @@ private:
 protected:
 	void CreateConstantBuffer(ID3D11Buffer** ppBuffer, u_int size);
 public:
-	SceneBase() :newScene(nullptr){}
+	SceneBase() :NewScene(nullptr){}
 	virtual ~SceneBase();
 
 	virtual bool Initialize() = 0;
@@ -51,13 +51,13 @@ public:
 
 	void imguiSceneChanger();
 
-	void setScene(std::unique_ptr<SceneBase> scene) { newScene = std::move(scene); }
-	std::unique_ptr<SceneBase> getScene() { return std::move(newScene); }
+	void setScene(std::unique_ptr<SceneBase> scene) { NewScene = std::move(scene); }
+	std::unique_ptr<SceneBase> getScene() { return std::move(NewScene); }
 
 	// 準備完了しているか
-	bool isReady() const { return ready; }
+	bool isReady() const { return GameReady; }
 	// 準備完了設定
-	void setReady(bool set) { ready = set; }
+	void setReady(bool set) { GameReady = set; }
 
 };
 
@@ -72,7 +72,7 @@ public:
 
 class SceneManager{
 private:
-	std::unique_ptr<SceneBase> currentScene;
+	std::unique_ptr<SceneBase> CurrentScene;
 public:
 	static SceneManager& getInstance() {
 		static SceneManager instance;
@@ -80,7 +80,7 @@ public:
 	}
 
 
-	SceneManager() :currentScene(nullptr) {}
+	SceneManager() :CurrentScene(nullptr) {}
 
 	void Update();
 	void Render();

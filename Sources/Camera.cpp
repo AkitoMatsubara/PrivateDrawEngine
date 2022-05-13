@@ -80,7 +80,7 @@ void Camera::Operate()
 {
 	// カメラ操作
 	static constexpr float MIN_DIST = 3.0f;
-	static constexpr float MAX_DIST = 10.0f;
+	static constexpr float MAX_DIST = 50.0f;
 	if (GetKeyState(VK_LEFT) < 0)   cAngle += DirectX::XMConvertToRadians(1);	// カメラ左回転
 	if (GetKeyState(VK_RIGHT) < 0)  cAngle -= DirectX::XMConvertToRadians(1);	// カメラ右回転
 

@@ -14,19 +14,15 @@ class GPUParticle
 {
 private:
 
-	// 自分で考えた必要そうな変数-----------------------------------------------------
-	Microsoft::WRL::ComPtr<ID3D11Buffer> ConstantBuffer;	// 毎フレーム更新のために送るあれ
 	Microsoft::WRL::ComPtr<ID3D11Buffer> ReadBackBuffer;	// GPUから読み込むためのバッファ
 	std::unique_ptr<Object3d> Parameters;	// パラメータ
 	std::shared_ptr<Texture> texture;
 	std::shared_ptr<Sampler> sample;
 
-	// 自分で考えた必要そうな変数しめ-------------------------------------------------
-
-	// てすと-------------------------------------------------------------------------
 	std::unique_ptr<ShaderEx> ParticleShader;
 
-	const static UINT NUM_ELEMENTS = 128;
+	inline const static UINT NUM_ELEMENTS = 128;
+	inline const static float GRABITY = -0.0005f;
 	int DispathNo;
 	int ParticleAmount;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> VerticesBuffer;	// 頂点バッファ
@@ -42,20 +38,21 @@ private:
 
 
 	// 頂点構造体 InputLayoutにも定義して頂点バッファを通して渡す
+	// 変数を追加したらInputLayout、hlsliにも追記すること！
 	struct VBuffer
 	{
-		DirectX::SimpleMath::Vector3 Position; // 座標値
+		DirectX::SimpleMath::Vector4 Position; // 座標値 .wには最大を設定をライフ
 		DirectX::SimpleMath::Vector3 Velocity; // 速度
 		DirectX::SimpleMath::Vector3 Force;    // 加速度
 		DirectX::SimpleMath::Vector4 Color;    // 色
-		bool Active;
 		float Life;
+		bool Active;
 	};
 	std::vector<VBuffer> vVecBuf;
 
 	struct cbCBuffer {
-		DirectX::SimpleMath::Matrix View;           // ビュー変換行列
-		DirectX::SimpleMath::Matrix Projection;     // 透視変換行列
+		DirectX::SimpleMath::Matrix view;           // ビュー変換行列
+		DirectX::SimpleMath::Matrix projection;     // 透視変換行列
 		DirectX::SimpleMath::Vector2 ParticleSize;   // パーティクルの大きさ
 		INT32      No;             //
 		FLOAT      dummy;          // ダミー
@@ -73,10 +70,10 @@ private:
 	struct cbCBuffer g_cbCBuffer;
 
 	// シーン定数バッファ
-	struct scene_constants {
+	struct SceneConstants {
 		DirectX::SimpleMath::Matrix view_projection;	// VP変換行列
-		DirectX::SimpleMath::Matrix View;
-		DirectX::SimpleMath::Matrix Projection;
+		DirectX::SimpleMath::Matrix view;
+		DirectX::SimpleMath::Matrix projection;
 
 		DirectX::SimpleMath::Vector4 light_direction;	// ライトの向き
 		DirectX::SimpleMath::Vector4 camera_position;	// カメラの位置
@@ -92,25 +89,26 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>	pBufInputSRV = nullptr;        // 入力用の構造化バッファーから作成されるシェーダーリソースビュー
 	Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView>	pBufResultUAV = nullptr;        // 出力用の構造化バッファーから作成されるアンオーダード アクセス ビュー
 
-	//BUFIN_TYPE vBufInArray[NUM_ELEMENTS];               // 入力用バッファーの配列を宣言
-
-	// てすとしめ---------------------------------------------------------------------
 
 	void CreateConstantBuffer(ID3D11Buffer** dstBuf, size_t size, bool dynamicFlg = false);
 
 public:
 
 	bool Init();
-	void Update(Camera* camera);
+	void Update();
 	void Draw();
 
-	void SetParticle();
+	void Play(); // パーティクルの再生 やることは更新と描画の両方
 
-	void SetSceneConstantBuffer(const ID3D11Buffer* cbBuf);
+	void SetParticle();	// パーティクルの再設定
+	void SetFirstPos(DirectX::SimpleMath::Vector3 pos);
+
+	void SpaceEffect();	// 空間を漂う動き
 
 	// TODO Debug用
 	void ImguiParticles();
-	float testColor[4] = { 1.0f,1.0f,1.0f,1.0f };
-	float testLife;
+	float testColor[4] = { 1.0f,1.0f,0.0f,1.0f };
+	float testLife;	// ImGuiでいじるよう
+	bool blendNone = false;
 	bool runCS = true;
 };

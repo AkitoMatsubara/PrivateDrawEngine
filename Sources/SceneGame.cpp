@@ -13,28 +13,25 @@
 
 bool SceneGame::Initialize() {
 	Microsoft::WRL::ComPtr<ID3D11Device> device = FRAMEWORK->GetDevice();	// frameworkからdeviceを取得
-	HRESULT hr = { S_OK };
 
 	// シーンコンスタントバッファの設定
-	CreateConstantBuffer(constant_buffer[0].GetAddressOf(), sizeof(scene_constants));
+	CreateConstantBuffer(ConstantBuffers[0].GetAddressOf(), sizeof(SceneConstants));
 
 	// Samplerの設定
-	sampleClamp = std::make_shared<Sampler>(D3D11_FILTER_MIN_MAG_MIP_LINEAR, D3D11_TEXTURE_ADDRESS_CLAMP);
+	DefaultSampleClamp = std::make_shared<Sampler>(D3D11_FILTER_MIN_MAG_MIP_LINEAR, D3D11_TEXTURE_ADDRESS_CLAMP);
 
 	// 各種クラス設定
 	{
-		camera = std::make_unique<Camera>();
-
-		// spriteオブジェクトを生成(今回は先頭の１つだけを生成する)
-		sprites = std::make_unique<Sprite>();
-		sprites->LoadImages(L".\\Resources\\screenshot.jpg");
-		sprites->setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+		// spriteオブジェクトを生成
+		Sprites = std::make_unique<Sprite>();
+		Sprites->LoadImages(L".\\Resources\\screenshot.jpg");
+		Sprites->setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
 
 		// Geometric_primitiveオブジェクトの生成
 		{
-			grid = std::make_unique<Geometric_Cube>();
-			grid->setPos(DirectX::SimpleMath::Vector3(0, -1, 0));
-			grid->setSize(DirectX::SimpleMath::Vector3(10, 0.1f, 10));
+			Grid = std::make_unique<Geometric_Cube>();
+			Grid->setPos(DirectX::SimpleMath::Vector3(0, -1, 0));
+			Grid->setSize(DirectX::SimpleMath::Vector3(10, 0.1f, 10));
 		}
 
 		player = std::make_unique<Player>();
@@ -45,48 +42,51 @@ bool SceneGame::Initialize() {
 		StageManager::getInstance().Initialize();
 	}
 
-	// Compute Shaderセッティング
-	{
-		// CS用コンスタントバッファの設定
-		CreateConstantBuffer(constant_buffer[1].GetAddressOf(), sizeof(cs_constants));
-
-		ComputeShader = std::make_unique<ShaderEx>();
-		ComputeShader->CreateCS(L"Shaders\\ComputeShader_cs");
-
-		// 入力用バッファーに初期値を設定する
-		for (int i = 0; i < NUM_ELEMENTS; i++)
-		{
-			vBufInArray[i].i = i;
-			vBufInArray[i].f = static_cast<float>(NUM_ELEMENTS - 1 - i);
-		}
-
-		// コンピュートシェーダーへの入力時に使用するSRVを作成する
-		UseComputeShader::CreateStructuredBufferAndSRV(sizeof(BUFIN_TYPE), NUM_ELEMENTS, &vBufInArray[0], pBufInput.GetAddressOf(), pBufInputSRV.GetAddressOf());
-
-		// コンピュートシェーダーからの出力時に使用するUAVを作成する
-		UseComputeShader::CreateStructuredBufferAndUAV(sizeof(BUFOUT_TYPE), NUM_ELEMENTS, NULL, pBufResult.GetAddressOf(), pBufResultUAV.GetAddressOf());
-	}
-
-	camera->SetProjection(DirectX::XMConvertToRadians(30), camera->GetWidth() / camera->GetHeight(), camera->GetNear(), camera->GetFar());
+	Camera::getInstance().SetProjection(DirectX::XMConvertToRadians(30), Camera::getInstance().GetWidth() / Camera::getInstance().GetHeight(), Camera::getInstance().GetNear(), Camera::getInstance().GetFar());
 
 	GpuParticle = std::make_unique<GPUParticle>();
 	GpuParticle->Init();
 
-	skybox = std::make_unique<SkyBox>(L".\\Resources\\SkyBox.png");
+	Skybox = std::make_unique<SkyBox>(L".\\Resources\\SkyBox.png");
 
-	font = std::make_unique<Font>();
-	font->LoadFont(L".\\Resources\\fonts\\APJapanesefontF.ttf", L"あんずもじ湛");
-	font->CreateFontTexture(L"D");
+	//font = std::make_unique<Font>();
+	//font->LoadFont(L".\\Resources\\fonts\\APJapanesefontF.ttf", L"あんずもじ湛");
+	//font->CreateFontTexture(L"D");
+
+	// シャドウマップ　
+	ShadowMapDrawer= std::make_unique<Sprite>();	// シャドウマップ確認用
+	for (int i = 0;i < 2;i++) {
+		ShadowMapTexture[i] = std::make_unique<Texture>();	// レンダーターゲット用テクスチャ
+		ShadowMapTexture[i]->Create(static_cast<UINT>(SHADOW_SIZE), static_cast<UINT>(SHADOW_SIZE), DXGI_FORMAT_R32G32_FLOAT);
+	}
+	GaussShadowMapTexture = std::make_unique<Texture>();	// レンダーターゲット用テクスチャ
+	GaussShadowMapTexture->Create(static_cast<UINT>(SHADOW_SIZE), static_cast<UINT>(SHADOW_SIZE), DXGI_FORMAT_R32G32_FLOAT);
+
+	ShadowDepth = std::make_unique<Texture>();	// レンダーターゲット用テクスチャ
+	ShadowDepth->CreateDepth(static_cast<UINT>(SHADOW_SIZE), static_cast<UINT>(SHADOW_SIZE));
+
+	ShadowShader= std::make_unique<ShaderEx>();
+	ShadowShader->CreateVS(L"Shaders/DepthShadow_vs");	// テクスチャに書き込むシェーダ
+	ShadowShader->CreatePS(L"Shaders/DepthShadow_ps");
+	RenderShadowShader = std::make_unique<ShaderEx>();
+	RenderShadowShader->CreateVS(L"Shaders/RenderShadow_vs");	// テクスチャに書き込むシェーダ
+	RenderShadowShader->CreatePS(L"Shaders/RenderShadow_ps");
+	CreateConstantBuffer(ConstantBuffers[3].GetAddressOf(), sizeof(ShadowConstant));
+	GaussianBlur = std::make_unique<ShaderEx>();
+	GaussianBlur->CreateVS(L"Shaders/GaussianBlur_vs");
+	GaussianBlur->CreatePS(L"Shaders/GaussianBlur_ps");
+	CreateConstantBuffer(ConstantBuffers[2].GetAddressOf(), sizeof(GaussianBlurConstants));
+
 	return true;
 }
 
 void SceneGame::Update() {
 	const float elapsed_time = FRAMEWORK->GetElapsedTime();
 	// シーン切り替え
-	if (GetAsyncKeyState('L') & 1)
-	{
-		setScene(std::make_unique<SceneLoading>(std::make_unique<SceneTitle>()));
-	}
+	//if (GetAsyncKeyState('L') & 1)
+	//{
+	//	setScene(std::make_unique<SceneLoading>(std::make_unique<SceneTitle>()));
+	//}
 	//if (GetAsyncKeyState('C') & 1)
 	//{
 	//	setScene(std::make_unique<SceneLoading>(std::make_unique<SceneClear>()));
@@ -96,11 +96,10 @@ void SceneGame::Update() {
 	StageManager::getInstance().Update();
 
 	// カメラ設定
-	camera->Set(camera->GetPos(), player->Parameters->Position, DirectX::XMFLOAT3(0, 1, 0));
+	Camera::getInstance().Set(Camera::getInstance().GetPos(), player->Parameters->Position, DirectX::XMFLOAT3(0, 1, 0));
 	// カメラ操作
-	camera->Operate();
-
-	GpuParticle->Update(camera.get());
+	Camera::getInstance().Operate();
+	Camera::getInstance().Activate();
 
 	// 敵関連
 	{
@@ -110,10 +109,9 @@ void SceneGame::Update() {
 		{
 			Object3d obj3d_desc;
 			obj3d_desc.CopyParam(player->Parameters.get());
-			obj3d_desc.Position = DirectX::SimpleMath::Vector3((rand() % 25) - 12.0f, 0.0f, (rand() % 25) - 12.0f);
+			obj3d_desc.Position		= DirectX::SimpleMath::Vector3((rand() % 25) - 12.0f, 0.0f, (rand() % 25) - 12.0f);
 			obj3d_desc.Orientation *= DirectX::SimpleMath::Quaternion::CreateFromAxisAngle({ 0.0f,1.0f,0.0f }, DirectX::XMConvertToRadians(static_cast<float>(rand() % 180)));
 			EnemyManager::getInstance().newSet(&obj3d_desc);
-			//EnemyManager::getInstance().newSet(player->Parameters.get());
 		}
 		for (auto it = EnemyManager::getInstance().getEnemys()->begin(); it != EnemyManager::getInstance().getEnemys()->end(); ++it)
 		{
@@ -130,98 +128,193 @@ void SceneGame::Update() {
 		Microsoft::WRL::ComPtr<ID3D11Device> device = FRAMEWORK->GetDevice();
 		HRESULT hr = { S_OK };
 
-		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		static float theta = 0.0f;
-		theta = (theta <= 1.0f) ? theta + 0.01f : 0.0f;	// チカチカすりゅ～！(色が)
-
-		//D3D11_MAPPED_SUBRESOURCE subRes;	// 別の更新方法 のはず。未完成
-		//immediate_context->Map(pBufInput.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &subRes);
-		//BUFIN_TYPE* pBufType = (BUFIN_TYPE*)subRes.pData;
-		//pBufType->f += 5;
-		////memcpy(subRes.pData, vBufInArray, sizeof(BUFIN_TYPE) * NUM_ELEMENTS);
-		//immediate_context->Unmap(pBufInput.Get(), 0);
-
-		// コンスタントバッファ更新
-		cs_constants csData{};
-		csData.Theta = theta;
-		immediate_context->UpdateSubresource(constant_buffer[1].Get(), 0, 0, &csData, 0, 0);
-		immediate_context->CSSetConstantBuffers(2, 1, constant_buffer[1].GetAddressOf());
-		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		UseComputeShader::RunComputeShader(ComputeShader->GetCS(), pBufInputSRV.Get(), 0, pBufResultUAV.Get(), 0, 3, 1, 1);
-
-		// アンオーダードアクセスビューのバッファの内容を CPU から読み込み可能なバッファへコピーする
-		ID3D11Buffer* debugbuf = nullptr;
-		UseComputeShader::CreateAndCopyToBuffer(pBufResult.Get(), &debugbuf);
-
-		D3D11_MAPPED_SUBRESOURCE MappedResource = { 0 };
-		hr = immediate_context->Map(debugbuf, 0, D3D11_MAP_READ, 0, &MappedResource);	// 読み取り専用でマップ
-		{
-			BUFOUT_TYPE* p;	// 受け取る型の変数を用意する
-			// "p,配列要素数"とウォッチ式に入力すると値が見れる これ便利
-			p = (BUFOUT_TYPE*)MappedResource.pData;	// 型変換して代入
-			player->Parameters->Color = DirectX::SimpleMath::Vector4{ p[1].i, p[0].i, p[2].i, 1.0f };
-		}
-		immediate_context->Unmap(debugbuf, 0);	// マップ解除
-		debugbuf->Release();	// CS受け取りポインタを解放
 	}
-
 	imguiUpdate();
 }
 
+void SceneGame::GaussianFilter(DirectX::SimpleMath::Vector4* array, int karnel_size, float sigma)
+{
+	float sum = 0.0f;	// 全重みの合計
+	int id = 0;
+	int x, y;
+	// 半分のマイナスから始めることで中心からのxyオフセット値を取得している
+	for (y = -karnel_size / 2; y < karnel_size / 2; y++) {
+		for (x = -karnel_size / 2; x < karnel_size / 2; x++) {
+			array[id].x = static_cast<float>(x);
+			array[id].y = static_cast<float>(y);
+			// exp:指数計算
+			array[id].z = exp(-(x * x + y * y) / (2 * sigma * sigma)) / (2 * PI * sigma * sigma);	// ガウス関数 どうやっても理解できんがこうらしい
+			sum += array[id].z;
+			id++;
+		}
+	}
+	// 正規化
+	for (int i = 0; i < karnel_size * karnel_size; i++) {
+		array[i].z /= sum;
+	}
+}
+
+void SceneGame::DepthShadowMapping() {
+	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();	// DevCon取得
+
+	// ShadowTextuereをターゲットに設定
+	ID3D11RenderTargetView* rtv[2] = {ShadowMapTexture[0]->GetRenderTargetView(),ShadowMapTexture[1]->GetRenderTargetView()};
+	ID3D11DepthStencilView* dsv = ShadowDepth->GetDepthStencilView();
+	// 諸々クリア
+	immediate_context->OMSetRenderTargets(1, &rtv[0], dsv);	// 真っ白のテクスチャをターゲット(出力先)に
+	float clearColor[4] = { 1.0f,1.0f,1.0f,1.0f };
+	immediate_context->ClearRenderTargetView(rtv[0], clearColor);
+	immediate_context->ClearDepthStencilView(dsv, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+
+	// ビューポートの設定
+	FRAMEWORK->CreateViewPort(ShadowMapTexture[0]->GetWidth(), ShadowMapTexture[0]->GetHeight());
+
+	// 3Dオブジェクトの描画設定
+	{
+		// TODO : Debug用
+		// ライトをカメラから発射
+		if (lightForCamera) {
+			light_dir[0] = -(Camera::getInstance().GetTarget().x - Camera::getInstance().GetPos().x);
+			light_dir[1] = -(Camera::getInstance().GetTarget().y - Camera::getInstance().GetPos().y);
+			light_dir[2] = -(Camera::getInstance().GetTarget().z - Camera::getInstance().GetPos().z);
+		}
+
+		// ライトからのビューを作成
+		Camera shadowView;
+		DirectX::SimpleMath::Vector3 shadowPos, shadowTarget, shadowUp;
+		// 向いている方向の反対側に位置を設定
+		shadowPos.x = 0.0f + light_dir[0];
+		shadowPos.y = 0.0f + light_dir[1] - 10;
+		shadowPos.z = 0.0f + light_dir[2];
+		shadowTarget = DirectX::SimpleMath::Vector3(0, 0, 0);	// 原点注視
+		shadowUp = DirectX::SimpleMath::Vector3(0, 1, 0);	// y方向がアップ
+		shadowView.Set(shadowPos, shadowTarget, shadowUp);
+		shadowView.SetOrtho(SHADOW_SIZE / ortho, SHADOW_SIZE / ortho, 1.0f, 50.0f);
+		shadowView.Activate();	// 行列計算
+		// コンスタントバッファの値を設定
+		ShadowConstant.light_view_projection = shadowView.GetView() * shadowView.GetProjection();
+		ShadowConstant.light_position = DirectX::SimpleMath::Vector4{ shadowPos.x,shadowPos.y,shadowPos.z,0.0f };
+		ShadowConstant.shadow_color = DirectX::SimpleMath::Vector4(0.3f, 0.3f, 0.3f, 1.0f);
+
+		// コンスタントバッファ更新
+		SceneConstants data{};
+		XMStoreFloat4x4(&data.view_projection, ShadowConstant.light_view_projection);	// Matrixから4x4へ変換
+		data.light_direction = DirectX::SimpleMath::Vector4{ light_dir[0],light_dir[1],light_dir[2],0 };	// シェーダに渡すライトの向き
+		data.camera_position = DirectX::SimpleMath::Vector4{ shadowView.GetPos().x,shadowView.GetPos().y,shadowView.GetPos().z,0 };				// シェーダに渡すカメラの位置
+		immediate_context->UpdateSubresource(ConstantBuffers[0].Get(), 0, 0, &data, 0, 0);
+		immediate_context->VSSetConstantBuffers(1, 1, ConstantBuffers[0].GetAddressOf());	// cBufferはドローコールのたびに消去されるので都度設定する必要がある
+		immediate_context->PSSetConstantBuffers(1, 1, ConstantBuffers[0].GetAddressOf());
+
+		immediate_context->OMSetBlendState(FRAMEWORK->GetBlendState(FRAMEWORK->BS_ALPHA), nullptr, 0xFFFFFFFF);
+		immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(FRAMEWORK->DS_TRUE_WRITE), 1);
+		// サンプラーステートをバインド
+		DefaultSampleClamp->Set(0);
+
+		{
+			// シャドウマップに深度を書き出すためにオブジェクトを描画する
+			player->Render(ShadowShader.get());
+			EnemyManager::getInstance().Render(ShadowShader.get());
+			//GpuParticle->Play();
+		}
+
+		// ぼかし処理
+
+		// ぼかし処理後のテクスチャの出力先に設定
+		immediate_context->OMSetRenderTargets(1, &rtv[1], nullptr);
+		immediate_context->ClearRenderTargetView(rtv[1], clearColor);
+		// ビューポートの設定
+		immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(FRAMEWORK->DS_FALSE), 1);
+
+		DirectX::SimpleMath::Vector4 weight[BUFFER_SIZE];
+		GaussianFilter(weight, KARNEL_SIZE, 10);	// サンプリングの位置オフセットとウェイトを計算する
+		// コンスタントバッファ更新
+		GaussianBlurConstants cb{};
+		memcpy(cb.weight, weight, sizeof(DirectX::SimpleMath::Vector4) * BUFFER_SIZE);
+		cb.karnel_size = KARNEL_SIZE;
+		cb.texcel.x = 1.0f / static_cast<float>(ShadowMapTexture[0]->GetWidth());
+		cb.texcel.y = 1.0f / static_cast<float>(ShadowMapTexture[0]->GetHeight());
+		immediate_context->UpdateSubresource(ConstantBuffers[2].Get(), 0, 0, &cb, 0, 0);
+		immediate_context->VSSetConstantBuffers(3, 1, ConstantBuffers[2].GetAddressOf());
+		immediate_context->PSSetConstantBuffers(3, 1, ConstantBuffers[2].GetAddressOf());
+
+		DirectX::XMFLOAT2 size = { static_cast<float>(ShadowDepth->GetWidth()), static_cast<float>(ShadowDepth->GetHeight()) };
+		ShadowMapDrawer->setTexSize(size.x,size.y);
+		ShadowMapDrawer->setPos(0,0);
+		ShadowMapDrawer->setSize(size.x,size.y);
+		ShadowMapDrawer->Render(ShadowMapTexture[0].get(),GaussianBlur.get());	// ぼかし処理の実行、結果がレンダーターゲットのテクスチャに出力される
+
+		// お片付け
+		constexpr static ID3D11RenderTargetView* nullView[1] = {nullptr};
+		immediate_context->OMSetRenderTargets(0, nullView, nullptr);
+	
+		// シャドウコンスタントバッファ更新
+		immediate_context->UpdateSubresource(ConstantBuffers[3].Get(), 0, 0, &ShadowConstant, 0, 0);
+		immediate_context->VSSetConstantBuffers(3, 1, ConstantBuffers[3].GetAddressOf());
+		immediate_context->PSSetConstantBuffers(3, 1, ConstantBuffers[3].GetAddressOf());
+
+	}
+}
+
 void SceneGame::Render() {
-	HRESULT hr{ S_OK };
+	DepthShadowMapping();	// シャドウマップ生成
 
 	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();	// DevCon取得
 
-	FRAMEWORK->Clear(ClearColor);	// 一旦クリア
+	FRAMEWORK->Clear(ClearColor);	// RTVの再設定
 
 	// ビューポートの設定
 	FRAMEWORK->CreateViewPort();
-
-	// サンプラーステートをバインド
-	sampleClamp->Set(0);
 
 	immediate_context->OMSetBlendState(FRAMEWORK->GetBlendState(FRAMEWORK->BS_ALPHA), nullptr, 0xFFFFFFFF);	// ブレンドインターフェースのポインタ、ブレンドファクターの配列値、サンプルカバレッジ(今回はデフォルト指定)
 
 	// 2D背景オブジェクトの描画設定
 	{
 		immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(FRAMEWORK->DS_TRUE), 1);		// 3Dオブジェクトの後ろに出すため一旦
-		sprites->Render();
-		skybox->Render(camera.get());
+		Skybox->Render(&Camera::getInstance());	// スカイボックス描画
 		immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(FRAMEWORK->DS_TRUE_WRITE), 1);	// 2Dオブジェクトとの前後関係をしっかりするため再設定
 	}
 	// 3Dオブジェクトの描画設定
 	{
-		camera->Activate();
-
-		// コンスタントバッファ更新
-		scene_constants data{};
-		XMStoreFloat4x4(&data.view_projection, camera->GetView() * camera->GetProjection());	// Matrixから4x4へ変換
+		// シーンコンスタントバッファ更新
+		SceneConstants data{};
+		XMStoreFloat4x4(&data.view_projection, Camera::getInstance().GetView() * Camera::getInstance().GetProjection());	// Matrixから4x4へ変換
 		data.light_direction = DirectX::SimpleMath::Vector4{ light_dir[0],light_dir[1],light_dir[2],0 };	// シェーダに渡すライトの向き
-		data.camera_position = DirectX::SimpleMath::Vector4{ camera->GetPos().x,camera->GetPos().y,camera->GetPos().z,0 };				// シェーダに渡すカメラの位置
-		data.View = camera->GetView();
-		data.Projection = camera->GetProjection();
-		data.ParticleSize = DirectX::SimpleMath::Vector2{ 1.0f,1.0f };	 // TODO 削除忘れず
-		immediate_context->UpdateSubresource(constant_buffer[0].Get(), 0, 0, &data, 0, 0);
-		immediate_context->VSSetConstantBuffers(1, 1, constant_buffer[0].GetAddressOf());	// cBufferはドローコールのたびに消去されるので都度設定する必要がある
-		immediate_context->PSSetConstantBuffers(1, 1, constant_buffer[0].GetAddressOf());
+		data.camera_position = DirectX::SimpleMath::Vector4{ Camera::getInstance().GetPos().x,Camera::getInstance().GetPos().y,Camera::getInstance().GetPos().z,0 };	// シェーダに渡すカメラの位置
+		data.view = Camera::getInstance().GetView();
+		data.projection = Camera::getInstance().GetProjection();
+		immediate_context->UpdateSubresource(ConstantBuffers[0].Get(), 0, 0, &data, 0, 0);
+		immediate_context->VSSetConstantBuffers(1, 1, ConstantBuffers[0].GetAddressOf());	// cBufferはドローコールのたびに消去されるので都度設定する必要がある
+		immediate_context->PSSetConstantBuffers(1, 1, ConstantBuffers[0].GetAddressOf());
 
 
+		// サンプラーステートをバインド
+		DefaultSampleClamp->Set(0);		// サンプラー (s0)
+		ShadowMapTexture[1]->Set(3);	// ぼかしたシャドウマップをセット	(t3)
+		DefaultSampleClamp->Set(3);		// シャドウマップ用サンプラー (s3)　
 		{
 			// 3Dオブジェクト描画
-			grid->Render(true);
-			//StageManager::getInstance().Render();
-			//player->Render();
-			//EnemyManager::getInstance().Render();
-			GpuParticle->SetSceneConstantBuffer(constant_buffer[0].Get());
-			GpuParticle->Draw();
+			Grid->Render(true);
+			StageManager::getInstance().Render(RenderShadowShader.get());
+			/*if(lightForCamera)*/player->Render(RenderShadowShader.get());
+			EnemyManager::getInstance().Render();
+			GpuParticle->Play();
 
-			// UI想定 2Dオブジェクト描画
+			// 2Dオブジェクト描画
 			{
 				immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(FRAMEWORK->DS_FALSE), 1);		// 3Dオブジェクトの前に出すため
-				font->Render();
+				immediate_context->OMSetBlendState(FRAMEWORK->GetBlendState(FRAMEWORK->BS_ALPHA), nullptr, 0xFFFFFFFF);	// ブレンドインターフェースのポインタ、ブレンドファクターの配列値、サンプルカバレッジ(今回はデフォルト指定)
+				////font->Render();
+				if (renderShadowMap) {
+					ShadowMapDrawer->setTexSize(ShadowDepth->GetWidth(), ShadowDepth->GetHeight());
+					DirectX::XMFLOAT2 size = { static_cast<float>(ShadowDepth->GetWidth() / 3), static_cast<float>(ShadowDepth->GetHeight() / 3) };
+					ShadowMapDrawer->setPos(0,0);
+					ShadowMapDrawer->setSize(size.x*0.5f, size.y*0.5f);
+					ShadowMapDrawer->Render(ShadowMapTexture[shadowNo].get());
+				}
 			}
 		}
+		ShadowMapTexture[1]->Set(3, false);	// 3番スロットのテクスチャ設定を剥がす
+		ShadowDepth->Set(0, false);			// 0番スロットのテクスチャ設定を剥がす
 	}
 
 #ifdef USE_IMGUI
@@ -241,16 +334,12 @@ void SceneGame::imguiUpdate() {
 	ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.0f, 0.6f, 0.1f, 1.0f));	// これ一つ呼ぶとImGui::PopStyleColorを書かないといけないらしい
 	ImGui::PushStyleColor(ImGuiCol_TitleBg, ImVec4(0.0f, 0.2f, 0.0f, 1.0f));
 
-	//imguiSceneChanger();
-	// 2D用 内部関数で完結させてる
-	//sprites->ImguiWindow();
 	// 3D用パラメータ
 	player->ImguiPlayer();
 	GpuParticle->ImguiParticles();
 	// ライト調整等グローバル設定
 	ImGui::Begin("SceneImGui");
 	{
-		//ImGui::SliderFloat3("Light_Direction", light_dir, -10.0f, 10.0f);
 		if (ImGui::CollapsingHeader("Object Counts"))
 		{
 			ImGui::Text("PlayerShots: %d", player->getShotManager()->getSize());
@@ -261,16 +350,30 @@ void SceneGame::imguiUpdate() {
 			ImGui::Text("Total Objects: %d", StageManager::getInstance().getSize() + EnemyManager::getInstance().getEnemys()->size()
 				+ player->getShotManager()->getSize() + EnemyManager::getInstance().getShotManager()->getSize());
 		}
-		if (ImGui::CollapsingHeader("Initializes"),true)
+		if (ImGui::CollapsingHeader("Initializes"))
 		{
 			if (ImGui::Button("Stage Initialize")) { StageManager::getInstance().Initialize(); }
 			if (ImGui::Button("Player Initialize")) { player->Initialize(); }
 			if (ImGui::Button("Scene Initialize")) { Initialize(); }
-			//if (ImGui::Button("Particle Initialize")) { GpuParticle->Init(); }	// TODO メモリリーク 想定していない使い方なのであまり気にしなくても…？
 			if (ImGui::Button("Particle Set")) { GpuParticle->SetParticle(); }
 		}
 		ImGui::PopStyleColor(2);	// ImGui::PushStyleColor一つにつき引数一つ増えるっぽい
 		ImGui::End();
 	}
+	ImGui::Begin("LightDirection");
+	{
+		ImGui::SliderFloat3("Light_Direction", light_dir, -50.0f, 50.0f);
+		ImGui::Checkbox("LightFromCamera", &lightForCamera);
+		if (ImGui::TreeNode("RenderMap"))
+		{
+			ImGui::Checkbox("ShadowMap", &renderShadowMap);
+			if (ImGui::RadioButton("Depth", shadowNo == 0)) { shadowNo = 0; };ImGui::SameLine();
+			if (ImGui::RadioButton("Gaussian", shadowNo == 1)) { shadowNo = 1; };
+			ImGui::SliderFloat("Ortho", &ortho, 0.0f, 500.0f);
+			ImGui::TreePop();
+		}
+	}
+	ImGui::End();
+
 #endif
 }

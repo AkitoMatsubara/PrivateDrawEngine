@@ -17,10 +17,10 @@ class Geometric_Primitive {
 public:
 	std::unique_ptr<Object3d> Parameters;
 private:
-	Microsoft::WRL::ComPtr<ID3D11Buffer> vertex_buffer;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> VertexBuffer;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> index_buffer;
 
-	Microsoft::WRL::ComPtr<ID3D11Buffer> constant_buffer;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> ConstantBuffers;
 
 	static std::unique_ptr<ShaderEx> GeometricShader;
 	DirectX::SimpleMath::Matrix world;
@@ -52,14 +52,12 @@ public:
 
 	void setPos   (float posX, float posY,float posZ)       { Parameters->Position   = DirectX::SimpleMath::Vector3(posX, posY,posZ); }
 	void setSize  (float sizeX, float sizeY,float sizeZ)    { Parameters->Scale = DirectX::SimpleMath::Vector3(sizeX, sizeY,sizeZ); }
-	//void setAngle (float angleX, float angleY,float angleZ) { Parameters->Rotate = DirectX::SimpleMath::Vector3(angleX, angleY,angleZ); }
 	void setAngle (float angleX, float angleY,float angleZ) { Parameters->Orientation = DirectX::SimpleMath::Quaternion(angleX, angleY,angleZ,Parameters->Orientation.w); }
 	void setColor (float r, float g, float b, float a)      { Parameters->Color = DirectX::SimpleMath::Vector4(r, g, b, a); }
 
 	// ƒQƒbƒ^[
 	DirectX::SimpleMath::Vector3 getPos() { return Parameters->Position; }
 	DirectX::SimpleMath::Vector3 getSize() { return Parameters->Scale; }
-	//DirectX::SimpleMath::Vector3 getAngle() { return Parameters->Rotate; }
 	DirectX::SimpleMath::Quaternion getAngle() { return Parameters->Orientation; }
 	DirectX::SimpleMath::Vector4 getColor() { return Parameters->Color; }
 	DirectX::SimpleMath::Matrix getWorld() { return world; }

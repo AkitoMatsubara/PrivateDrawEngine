@@ -11,7 +11,6 @@
 #include "texture.h"
 #include "skinned_mesh.h"
 
-Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> Skinned_Mesh::dummyTexture = nullptr;
 
 inline DirectX::SimpleMath::Matrix ConvertToXmfloat4x4(const FbxAMatrix& fbxamatrix) {
 	DirectX::SimpleMath::Matrix value;
@@ -120,7 +119,7 @@ Skinned_Mesh::Skinned_Mesh(const char* fbx_filename, int cstNo, bool triangulate
 
 	// マテリアル情報がない場合に備え予めダミーテクスチャをセット
 	// 静的宣言なので一回だけ 中身がnullじゃなかったら作成、それ以外は作らない
-	if (dummyTexture) { make_dummy_texture(dummyTexture.GetAddressOf(), 0xFFFFFFFF, 16); }
+	if (dummyTexture) { Texture::MakeDummyTexture(dummyTexture.GetAddressOf(), 0xFFFFFFFF, 16); }
 	Create_com_buffers(fbx_filename);
 
 	CstNo = cstNo;
@@ -134,7 +133,6 @@ Skinned_Mesh::Skinned_Mesh(const char* fbx_filename, int cstNo, bool triangulate
 	Parameters = std::make_unique<Object3d>();
 	Parameters->Position = DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f);
 	Parameters->Scale = DirectX::SimpleMath::Vector3(1.0f, 1.0f, 1.0f);
-	//Parameters->Rotate = DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f);
 	Parameters->Orientation = DirectX::SimpleMath::Quaternion(0.0f, 0.0f, 0.0f,1.0f);
 	Parameters->Color = DirectX::SimpleMath::Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 }
@@ -142,21 +140,23 @@ Skinned_Mesh::Skinned_Mesh(const char* fbx_filename, int cstNo, bool triangulate
 void Skinned_Mesh::Render(Shader* shader, int rs_state) {
 	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();
 
-
-	for (const Mesh& mesh : meshes) {
+	{
 		// 単位をセンチメートルからメートルに変更するため、scale_factorを0.01に設定する
-		const float scale_factor = 1.0f;
-		DirectX::XMMATRIX C{ XMLoadFloat4x4(&coordinate_system_transforms[CstNo]) * DirectX::XMMatrixScaling(scale_factor,scale_factor,scale_factor) };
+		const float SCALE_FACTOR = 1.0f;
+		DirectX::XMMATRIX C{ XMLoadFloat4x4(&coordinate_system_transforms[CstNo]) * DirectX::XMMatrixScaling(SCALE_FACTOR,SCALE_FACTOR,SCALE_FACTOR) };
 
 		DirectX::XMMATRIX S{ DirectX::XMMatrixScaling(Parameters->Scale.x,Parameters->Scale.y,Parameters->Scale.z) };	// 拡縮
 		DirectX::XMMATRIX R = DirectX::XMMatrixRotationQuaternion(Parameters->Orientation);
 		DirectX::XMMATRIX T{ DirectX::XMMatrixTranslation(Parameters->Position.x,Parameters->Position.y,Parameters->Position.z) };	// 平行移動
 
-		XMStoreFloat4x4(&world, C * S * R * T);	// ワールド変換行列作成
+		XMStoreFloat4x4(&matWorld, C * S * R * T);	// ワールド変換行列作成
+	}
+
+	for (const Mesh& mesh : meshes) {
 
 		uint32_t stride{ sizeof(Vertex) };	// stride:刻み幅
 		uint32_t offset{ 0 };
-		immediate_context->IASetVertexBuffers(0, 1, mesh.vertex_buffer.GetAddressOf(), &stride, &offset);
+		immediate_context->IASetVertexBuffers(0, 1, mesh.VertexBuffer.GetAddressOf(), &stride, &offset);
 		immediate_context->IASetIndexBuffer(mesh.index_buffer.Get(), DXGI_FORMAT_R32_UINT, 0);
 		immediate_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -165,8 +165,9 @@ void Skinned_Mesh::Render(Shader* shader, int rs_state) {
 		// ラスタライザステートの設定
 		immediate_context->RSSetState(FRAMEWORK->GetRasterizerState(rs_state));
 
-		Constants data{ world,Parameters->Color };
-		DirectX::XMStoreFloat4x4(&data.world, DirectX::XMMatrixMultiply(DirectX::XMLoadFloat4x4(&mesh.default_global_transform), DirectX::XMLoadFloat4x4(&world)));	// グローバルのTransformとworld行列を掛けてworld座標に変換している
+		Constants data{ matWorld,Parameters->Color };
+		DirectX::XMStoreFloat4x4(&data.world,
+			DirectX::XMMatrixMultiply(DirectX::XMLoadFloat4x4(&mesh.default_global_transform), DirectX::XMLoadFloat4x4(&matWorld)));	// グローバルのTransformとworld行列を掛けてworld座標に変換している
 
 		for (const Mesh::Subset& subset : mesh.subsets) {	// マテリアル別メッシュの数回すよ
 			if (subset.material_unique_id != 0)	// unique_idの確認
@@ -183,13 +184,16 @@ void Skinned_Mesh::Render(Shader* shader, int rs_state) {
 				immediate_context->PSSetShaderResources(0, 1, dummyTexture.GetAddressOf());	// ダミーテクスチャを使用する
 			}
 
-			immediate_context->VSSetConstantBuffers(0, 1, constant_buffer.GetAddressOf());
-			immediate_context->UpdateSubresource(constant_buffer.Get(), 0, 0, &data, 0, 0);
+			immediate_context->VSSetConstantBuffers(0, 1, ConstantBuffers.GetAddressOf());
+			immediate_context->UpdateSubresource(ConstantBuffers.Get(), 0, 0, &data, 0, 0);
 			immediate_context->DrawIndexed(subset.index_count, subset.start_index_location, 0);	// 描画するインデックスの数,最初のインデックスの場所,頂点バッファから読み取る前に追加する値
 		}
 	}
+	constexpr static ID3D11ShaderResourceView* nullSrv[1] = { nullptr };
+	immediate_context->PSSetShaderResources(0, 1, nullSrv);	// SRVを未設定にする ここではテクスチャ
 	// シェーダの無効化
 	shader->Inactivate();
+
 }
 
 void Skinned_Mesh::Create_com_buffers(const char* fbx_filename) {
@@ -211,7 +215,7 @@ void Skinned_Mesh::Create_com_buffers(const char* fbx_filename) {
 		subresource_data.SysMemPitch = 0;
 		subresource_data.SysMemSlicePitch = 0;
 
-		hr = device->CreateBuffer(&buffer_desc, &subresource_data, mesh.vertex_buffer.ReleaseAndGetAddressOf());
+		hr = device->CreateBuffer(&buffer_desc, &subresource_data, mesh.VertexBuffer.ReleaseAndGetAddressOf());
 		_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 
 		buffer_desc.ByteWidth = static_cast<UINT>(sizeof(uint32_t) * mesh.indices.size());
@@ -233,10 +237,10 @@ void Skinned_Mesh::Create_com_buffers(const char* fbx_filename) {
 			std::filesystem::path path(fbx_filename);
 			path.replace_filename(iterator->second.texture_filenames[0]);
 			D3D11_TEXTURE2D_DESC texture2d_desc;
-			load_texture_from_file(path.c_str(), iterator->second.srv[0].GetAddressOf(), &texture2d_desc);
+			Texture::LoadTextureFromFile(path.c_str(), iterator->second.srv[0].GetAddressOf(), &texture2d_desc);
 		}
 		else {
-			make_dummy_texture(iterator->second.srv[0].GetAddressOf(), 0xFFFFFFFF, 16);
+			Texture::MakeDummyTexture(iterator->second.srv[0].GetAddressOf(), 0xFFFFFFFF, 16);
 		}
 	}
 
@@ -245,7 +249,7 @@ void Skinned_Mesh::Create_com_buffers(const char* fbx_filename) {
 	buffer_desc.ByteWidth = sizeof(Constants);	// Constantsの型を使用
 	buffer_desc.Usage = D3D11_USAGE_DEFAULT;
 	buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;	// ConstantBufferとして使用することをきめる
-	hr = device->CreateBuffer(&buffer_desc, nullptr, constant_buffer.ReleaseAndGetAddressOf());
+	hr = device->CreateBuffer(&buffer_desc, nullptr, ConstantBuffers.ReleaseAndGetAddressOf());
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 }
 

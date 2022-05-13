@@ -12,6 +12,8 @@ class Font :public Sprite
 private:
 	HFONT hFont;
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> tex2D; // 2Dテクスチャ メモリリーク対策でComPtr使用
+	//D3D11_TEXTURE2D_DESC	texture2d_desc;
+	//Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>	shader_resource_view;
 	std::vector<const wchar_t*> FontList;	// 読み込んだフォントのパスを保持するコンテナ
 public:
 	//ttfファイルへのパス

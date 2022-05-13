@@ -38,10 +38,7 @@ void Shot::Update()
 
 void Shot::Render()
 {
-	if (Exist) {
-		Model->Render();
-		//Sphere->Render();
-	}
+	if (Exist) { Model->Render(); }
 }
 
 void Shot::set(const Object3d* parent)
@@ -74,7 +71,8 @@ void ShotManager::Update()
 						// “–‚½‚è”»’èA–ß‚è’ltrue‚Å‚ ‚ê‚Î
 						if (isHits(enem->get()->Parameters.get(), shots->get()))
 						{
-							enem->get()->setExist(false);
+							//enem->get()->setExist(false);
+							enem->get()->Destroy();
 							shots->get()->setExist(false);
 							break;	// ‘ÎÛ‚Ì’e‚ªÁ‚¦‚é‚Ì‚ÅEnemyFor•¶‚ğI—¹
 						}

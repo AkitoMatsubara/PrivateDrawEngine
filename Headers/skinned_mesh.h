@@ -125,7 +125,7 @@ public:
 	};
 	// <キー型,値型>オブジェクト名
 	std::unordered_map<uint64_t, Material>materials;
-	static Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> dummyTexture;	// fbxにマテリアルが設定されていない場合に使用する
+	static inline Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> dummyTexture;	// fbxにマテリアルが設定されていない場合に使用する
 
 	struct Mesh {
 	public:
@@ -160,7 +160,7 @@ public:
 		void serialize(T& archive) { archive(unique_id, name, node_index, vertices, indices, subsets, default_global_transform); }
 
 	private:
-		Microsoft::WRL::ComPtr<ID3D11Buffer> vertex_buffer;
+		Microsoft::WRL::ComPtr<ID3D11Buffer> VertexBuffer;
 		Microsoft::WRL::ComPtr<ID3D11Buffer> index_buffer;
 		friend class Skinned_Mesh;
 	};
@@ -169,9 +169,9 @@ public:
 	enum { CST_RIGHT_Y, CST_LEFT_Y, CST_RIGHT_Z, CST_LEFT_Z, CST_END };	// coordinate_system_transforms変数用
 
 private:
-	DirectX::SimpleMath::Matrix world;
+	DirectX::SimpleMath::Matrix matWorld;
 
-	Microsoft::WRL::ComPtr<ID3D11Buffer> constant_buffer;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> ConstantBuffers;
 
 	bool wireframe;	// ワイヤーフレーム表示の有無
 
@@ -226,10 +226,9 @@ public:
 	// ゲッター
 	DirectX::SimpleMath::Vector3 getPos() { return Parameters->Position; }
 	DirectX::SimpleMath::Vector3 getSize() { return Parameters->Scale; }
-	//DirectX::SimpleMath::Vector3 getAngle() { return Parameters->Rotate; }
 	DirectX::SimpleMath::Quaternion getAngle() { return Parameters->Orientation; }
 	DirectX::SimpleMath::Vector4 getColor() { return Parameters->Color; }
-	DirectX::SimpleMath::Matrix getWorld() { return world; }
+	DirectX::SimpleMath::Matrix getWorld() { return matWorld; }
 	Object3d* getParameters() { return Parameters.get(); }
 
 private:

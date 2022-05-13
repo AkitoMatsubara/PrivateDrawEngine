@@ -8,16 +8,16 @@ static float imguiPos[3] = { 0.0f };
 static float imguiRot= { 0.0f };
 
 void Player::Initialize() {
-	Model = std::make_unique<Skinned_Mesh>(".\\Resources\\Player\\Player.fbx");
+	Model = std::make_unique<Skinned_Mesh>(".\\Resources\\Player\\Player.fbx");	// 丸モデル
+	//Model = std::make_unique<Skinned_Mesh>(".\\Resources\\Player\\Player_.fbx");	// 3角形モデル
 
 	// パラメーターの初期化
 	Parameters = std::make_unique<Object3d>();
 	Parameters->Position     = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
-	Parameters->Vector       = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
 	Parameters->Acceleration = DirectX::SimpleMath::Vector3{ 0.0f,0.0f,0.0f };
 	Parameters->Orientation  = DirectX::SimpleMath::Quaternion{ 0.0f,0.0f,0.0f,1.0f };
 	Parameters->Scale        = DirectX::SimpleMath::Vector3{ 1.0f,1.0f,1.0f };
-	Parameters->Color        = DirectX::SimpleMath::Vector4{ 1.0f,1.0f,1.0f,1.0f };
+	Parameters->Color        = DirectX::SimpleMath::Vector4{ 0.0f,1.0f,0.5f,1.0f };
 	Parameters->CurLife      = Parameters->MaxLife = 5;
 
 	ShotsManager = std::make_unique<ShotManager>();
@@ -26,7 +26,8 @@ void Player::Initialize() {
 	Capcule = std::make_unique<Geometric_Capsule>(1.0f, 10, 10);
 	testSphere2 = std::make_unique<Geometric_Sphere>();
 	playerHitSphere = std::make_unique<Geometric_Sphere>();
-	instance = this;	// 1P想定のみ 現状2P不可
+
+	instance = this;
 }
 
 void Player::Update() {
@@ -37,8 +38,13 @@ void Player::Update() {
 
 	// モデルに描画系パラメーターを渡す
 	Model->getParameters()->CopyParam(Parameters.get());
-
-	StageManager::getInstance().RideParts(*Parameters, Parameters->Scale.x * 0.5f);
+	// ステージの上に乗っているか判定
+	if (StageManager::getInstance().RideParts(*Parameters, Parameters->Scale.x * 0.5f)) {
+		Parameters->Position.y = 0.0f;	// TODO debug:見た目上ステージの上にいる
+	}
+	else {
+		Parameters->Position.y -= 0.05f;
+	}
 
 
 	//-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -49,11 +55,6 @@ void Player::Update() {
 	Capcule->Parameters->Color = DirectX::SimpleMath::Vector4{ 1.0f,1.0f,1.0f,1.0f, };
 
 	Capcule->Parameters->Orientation = DirectX::SimpleMath::Quaternion::CreateFromAxisAngle(Model->getWorld().Right(), DirectX::XMConvertToRadians(90));
-
-	Capcule->Parameters->Vector.y = sinf((Capcule->Parameters->Orientation.y));
-	Capcule->Parameters->Vector.x = sinf((Capcule->Parameters->Orientation.x));
-	Capcule->Parameters->Vector.z = cosf((Capcule->Parameters->Orientation.y));
-	Capcule->Parameters->Vector.Normalize();	// 方向ベクトルなので正規化しとく
 
 	static const float SPHERESIZE = 0.5f;
 	testSphere2->Parameters->CopyParam(Parameters.get());
@@ -88,13 +89,15 @@ void Player::Update() {
 	//-----------------------------------------------------------------------------------------------------------------------------------------------------
 }
 
-void Player::Render() {
-	if (Parameters->Exist) { Model->Render(); }
+void Player::Render(Shader* shader) {
+	if (Parameters->Exist) { 
+		(shader) ? Model->Render(shader) : Model->Render();	// シェーダーが外部から設定されていれば使用する
+	}
 	ShotsManager->Render();
 #ifdef _DEBUG
 	//Capcule->Render        (FRAMEWORK->RS_WIRE_NONE);
-	testSphere2->Render    (FRAMEWORK->RS_WIRE_NONE);
-	playerHitSphere->Render(FRAMEWORK->RS_WIRE_NONE);
+	//testSphere2->Render    (FRAMEWORK->RS_WIRE_NONE);
+	//playerHitSphere->Render(FRAMEWORK->RS_WIRE_NONE);
 #endif
 }
 
@@ -119,12 +122,9 @@ void Player::ImguiPlayer()
 void Player::Control()
 {
 	static float MOVE_SPEED = 0.1f;
-	static float ROTATE = DirectX::XMConvertToRadians(3);
+	static float ROTATE_SPEED = DirectX::XMConvertToRadians(5);
 	Parameters->Acceleration = DirectX::SimpleMath::Vector3{ 0.0f, 0.0f, 0.0f };
-	Parameters->Velocity = DirectX::SimpleMath::Vector3{ 0.0f, 0.0f, 0.0f };	// 入力中だけ動かすために毎フレーム初期化 完成とかつけ始めるといらない
-
-	// TODO クォータニオンを使用したことにより関数がお亡くなりに。.Vectorを使うのなら要修正
-	Parameters->calcForward();
+	Parameters->Velocity = DirectX::SimpleMath::Vector3{ 0.0f, 0.0f, 0.0f };	// 入力中だけ動かすために毎フレーム初期化 慣性とかつけ始めるといらない
 
 	//--------------------------------------------------------
 	//前後処理
@@ -141,12 +141,12 @@ void Player::Control()
 	//回転処理
 	{
 		if (GetKeyState('D') < 0) {
-			Parameters->Orientation *= DirectX::SimpleMath::Quaternion::CreateFromAxisAngle(Model->getWorld().Up(), ROTATE);
+			Parameters->Orientation *= DirectX::SimpleMath::Quaternion::CreateFromAxisAngle(Model->getWorld().Up(), ROTATE_SPEED);
 
 		}
 
 		if (GetKeyState('A') < 0) {
-			Parameters->Orientation *= DirectX::SimpleMath::Quaternion::CreateFromAxisAngle(Model->getWorld().Down(), ROTATE);
+			Parameters->Orientation *= DirectX::SimpleMath::Quaternion::CreateFromAxisAngle(Model->getWorld().Down(), ROTATE_SPEED);
 		}
 		//// debug用 上下降
 		//if (GetKeyState('Q') < 0) {

@@ -44,16 +44,16 @@ private:
 
 public:
 	// Sprite型 画像描画用
-	std::unique_ptr<Sprite> sprites;
+	std::unique_ptr<Sprite> Sprites;
 	std::unique_ptr<sprite_Batch> sprite_batches[8];
 
 	// シーン定数バッファ
-	struct scene_constants {
+	struct SceneConstants {
 		DirectX::SimpleMath::Matrix view_projection;	// VP変換行列
 		DirectX::SimpleMath::Vector4 light_direction;	// ライトの向き
 		DirectX::SimpleMath::Vector4 camera_position;	// カメラの位置
 	};
-	Microsoft::WRL::ComPtr<ID3D11Buffer> constant_buffer[8];
+	Microsoft::WRL::ComPtr<ID3D11Buffer> ConstantBuffers[8];
 
 	// プレイヤーオブジェクト
 	std::unique_ptr<Player> player;

@@ -24,7 +24,7 @@ Geometric_Primitive::Geometric_Primitive() {
 	buffer_desc.ByteWidth = sizeof(Constants);
 	buffer_desc.Usage = D3D11_USAGE_DEFAULT;
 	buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	hr = device->CreateBuffer(&buffer_desc, nullptr, constant_buffer.GetAddressOf());
+	hr = device->CreateBuffer(&buffer_desc, nullptr, ConstantBuffers.GetAddressOf());
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 
 	// 各種パラメータの初期化
@@ -53,7 +53,7 @@ void Geometric_Primitive::Create_com_buffers(Vertex* vertices, size_t vertex_cou
 	subresource_data.SysMemPitch = 0;
 	subresource_data.SysMemSlicePitch = 0;
 
-	hr = device->CreateBuffer(&buffer_desc, &subresource_data, vertex_buffer.ReleaseAndGetAddressOf());
+	hr = device->CreateBuffer(&buffer_desc, &subresource_data, VertexBuffer.ReleaseAndGetAddressOf());
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 
 	buffer_desc.ByteWidth = static_cast<UINT>(sizeof(uint32_t) * index_count);
@@ -71,7 +71,7 @@ void Geometric_Primitive::Render(int rs_state) {
 	uint32_t offset{ 0 };
 
 	// 頂点バッファのバインド
-	immediate_context->IASetVertexBuffers(0, 1, vertex_buffer.GetAddressOf(), &stride, &offset);
+	immediate_context->IASetVertexBuffers(0, 1, VertexBuffer.GetAddressOf(), &stride, &offset);
 
 	// インデックスバッファのバインド
 	immediate_context->IASetIndexBuffer(index_buffer.Get(),		// インデックスを格納したオブジェクトのポインタ
@@ -93,12 +93,12 @@ void Geometric_Primitive::Render(int rs_state) {
 
 	Constants data{ world,Parameters->Color };
 	// メモリからマップ不可能なメモリに作成されたサブリソースにデータをコピー
-	immediate_context->UpdateSubresource(constant_buffer.Get(),	// 宛先リソースへのポインタ
+	immediate_context->UpdateSubresource(ConstantBuffers.Get(),	// 宛先リソースへのポインタ
 		0,														// 宛先サブリソースを識別するインデックス
 		0, &data, 0, 0);
 
 	// 定数バッファの設定
-	immediate_context->VSSetConstantBuffers(0, 1, constant_buffer.GetAddressOf());
+	immediate_context->VSSetConstantBuffers(0, 1, ConstantBuffers.GetAddressOf());
 
 	// ラスタライザステートの設定
 	immediate_context->RSSetState(FRAMEWORK->getInstance()->GetRasterizerState(rs_state));

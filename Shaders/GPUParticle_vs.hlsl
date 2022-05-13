@@ -17,6 +17,4 @@ GS_INPUT main(VS_INPUT_GPU In)
     Out1.Life = In.Life;
 
     return Out1;
-
-//	return In;
 }

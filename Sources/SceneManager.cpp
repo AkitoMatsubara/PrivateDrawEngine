@@ -42,25 +42,25 @@ void SceneBase::imguiSceneChanger() {
 
 void SceneManager::Update() {
 	std::unique_ptr<SceneBase> newScene = nullptr;
-	newScene = currentScene->getScene();
+	newScene = CurrentScene->getScene();
 	if (newScene) {				//チェック
 		ChangeScene(newScene.release());	// 変更開始
 		//ChangeScene(std::move(newScene));	// 変更開始
 	}
-	currentScene->Update();	// 更新
+	CurrentScene->Update();	// 更新
 }
 
 void SceneManager::Render() {
-	currentScene->Render();
+	CurrentScene->Render();
 }
 
 void SceneManager::ChangeScene(SceneBase* newScene) {
-	currentScene.reset(newScene);
+	CurrentScene.reset(newScene);
 	// 2重初期化されないようにする。
-	if (!currentScene->isReady())
+	if (!CurrentScene->isReady())
 	{
-		currentScene->Initialize();
-		currentScene->setReady(true);
+		CurrentScene->Initialize();
+		CurrentScene->setReady(true);
 	}
 
 }

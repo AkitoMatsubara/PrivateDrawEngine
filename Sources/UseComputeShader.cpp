@@ -53,7 +53,20 @@ HRESULT UseComputeShader::CreateWritableStructuredBufferAndSRV(UINT uElementSize
 		BufferDesc.StructureByteStride = uElementSize;					// 構造化バッファーのサイズ (バイト単位)
 		BufferDesc.Usage = D3D11_USAGE_DYNAMIC;							// 動的
 		BufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;				// CPUからの書き込みを許可
-		hr = pD3DDevice->CreateBuffer(&BufferDesc, nullptr, ppBuf);
+			// 初期値を設定
+		if (pInitData)
+		{
+			D3D11_SUBRESOURCE_DATA InitData;
+			InitData.pSysMem = pInitData;
+			InitData.SysMemPitch = 0;
+			InitData.SysMemSlicePitch = 0;
+			hr = pD3DDevice->CreateBuffer(&BufferDesc, &InitData, ppBuf);
+		}
+		// 初期値なしで領域のみ確保する
+		else
+		{
+			hr = pD3DDevice->CreateBuffer(&BufferDesc, nullptr, ppBuf);
+		}
 		if (FAILED(hr))_ASSERT_EXPR_A(false, "FAILED CreateStructuredBuffer");
 	}
 	// 構造化バッファーからシェーダーリソースビューを作成する

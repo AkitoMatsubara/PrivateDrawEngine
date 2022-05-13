@@ -39,10 +39,12 @@ public:
 
 	void Initialize();
 	void Update();
-	void Render();
+	void Render(Shader* shader = nullptr);
 
 	ShotManager* getShotManager() { return ShotsManager.get(); }
-	static Player* getInstance() { return instance; }
+	static Player* getInstance() { 
+		return instance;
+	}
 
 	void ImguiPlayer();
 

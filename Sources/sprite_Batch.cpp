@@ -18,7 +18,7 @@ sprite_Batch::sprite_Batch(const wchar_t* filename, size_t max_sprites) :max_ver
 	std::unique_ptr<Vertex[]> vertices{ std::make_unique<Vertex[]>(max_vertices) };
 
 	// テクスチャのロード
-	load_texture_from_file(filename, shader_resource_view.GetAddressOf(), &texture2d_desc);
+	Texture::LoadTextureFromFile(filename, shader_resource_view.GetAddressOf(), &texture2d_desc);
 
 	// ByteWidth,BindFlags,StructuerByteStrideは可変情報、その他情報はあまり変化することはない
 	D3D11_BUFFER_DESC buffer_desc{};			                // バッファの使われ方を設定する構造体
@@ -34,7 +34,7 @@ sprite_Batch::sprite_Batch(const wchar_t* filename, size_t max_sprites) :max_ver
 	subresource_data.SysMemPitch = 0;					        // メモリのピッチ 2D or 3Dテクスチャの場合に使用する
 	subresource_data.SysMemSlicePitch = 0;				        //	深度レベル	 同上
 
-	hr = device->CreateBuffer(&buffer_desc, &subresource_data, vertex_buffer.GetAddressOf());		// 作成するバッファ情報、作成するバッファの初期化情報、作成したバッファを保存するポインタ
+	hr = device->CreateBuffer(&buffer_desc, &subresource_data, VertexBuffer.GetAddressOf());		// 作成するバッファ情報、作成するバッファの初期化情報、作成したバッファを保存するポインタ
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));	// _ASSERT_EXPR：第一引数条件が満たされなければ第二引数のメッセージを表示する
 
 	if (!SpriteShader)	// 一回だけ生成
@@ -60,9 +60,6 @@ void sprite_Batch::begin() {
 	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();
 
 	vertices.clear();
-	// シェーダのバインド
-	//immediate_context->VSSetShader(vertex_shader.Get(), nullptr, 0);
-	//immediate_context->PSSetShader(pixel_shader.Get(), nullptr, 0);
 	// SRVバインド
 	immediate_context->PSSetShaderResources(0, 1, shader_resource_view.GetAddressOf());	// レジスタ番号、シェーダリソースの数、SRVのポインタ
 }
@@ -74,7 +71,7 @@ void sprite_Batch::end(ShaderEx* shader) {
 	HRESULT hr = { S_OK };
 	D3D11_MAPPED_SUBRESOURCE mapped_subrecource{};
 	// mapped_subrecourceをvertex_bufferにマッピング
-	hr = immediate_context->Map(vertex_buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_subrecource);	// 動的な定数バッファーを Map して書き込むときは D3D11_MAP_WRITE_DISCARD を使用する
+	hr = immediate_context->Map(VertexBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_subrecource);	// 動的な定数バッファーを Map して書き込むときは D3D11_MAP_WRITE_DISCARD を使用する
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 
 	size_t vertex_count = vertices.size();
@@ -85,7 +82,7 @@ void sprite_Batch::end(ShaderEx* shader) {
 		const Vertex* p = vertices.data();
 		memcpy_s(data, max_vertices * sizeof(Vertex), p, vertex_count * sizeof(Vertex));	// memcpy_s：Buffer間でのバイトのコピー(コピー先ポインタ、コピー先サイズ、コピー元ポインタ、コピー元サイズ)
 	}
-	immediate_context->Unmap(vertex_buffer.Get(), 0);	// マッピング解除 頂点バッファを上書きしたら必ず実行。Map&Unmapはセットで使用する
+	immediate_context->Unmap(VertexBuffer.Get(), 0);	// マッピング解除 頂点バッファを上書きしたら必ず実行。Map&Unmapはセットで使用する
 
 	// 頂点バッファのバインド
 	UINT stride{ sizeof(Vertex) };
@@ -93,7 +90,7 @@ void sprite_Batch::end(ShaderEx* shader) {
 	immediate_context->IASetVertexBuffers(
 		0,				               // 入力スロットの開始番号
 		1,				               // 頂点バッファの数
-		vertex_buffer.GetAddressOf(),  // 頂点バッファの配列
+		VertexBuffer.GetAddressOf(),  // 頂点バッファの配列
 		&stride,		               // １頂点のサイズの配列
 		&offset);		       // 頂点バッファの開始位置をずらすオフセットの配列
 

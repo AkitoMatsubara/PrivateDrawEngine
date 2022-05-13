@@ -24,23 +24,32 @@ protected:
 public:
 	Camera();
 	virtual ~Camera();
+
+	void Activate();	// 自身の値をもとに作成する
+	void Operate();		// カメラ操作
+
 	void SetPos(DirectX::XMFLOAT3 pos) { Position = pos; };
 	void SetTarget(DirectX::XMFLOAT3 target) { Target = target; };
 	void SetUp(DirectX::XMFLOAT3 up) { Up = up; };
 	void Set(DirectX::XMFLOAT3 pos, DirectX::XMFLOAT3 target, DirectX::XMFLOAT3 up);
 	void SetProjection(FLOAT fov, FLOAT aspect, FLOAT min, FLOAT max);
-	void SetOrtho(FLOAT width, FLOAT height, FLOAT min, FLOAT max);
+	void SetOrtho(FLOAT width, FLOAT height, FLOAT min, FLOAT max);	// 平行投影
 
-	void Activate();	// 自身の値をもとに作成する
-	void Operate();		// カメラ操作
-	DirectX::XMMATRIX GetView() { return XMLoadFloat4x4(&ViewMatrix); }
-	DirectX::XMMATRIX GetProjection() { return XMLoadFloat4x4(&ProjectionMatrix); }
 	DirectX::SimpleMath::Vector3 GetPos() { return Position; }
 	DirectX::SimpleMath::Vector3 GetTarget() { return Target; }
-	FLOAT GetFar() { return Far; }
+	DirectX::SimpleMath::Vector3 GetUp() { return Up; }
+	DirectX::XMMATRIX GetView() { return XMLoadFloat4x4(&ViewMatrix); }
+	DirectX::XMMATRIX GetProjection() { return XMLoadFloat4x4(&ProjectionMatrix); }
 	FLOAT GetNear() { return Near; }
+	FLOAT GetFar() { return Far; }
 	FLOAT GetWidth() { return Width; }
 	FLOAT GetHeight() { return Height; }
 	FLOAT GetAspext() { return Aspect; }
+
+	static Camera& getInstance()
+	{
+		static Camera instance;
+		return instance;
+	}
 
 };

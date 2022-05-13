@@ -40,7 +40,7 @@ Sprite::Sprite()
 	subresource_data.SysMemPitch = 0;					// メモリのピッチ 2D or 3Dテクスチャの場合に使用する
 	subresource_data.SysMemSlicePitch = 0;				// 深度レベル	同上
 
-	hr = device->CreateBuffer(&buffer_desc, &subresource_data, vertex_buffer.GetAddressOf());		// 作成するバッファ情報、作成するバッファの初期化情報、作成したバッファを保存するポインタ
+	hr = device->CreateBuffer(&buffer_desc, &subresource_data, VertexBuffer.GetAddressOf());		// 作成するバッファ情報、作成するバッファの初期化情報、作成したバッファを保存するポインタ
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));	// _ASSERT_EXPR：第一引数条件が満たされなければ第二引数のメッセージを表示する
 
 	if (!SpriteShader)	// 一回だけ生成
@@ -49,41 +49,34 @@ Sprite::Sprite()
 		SpriteShader->CreateVS(L"Shaders\\sprite_vs");
 		SpriteShader->CreatePS(L"Shaders\\sprite_ps");
 	}
+	SpriteTexture = std::make_unique<Texture>();
 
-	param = std::make_unique<Object2d>();
+	Parameter = std::make_unique<Object2d>();
 
-	param->Pos =DirectX::SimpleMath::Vector2(0.0f, 0.0f);
-	param->TexPos  =DirectX::SimpleMath::Vector2(0.0f, 0.0f);
-	param->Angle   = 0.0f;
-	param->Color   =DirectX::SimpleMath::Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	Parameter->Pos =DirectX::SimpleMath::Vector2(0.0f, 0.0f);
+	Parameter->TexPos  =DirectX::SimpleMath::Vector2(0.0f, 0.0f);
+	Parameter->Angle   = 0.0f;
+	Parameter->Color   =DirectX::SimpleMath::Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
-Sprite::~Sprite()
-{
-	for (auto& path : FontList)
-	{
-		// システムからフォントを削除する
-		if (RemoveFontResourceEx(path, FR_PRIVATE, NULL) == 0)
-		{
-			_ASSERT_EXPR_A(false, "Delete Font Failed.");	// フォント削除失敗
-		}
-	}
-	FontList.clear();
-}
+Sprite::~Sprite() {}
 
 void Sprite::LoadImages(const wchar_t* filename)
 {
 	HRESULT hr;
 	// テクスチャのロード
-	hr = load_texture_from_file(filename, shader_resource_view.GetAddressOf(), &texture2d_desc);
-	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));	// _ASSERT_EXPR：第一引数条件が満たされなければ第二引数のメッセージを表示する
-	// サイズなどは画像から取得しているためここで設定する
-	param->Size = DirectX::SimpleMath::Vector2(static_cast<float>(texture2d_desc.Width), static_cast<float>(texture2d_desc.Height));
-	param->TexSize = DirectX::SimpleMath::Vector2(static_cast<float>(texture2d_desc.Width), static_cast<float>(texture2d_desc.Height));
+	SpriteTexture->Load(filename);
+
+	//// サイズなどは画像から取得しているためここで設定する
+	Parameter->Size = DirectX::SimpleMath::Vector2(static_cast<float>(SpriteTexture->GetWidth()), static_cast<float>(SpriteTexture->GetHeight()));
+	Parameter->TexSize = DirectX::SimpleMath::Vector2(static_cast<float>(SpriteTexture->GetWidth()), static_cast<float>(SpriteTexture->GetHeight()));
+	//hr = load_texture_from_file(filename, shader_resource_view.GetAddressOf(), &texture2d_desc);
+	//_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));	// _ASSERT_EXPR：第一引数条件が満たされなければ第二引数のメッセージを表示する
+	//Parameter->Size = DirectX::SimpleMath::Vector2(static_cast<float>(texture2d_desc.Width), static_cast<float>(texture2d_desc.Height));
+	//Parameter->TexSize = DirectX::SimpleMath::Vector2(static_cast<float>(texture2d_desc.Width), static_cast<float>(texture2d_desc.Height));
 }
 
-void Sprite::CreateVertexData(Shader* shader,DirectX::SimpleMath::Vector2 pos,DirectX::SimpleMath::Vector2 size, float angle,
-	DirectX::SimpleMath::Vector4 color,DirectX::SimpleMath::Vector2 TexPos,DirectX::SimpleMath::Vector2 TexSize) {
+void Sprite::CreateVertexData(Texture* texture, Shader* shader) {
 	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();
 	// スクリーン(ビューポート)のサイズを取得する
 	D3D11_VIEWPORT viewport{};
@@ -97,20 +90,20 @@ void Sprite::CreateVertexData(Shader* shader,DirectX::SimpleMath::Vector2 pos,Di
 	/*					| /  |						*/
 	/*		left_bottom	*----*	right_bottom		*/
 
-	DirectX::SimpleMath::Vector3 left_top    { pos.x         ,pos.y          ,1.0f };	// 左上
-	DirectX::SimpleMath::Vector3 right_top   { pos.x + size.x,pos.y          ,1.0f };	// 右上
-	DirectX::SimpleMath::Vector3 left_bottom { pos.x         ,pos.y + size.y ,1.0f };	// 左下
-	DirectX::SimpleMath::Vector3 right_bottom{ pos.x + size.x,pos.y + size.y ,1.0f };	// 右下
+	DirectX::SimpleMath::Vector3 left_top    { Parameter->Pos.x         ,Parameter->Pos.y          , 1.0f };	// 左上
+	DirectX::SimpleMath::Vector3 right_top   { Parameter->Pos.x + Parameter->Size.x,Parameter->Pos.y          , 1.0f };	// 右上
+	DirectX::SimpleMath::Vector3 left_bottom { Parameter->Pos.x         ,Parameter->Pos.y + Parameter->Size.y , 1.0f };	// 左下
+	DirectX::SimpleMath::Vector3 right_bottom{ Parameter->Pos.x + Parameter->Size.x,Parameter->Pos.y + Parameter->Size.y , 1.0f };	// 右下
 
 	// 回転の中心を矩形の中心点に
 	DirectX::SimpleMath::Vector2 center{ 0,0 };
-	center.x = pos.x + size.x * 0.5f;	// 位置-(大きさ/2)で頂点位置から半サイズ分動く=半分になる
-	center.y = pos.y + size.y * 0.5f;
+	center.x = Parameter->Pos.x + Parameter->Size.x * 0.5f;	// 位置-(大きさ/2)で頂点位置から半サイズ分動く=半分になる
+	center.y = Parameter->Pos.y + Parameter->Size.y * 0.5f;
 	// 頂点回転
-	SpriteMath::rotate(left_top    , center, angle);
-	SpriteMath::rotate(left_bottom , center, angle);
-	SpriteMath::rotate(right_top   , center, angle);
-	SpriteMath::rotate(right_bottom, center, angle);
+	SpriteMath::rotate(left_top    , center, Parameter->Angle);
+	SpriteMath::rotate(left_bottom , center, Parameter->Angle);
+	SpriteMath::rotate(right_top   , center, Parameter->Angle);
+	SpriteMath::rotate(right_bottom, center, Parameter->Angle);
 
 	// スクリーン座標系からNDC(正規化デバイス座標)への座標変換を行う
 	left_top     = SpriteMath::ConvertToNDC(left_top    , viewport);	// 頂点位置、スクリーンの大きさ
@@ -118,10 +111,22 @@ void Sprite::CreateVertexData(Shader* shader,DirectX::SimpleMath::Vector2 pos,Di
 	right_top    = SpriteMath::ConvertToNDC(right_top   , viewport);
 	right_bottom = SpriteMath::ConvertToNDC(right_bottom, viewport);
 
-	const DirectX::SimpleMath::Vector2 TexLeft_top    { (TexPos.x)             / texture2d_desc.Width , (TexPos.y)				/ texture2d_desc.Height };
-	const DirectX::SimpleMath::Vector2 TexRight_top   { (TexPos.x + TexSize.x) / texture2d_desc.Width , (TexPos.y)				/ texture2d_desc.Height };
-	const DirectX::SimpleMath::Vector2 TexLeft_bottom { (TexPos.x)             / texture2d_desc.Width , (TexPos.y + TexSize.y)	/ texture2d_desc.Height };
-	const DirectX::SimpleMath::Vector2 TexRight_bottom{ (TexPos.x + TexSize.x) / texture2d_desc.Width , (TexPos.y + TexSize.y)	/ texture2d_desc.Height };
+	// テクスチャの指定の有無で変えている
+	UINT width;
+	UINT height;
+	if (texture) {
+		width  = texture->GetWidth();
+		height = texture->GetHeight();
+	}
+	else {
+		width  = SpriteTexture->GetWidth();
+		height = SpriteTexture->GetHeight();
+	}
+
+	const DirectX::SimpleMath::Vector2 tex_left_top    { (Parameter->TexPos.x)                    / width, (Parameter->TexPos.y)						/ height };
+	const DirectX::SimpleMath::Vector2 tex_right_top   { (Parameter->TexPos.x + Parameter->TexSize.x) / width, (Parameter->TexPos.y)						/ height };
+	const DirectX::SimpleMath::Vector2 tex_left_bottom { (Parameter->TexPos.x)                    / width, (Parameter->TexPos.y + Parameter->TexSize.y)	/ height };
+	const DirectX::SimpleMath::Vector2 tex_right_bottom{ (Parameter->TexPos.x + Parameter->TexSize.x) / width, (Parameter->TexPos.y + Parameter->TexSize.y)	/ height };
 
 
 	// 計算結果で頂点バッファオブジェクトを更新する
@@ -129,7 +134,7 @@ void Sprite::CreateVertexData(Shader* shader,DirectX::SimpleMath::Vector2 pos,Di
 	HRESULT hr = { S_OK };
 	D3D11_MAPPED_SUBRESOURCE mapped_subrecource{};
 	// mapped_subrecourceをvertex_bufferにマッピング
-	hr = immediate_context->Map(vertex_buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_subrecource);	// 動的な定数バッファーを Map して書き込むときは D3D11_MAP_WRITE_DISCARD を使用する
+	hr = immediate_context->Map(VertexBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_subrecource);	// 動的な定数バッファーを Map して書き込むときは D3D11_MAP_WRITE_DISCARD を使用する
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 
 	Vertex* vertices{ reinterpret_cast<Vertex*>(mapped_subrecource.pData) };	// reinterpret_cast：ありえないような変換のときに使用する？
@@ -140,14 +145,14 @@ void Sprite::CreateVertexData(Shader* shader,DirectX::SimpleMath::Vector2 pos,Di
 		vertices[3].position = right_bottom;
 
 		for (int i = 0; i < 4; i++) {
-			vertices[i].color = color;
+			vertices[i].color = Parameter->Color;
 		}
 
 		// UV座標を頂点バッファにセット
-		vertices[0].texcoord = TexLeft_top;
-		vertices[1].texcoord = TexRight_top;
-		vertices[2].texcoord = TexLeft_bottom;
-		vertices[3].texcoord = TexRight_bottom;
+		vertices[0].texcoord = tex_left_top;
+		vertices[1].texcoord = tex_right_top;
+		vertices[2].texcoord = tex_left_bottom;
+		vertices[3].texcoord = tex_right_bottom;
 
 		// 法線情報を設定
 		vertices[0].normal =DirectX::SimpleMath::Vector3(0, 0, 1);
@@ -156,14 +161,14 @@ void Sprite::CreateVertexData(Shader* shader,DirectX::SimpleMath::Vector2 pos,Di
 		vertices[3].normal =DirectX::SimpleMath::Vector3(0, 0, 1);
 
 	}
-	immediate_context->Unmap(vertex_buffer.Get(), 0);	// マッピング解除 頂点バッファを上書きしたら必ず実行。Map&Unmapはセットで使用する
+	immediate_context->Unmap(VertexBuffer.Get(), 0);	// マッピング解除 頂点バッファを上書きしたら必ず実行。Map&Unmapはセットで使用する
 
 
 	// シェーダの有効化
 	shader->Activate();
 
 	// SRVバインド
-	immediate_context->PSSetShaderResources(0, 1, shader_resource_view.GetAddressOf());	// レジスタ番号、シェーダリソースの数、SRVのポインタ
+	(texture) ? texture->Set(0) : SpriteTexture->Set(0);	/// テクスチャが外部からの指定があればそちらをSRVにセットする
 
 	// 頂点バッファのバインド
 	const UINT stride{ sizeof(Vertex) };
@@ -171,40 +176,33 @@ void Sprite::CreateVertexData(Shader* shader,DirectX::SimpleMath::Vector2 pos,Di
 	immediate_context->IASetVertexBuffers(
 		0,								// 入力スロットの開始番号
 		1,								// 頂点バッファの数
-		vertex_buffer.GetAddressOf(),	// 頂点バッファの配列
+		VertexBuffer.GetAddressOf(),	// 頂点バッファの配列
 		&stride,						// １頂点のサイズの配列
-		&offset);				// 頂点バッファの開始位置をずらすオフセットの配列
+		&offset);						// 頂点バッファの開始位置をずらすオフセットの配列
 
 	//プリミティブタイプ及びデータの順序に関する情報のバインド
 	immediate_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);	// プリミティブの形状を指定できる 今回は連続三角形に変更
 
 	// ラスタライザステートの設定
-	immediate_context->RSSetState(FRAMEWORK->GetRasterizerState(FRAMEWORK->RS_SOLID_BACK));
+	immediate_context->RSSetState(FRAMEWORK->GetRasterizerState(FRAMEWORK->RS_SOLID_NONE));
 	// プリミティブの描画
 	immediate_context->Draw(4, 0);	// 頂点の数、描画開始時点で使う頂点バッファの最初のインデックス
+	texture->Set(0, false);
 	// シェーダの無効化
 	shader->Inactivate();
 }
 
-//void Sprite::Render(Shader* shader,DirectX::SimpleMath::Vector2 pos,DirectX::SimpleMath::Vector2 size, float angle,DirectX::SimpleMath::Vector4 color,DirectX::SimpleMath::Vector2 TexPos,DirectX::SimpleMath::Vector2 TexSize) {
-//	CreateVertexData(shader, pos, size, angle, color, TexPos, TexSize);
-//}
-
-void Sprite::Render(Shader* shader) {
-	CreateVertexData(shader, param->Pos, param->Size, param->Angle, param->Color, param->TexPos, param->TexSize);
+void Sprite::Render(Texture* texture, Shader* shader) {
+	CreateVertexData(texture, shader);
 }
 
-//void Sprite::Render(Shader* shader,DirectX::SimpleMath::Vector2 Pos,DirectX::SimpleMath::Vector2 Size) {
-//	CreateVertexData(shader, Pos, Size, param->Angle, param->Color, param->TexPos, param->TexSize);
-//}
-
 void Sprite::ImguiWindow() {
-	static float pos[2]     { param->Pos.x    ,param->Pos.y };
-	static float size[2]    { param->Size.x   ,param->Size.y };
-	static float angle      { param->Angle};
-	static float TexPos[2]  { param->TexPos.x ,param->TexPos .y };
-	static float TexSize[2] { param->TexSize.x,param->TexSize.y };
-	static float Color[4] = { param->Color.x  ,param->Color.y,param->Color.z,param->Color.w };
+	static float pos[2]     { Parameter->Pos.x    ,Parameter->Pos.y };
+	static float size[2]    { Parameter->Size.x   ,Parameter->Size.y };
+	static float angle      { Parameter->Angle};
+	static float TexPos[2]  { Parameter->TexPos.x ,Parameter->TexPos .y };
+	static float TexSize[2] { Parameter->TexSize.x,Parameter->TexSize.y };
+	static float Color[4] = { Parameter->Color.x  ,Parameter->Color.y,Parameter->Color.z,Parameter->Color.w };
 
 	ImGui::Begin("Sprite_param");
 

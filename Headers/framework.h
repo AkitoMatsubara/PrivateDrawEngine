@@ -97,13 +97,14 @@ public:
 	LRESULT CALLBACK handle_message(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 	static framework* getInstance() { return instance; }
 
-	bool CreateViewPort();				// ViewPortÇÃçÏê¨
+	bool CreateViewPort(float width = SCREEN_WIDTH, float height = SCREEN_HEIGHT);				// ViewPortÇÃçÏê¨
 
 	// ÉQÉbÉ^Å[
 	ID3D11Device* GetDevice() { return device.Get(); }
 	ID3D11DeviceContext* GetDeviceContext() { return immediate_context.Get(); }
 	ID3D11BlendState* GetBlendState(int state) { return bd_states[state].Get(); }
 	ID3D11DepthStencilState* GetDepthStencileState(int state) { return depth_stencil_state[state].Get(); }
+	ID3D11DepthStencilView* GetDepthStencileView() { return depth_stencil_view.Get(); }
 	ID3D11RasterizerState* GetRasterizerState(int state) { return rasterizer_state[state].Get(); }
 
 	const float GetElapsedTime() { return tictoc.time_interval(); }

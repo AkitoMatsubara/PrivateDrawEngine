@@ -30,14 +30,16 @@ public:
 	//シャドウ用ディプスバッファ
 	bool CreateShadowDepth(u_int width, u_int height);
 
+	// フォント画像作成
+	bool CreateFontImage(u_int width, u_int height,ID3D11Texture2D* texture2d );
 
 	UINT GetWidth() { return texture2d_desc.Width; }
 	UINT GetHeight() { return texture2d_desc.Height; }
 
-	ID3D11ShaderResourceView* GetRenderResourceView() { return ShaderResourceView.Get(); }
-
+	ID3D11ShaderResourceView* GetShaderResourceView() { return ShaderResourceView.Get(); }
 	ID3D11RenderTargetView* GetRenderTargetView() { return RenderTargetView.Get(); }
 	ID3D11DepthStencilView* GetDepthStencilView() { return DepthStencilView.Get(); }
+
+	static HRESULT LoadTextureFromFile(const wchar_t* filename, ID3D11ShaderResourceView** shader_resource_view, D3D11_TEXTURE2D_DESC* texture2d_desc);
+	static HRESULT MakeDummyTexture(ID3D11ShaderResourceView** shader_resource_view, DWORD value/*0xAABBGGRR*/, UINT dimension);
 };
-HRESULT load_texture_from_file(const wchar_t* filename, ID3D11ShaderResourceView** shader_resource_view, D3D11_TEXTURE2D_DESC* texture2d_desc);
-HRESULT make_dummy_texture(ID3D11ShaderResourceView** shader_resource_view, DWORD value/*0xAABBGGRR*/, UINT dimension);

@@ -1,26 +1,29 @@
 #pragma once
 #include "SceneManager.h"
+#include "GPUParticle.h"
 
 class SceneLoading:public SceneBase{
 	// 変数
 private:
-	std::unique_ptr<SceneBase> nextScene;	// ロードするシーン
+	std::unique_ptr<SceneBase> NextScene;	// ロードするシーン
 
-	std::unique_ptr<Sprite> loadingImage;
+	std::unique_ptr<Sprite> LoadingImage;
 
 	// シーン定数バッファ
-	struct scene_constants {
+	struct SceneConstants {
 		DirectX::SimpleMath::Matrix view_projection;	// VP変換行列
 		DirectX::SimpleMath::Vector4 light_direction;	// ライトの向き
 		DirectX::SimpleMath::Vector4 camera_position;	// カメラの位置
 	};
 
-	Microsoft::WRL::ComPtr<ID3D11Buffer> constant_buffer[8];
+	Microsoft::WRL::ComPtr<ID3D11Buffer> ConstantBuffers[8];
 
 	// 個人 ImGuiで数値を編集、格納して関数に渡す変数
 	float light_dir[3]{ 0.5f,-1.0f,1.0f };	// ライトの向かう方向
 	bool focus_zero = false;	// 焦点が(0,0,0)に向けるかどうか
-	DirectX::SimpleMath::Vector3 eyePos = DirectX::SimpleMath::Vector3(0.0f, 0.0f, -10.0f);	// カメラの位置
+	DirectX::SimpleMath::Vector3 EyePos = DirectX::SimpleMath::Vector3(0.0f, 0.0f, -10.0f);	// カメラの位置
+
+	std::unique_ptr<GPUParticle> GpuParticle;
 
 public:
 protected:
@@ -30,9 +33,9 @@ private:
 	// ローディングスレッド
 	static void LoadingThread(SceneLoading* scene);
 public:
-	SceneLoading(std::unique_ptr<SceneBase>nextScene) :nextScene(nullptr)
+	SceneLoading(std::unique_ptr<SceneBase>nextScene) :NextScene(nullptr)
 	{
-		this->nextScene = std::move(nextScene);
+		this->NextScene = std::move(nextScene);
 	}
 	bool Initialize();
 	void Update();

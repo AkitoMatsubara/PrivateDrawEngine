@@ -104,36 +104,36 @@ bool Judge::s_s(const Object3d& shpere,const float shpereRadian, const Object3d&
 }
 
 
-bool Judge::JudgeCap_Sphe(const Geometric_Capsule& capsle, const Geometric_Sphere& sphere)
-{
-	DirectX::SimpleMath::Vector3 forward;	// カプセル上面の位置
-	DirectX::SimpleMath::Vector3 back;		// カプセル下面の位置
-
-	forward = capsle.Parameters->Position + (capsle.Parameters->Vector * (capsle.Parameters->Scale * (capsle.Height * 0.5f)));	// 前方へズラせてカプセル上円点として使う かけ数はサイズ的な意味合い
-	back = capsle.Parameters->Position - (capsle.Parameters->Vector * (capsle.Parameters->Scale * (capsle.Height * 0.5f)));	// 後方へズラせてカプセル下円点として使う かけ数はサイズ的な意味合い
-
-	DirectX::SimpleMath::Vector3 len1 = forward - sphere.Parameters->Position;
-	DirectX::SimpleMath::Vector3 len2 = back - sphere.Parameters->Position;
-	float d1 = len1.LengthSquared();	// 前方判定
-	float d2 = len2.LengthSquared();	// 後方判定
-
-	if (d2 <= d1)
-	{
-		// sphereはスケールは全要素同数値なのでどこでもいい
-		if (d2 <= (capsle.Radian * capsle.Parameters->Scale.x) || d2 <= (sphere.Radian * sphere.Parameters->Scale.x)) {
-			return true;
-		}
-	}
-	else if (d1 <= d2)
-	{
-		if (d1 <= (capsle.Radian * capsle.Parameters->Scale.x) || d1 <= (sphere.Radian * sphere.Parameters->Scale.x)) {
-			{
-				return true;
-			}
-		}
-	}
-	return false;
-}
+//bool Judge::JudgeCap_Sphe(const Geometric_Capsule& capsle, const Geometric_Sphere& sphere)
+//{
+//	DirectX::SimpleMath::Vector3 forward;	// カプセル上面の位置
+//	DirectX::SimpleMath::Vector3 back;		// カプセル下面の位置
+//
+//	forward = capsle.Parameters->Position + (capsle.Parameters->Vector * (capsle.Parameters->Scale * (capsle.Height * 0.5f)));	// 前方へズラせてカプセル上円点として使う かけ数はサイズ的な意味合い
+//	back = capsle.Parameters->Position - (capsle.Parameters->Vector * (capsle.Parameters->Scale * (capsle.Height * 0.5f)));	// 後方へズラせてカプセル下円点として使う かけ数はサイズ的な意味合い
+//
+//	DirectX::SimpleMath::Vector3 len1 = forward - sphere.Parameters->Position;
+//	DirectX::SimpleMath::Vector3 len2 = back - sphere.Parameters->Position;
+//	float d1 = len1.LengthSquared();	// 前方判定
+//	float d2 = len2.LengthSquared();	// 後方判定
+//
+//	if (d2 <= d1)
+//	{
+//		// sphereはスケールは全要素同数値なのでどこでもいい
+//		if (d2 <= (capsle.Radian * capsle.Parameters->Scale.x) || d2 <= (sphere.Radian * sphere.Parameters->Scale.x)) {
+//			return true;
+//		}
+//	}
+//	else if (d1 <= d2)
+//	{
+//		if (d1 <= (capsle.Radian * capsle.Parameters->Scale.x) || d1 <= (sphere.Radian * sphere.Parameters->Scale.x)) {
+//			{
+//				return true;
+//			}
+//		}
+//	}
+//	return false;
+//}
 
 void Judge::HitJudge(Player* p, Enemy* e)
 {

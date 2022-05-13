@@ -59,12 +59,12 @@ dcl_temps 5
 //   o1.x <- <main return value>.worldPosition.x; o1.y <- <main return value>.worldPosition.y; o1.z <- <main return value>.worldPosition.z; 
 //   o0.x <- <main return value>.NDCPosition.x; o0.y <- <main return value>.NDCPosition.y; o0.z <- <main return value>.NDCPosition.z; o0.w <- <main return value>.NDCPosition.w
 //
-#line 6 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine\Shaders\SkyBox_vs.hlsl"
-mov r0.xyz, v0.xyzx  // r0.x <- vout.NDCPosition.x; r0.y <- vout.NDCPosition.y; r0.z <- vout.NDCPosition.z
-mov r0.w, l(1.000000)  // r0.w <- vout.NDCPosition.w
+#line 6 "F:\修琁EプロジェクチEPrivateEngine\Shaders\SkyBox_vs.hlsl"
+mov r0.xyz, v0.xyzx  // r0.x <- output.NDCPosition.x; r0.y <- output.NDCPosition.y; r0.z <- output.NDCPosition.z
+mov r0.w, l(1.000000)  // r0.w <- output.NDCPosition.w
 
 #line 7
-mov r1.xyzw, v3.xyzw  // r1.x <- vout.color.x; r1.y <- vout.color.y; r1.z <- vout.color.z; r1.w <- vout.color.w
+mov r1.xyzw, v3.xyzw  // r1.x <- output.color.x; r1.y <- output.color.y; r1.z <- output.color.z; r1.w <- output.color.w
 
 #line 13
 mul r2.xyzw, r0.xxxx, cb0[5].xyzw
@@ -88,7 +88,7 @@ mul r3.xyz, r2.wwww, cb0[4].xyzx
 add r2.xyz, r2.xyzx, r3.xyzx  // r2.x <- p.x; r2.y <- p.y; r2.z <- p.z
 
 #line 19
-mov r2.xyz, r2.xyzx  // r2.x <- vout.worldPosition.x; r2.y <- vout.worldPosition.y; r2.z <- vout.worldPosition.z
+mov r2.xyz, r2.xyzx  // r2.x <- output.worldPosition.x; r2.y <- output.worldPosition.y; r2.z <- output.worldPosition.z
 
 #line 21
 mov o0.xyzw, r0.xyzw

@@ -10,71 +10,57 @@ class SceneGame :public SceneBase {
 
 	// 変数 //
 private:
-	// てすと-------------------------------------------------------------------------
-	std::unique_ptr<ShaderEx> ComputeShader;
-
-
-	const static UINT NUM_ELEMENTS = 128;
-
-	struct BUFIN_TYPE
-	{
-		int i;
-		float f;
-	};
-
-	struct BUFOUT_TYPE
-	{
-		float i;
-	};
-
-	// シーン定数バッファ
-	struct cs_constants {
-		float Theta;	// sinカーブ用
-		DirectX::SimpleMath::Vector3 dummy;
-	};
-
-	Microsoft::WRL::ComPtr<ID3D11Buffer> pBufInput = nullptr;                      // 入力用の構造化バッファー
-	Microsoft::WRL::ComPtr<ID3D11Buffer> pBufResult = nullptr;                      // 出力用の構造化バッファー
-
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>	pBufInputSRV = nullptr;        // 入力用の構造化バッファーから作成されるシェーダーリソースビュー
-	Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView>	pBufResultUAV = nullptr;        // 出力用の構造化バッファーから作成されるアンオーダード アクセス ビュー
-
-	BUFIN_TYPE vBufInArray[NUM_ELEMENTS];               // 入力用バッファーの配列を宣言
-
+	// シーン 揺蕩うパーティクル
 	std::unique_ptr<GPUParticle> GpuParticle;
-	// てすとしめ---------------------------------------------------------------------
+
+	// シャドウマップ関連
+	std::unique_ptr<Sprite> ShadowMapDrawer; // シャドウマップ描画用
+	std::unique_ptr<Texture> ShadowMapTexture[2];	// シャドウマップ書き込み先[0]:通常 [1]:ガウスブラー処理後
+	//std::unique_ptr<Texture> ShadowMapTexture;	// シャドウマップ書き込み先	配列で管理しようとしたら警告が出てしまうので二つに分けた
+	std::unique_ptr<Texture> GaussShadowMapTexture;	// ガウスブラー処理後シャドウマップ
+	inline constexpr static float SHADOW_SIZE = 2048;
+	std::unique_ptr<Texture> ShadowDepth;	// シャドウマップ用深度書き込み先？
+	std::unique_ptr<ShaderEx> ShadowShader;	// シャドウマップに書き込ませるシェーダー
+	std::unique_ptr<ShaderEx> RenderShadowShader;	// シャドウマップ適用シェーダー
+	// シャドウマップ用ガウスブラー関連
+	std::unique_ptr<ShaderEx> GaussianBlur;	// シャドウマップ用ガウス処理シェーダ
+	static constexpr u_int KARNEL_SIZE = 5;
+	static constexpr float PI = 3.141592f;
+	static constexpr u_int BUFFER_SIZE = KARNEL_SIZE * KARNEL_SIZE;
+	struct GaussianBlurConstants {
+		DirectX::SimpleMath::Vector4 weight[BUFFER_SIZE]; //ガウシアンフィルタ X,Y オフセット、Z 重み
+		float karnel_size;
+		DirectX::SimpleMath::Vector2 texcel;
+		float dummy;
+	};
+
+	struct ShadowConstants {
+		DirectX::SimpleMath::Matrix light_view_projection;
+		DirectX::SimpleMath::Vector4 light_position;
+		DirectX::SimpleMath::Vector4 shadow_color;
+	}ShadowConstant;
 
 public:
 	// Sprite型 画像描画用
-	std::unique_ptr<Sprite> sprites;
-	std::unique_ptr<sprite_Batch> sprite_batches[8];
-	std::unique_ptr<Font> font;
-	std::unique_ptr<SkyBox> skybox;
+	std::unique_ptr<Sprite> Sprites;
+	//std::unique_ptr<sprite_Batch> sprite_batches[8];
+	//std::unique_ptr<Font> font;
+	std::unique_ptr<SkyBox> Skybox;
 
 	// シーン定数バッファ
-	//struct scene_constants {
-	//	DirectX::SimpleMath::Matrix view_projection;	// VP変換行列
-	//	DirectX::SimpleMath::Vector4 light_direction;	// ライトの向き
-	//	DirectX::SimpleMath::Vector4 camera_position;	// カメラの位置
-	//};
-
-	struct scene_constants
+	struct SceneConstants
 	{
 		DirectX::SimpleMath::Matrix view_projection;
 		DirectX::SimpleMath::Vector4 light_direction;
 		DirectX::SimpleMath::Vector4 camera_position;
-		DirectX::SimpleMath::Matrix  View;
-		DirectX::SimpleMath::Matrix  Projection;
-
-		DirectX::SimpleMath::Vector2 ParticleSize; // パーティクルの大きさ
-		float dummy; // ダミー
-		float dummy2;
+		DirectX::SimpleMath::Matrix  view;
+		DirectX::SimpleMath::Matrix  projection;
 	};
 
-	Microsoft::WRL::ComPtr<ID3D11Buffer> constant_buffer[8];
+	Microsoft::WRL::ComPtr<ID3D11Buffer> ConstantBuffers[8];
 
 	// Geometric_primitiveの変数やつ
-	std::unique_ptr< Geometric_Cube> grid;	// グリッド線もどき
+	std::unique_ptr< Geometric_Cube> Grid;	// グリッド線もどき
 
 	// プレイヤーオブジェクト
 	std::unique_ptr<Player> player;
@@ -83,14 +69,21 @@ public:
 
 	// 個人 ImGuiで数値を編集、格納して関数に渡す変数
 	float light_dir[3]{ 0.5f,-2.0f,1.0f };	// ライトの向かう方向
-	bool focus_zero = false;	// 焦点が(0,0,0)に向けるかどうか
+	float ortho = 50.0f;	// ImGui用　一時的
+	bool lightForCamera = false;	// カメラからライトを発射するか
+	bool renderShadowMap = false;	// シャドウマップを表示するか
+	int  shadowNo = 0;				// 表示するシャドウマップの番号 0/1
 	DirectX::SimpleMath::Vector3 eyePos = DirectX::SimpleMath::Vector3(0.0f, 0.0f, -10.0f);	// カメラの位置
 
 	// カメラ管理クラス的に実装してる 多分管理…うん…
-	std::unique_ptr<Camera> camera = nullptr;
-
+	//std::unique_ptr<Camera> camera = nullptr;
+	// instance使ってどこからでも呼び出せるように変更、不具合や不都合が分かれば戻そう
+	
 	// 関数 //
 private:
+	void DepthShadowMapping();	// 深度値を用いたシャドウマッピング
+	void GaussianFilter(DirectX::SimpleMath::Vector4* array, int karnel_size, float sigma);
+
 public:
 	bool Initialize();
 	void Update();

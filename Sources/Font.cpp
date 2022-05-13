@@ -90,6 +90,7 @@ void Font::CreateFontTexture(const WCHAR* FontChar)
 
 
 	//// CPUで書き込みができるテクスチャを作成 ////
+	D3D11_TEXTURE2D_DESC	texture2d_desc;
 	ZeroMemory(&texture2d_desc, sizeof(D3D11_TEXTURE2D_DESC));
 	texture2d_desc.Width = GM.gmCellIncX;
 	texture2d_desc.Height = TM.tmHeight;
@@ -136,6 +137,7 @@ void Font::CreateFontTexture(const WCHAR* FontChar)
 	delete[] ptr;	// newで確保したので後片付け
 
 	//	シェーダーリソースビュー作成
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>	shader_resource_view = SpriteTexture->GetShaderResourceView();
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvd;
 	ZeroMemory(&srvd, sizeof(srvd));
 	srvd.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -145,8 +147,12 @@ void Font::CreateFontTexture(const WCHAR* FontChar)
 	hr = Dev->CreateShaderResourceView(tex2D.Get(), &srvd, shader_resource_view.GetAddressOf());	// SRVの作成 これでシェーダに渡せる
 	if (FAILED(hr)) { MessageBox(0, L"SRV Create Failure", NULL, MB_OK); }
 
-	param->Size    = DirectX::SimpleMath::Vector2(static_cast<float>(texture2d_desc.Width), static_cast<float>(texture2d_desc.Height));
-	param->TexSize = DirectX::SimpleMath::Vector2(static_cast<float>(texture2d_desc.Width), static_cast<float>(texture2d_desc.Height));
+	//texture->CreateFontImage(GM.gmCellIncX, TM.tmHeight, tex2D.Get());
+
+	//Parameter->Size    = DirectX::SimpleMath::Vector2(static_cast<float>(texture->GetWidth()), static_cast<float>(texture->GetHeight()));
+	//Parameter->Size    = DirectX::SimpleMath::Vector2(static_cast<float>(texture->GetWidth()), static_cast<float>(texture->GetHeight()));
+	Parameter->TexSize = DirectX::SimpleMath::Vector2(static_cast<float>(texture2d_desc.Width), static_cast<float>(texture2d_desc.Height));
+	Parameter->TexSize = DirectX::SimpleMath::Vector2(static_cast<float>(texture2d_desc.Width), static_cast<float>(texture2d_desc.Height));
 
 
 	//// シェーダ用にサンプラを作成する

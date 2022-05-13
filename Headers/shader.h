@@ -35,7 +35,7 @@ public:
 
 protected:
 	// ファイルパス, エントリポイント, シェーダモデル, 受け取りID3DBlobポインタ
-	HRESULT Compile(WCHAR* filename, LPCSTR method, LPCSTR shaderModel, ID3DBlob** ppBlobOut);
+	HRESULT Compile(WCHAR* filename, LPCSTR method, LPCSTR shader_model, ID3DBlob** ppBlobOut);
 private:
 };
 

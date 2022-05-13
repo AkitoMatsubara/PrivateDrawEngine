@@ -6,20 +6,20 @@ bool SceneTitle::Initialize() {
 	Microsoft::WRL::ComPtr<ID3D11Device> device = FRAMEWORK->GetDevice();	// frameworkからdeviceを取得
 // シーンコンスタントバッファの設定
 	D3D11_BUFFER_DESC buffer_desc{};
-	buffer_desc.ByteWidth = sizeof(scene_constants);
+	buffer_desc.ByteWidth = sizeof(SceneConstants);
 	buffer_desc.Usage = D3D11_USAGE_DEFAULT;
 	buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	buffer_desc.CPUAccessFlags = 0;
 	buffer_desc.MiscFlags = 0;
 	buffer_desc.StructureByteStride = 0;
-	HRESULT hr = device->CreateBuffer(&buffer_desc, nullptr, constant_buffer[0].GetAddressOf());
+	HRESULT hr = device->CreateBuffer(&buffer_desc, nullptr, ConstantBuffers[0].GetAddressOf());
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 
 	// Blenderの設定
 	//blender.setBlend(device.Get());
 
 	// Samplerの設定
-	sampleClamp = std::make_shared<Sampler>(D3D11_FILTER_MIN_MAG_MIP_LINEAR, D3D11_TEXTURE_ADDRESS_CLAMP);
+	DefaultSampleClamp = std::make_shared<Sampler>(D3D11_FILTER_MIN_MAG_MIP_LINEAR, D3D11_TEXTURE_ADDRESS_CLAMP);
 
 	// 各種クラス設定
 	{
@@ -30,9 +30,9 @@ bool SceneTitle::Initialize() {
 
 		// Geometric_primitiveオブジェクトの生成
 		{
-			grid = std::make_unique<Geometric_Cube>();
-			grid->setPos(DirectX::SimpleMath::Vector3(0, -1, 0));
-			grid->setSize(DirectX::SimpleMath::Vector3(10, 0.1f, 10));
+			Grid = std::make_unique<Geometric_Cube>();
+			Grid->setPos(DirectX::SimpleMath::Vector3(0, -1, 0));
+			Grid->setSize(DirectX::SimpleMath::Vector3(10, 0.1f, 10));
 			GeomtricShader = std::make_unique<ShaderEx>();
 			GeomtricShader->CreateVS(L"Shaders\\geometric_primitive_vs");
 			GeomtricShader->CreatePS(L"Shaders\\geometric_primitive_ps");
@@ -88,7 +88,7 @@ void SceneTitle::Render() {
 	FRAMEWORK->CreateViewPort();
 
 	// サンプラーステートをバインド
-	sampleClamp->Set(0);
+	DefaultSampleClamp->Set(0);
 
 	immediate_context->OMSetBlendState(FRAMEWORK->GetBlendState(FRAMEWORK->BS_ALPHA), nullptr, 0xFFFFFFFF);	// ブレンドインターフェースのポインタ、ブレンドファクターの配列値、サンプルカバレッジ(今回はデフォルト指定)
 
@@ -102,19 +102,19 @@ void SceneTitle::Render() {
 		camera->Activate();
 
 		// コンスタントバッファ更新
-		scene_constants data{};
+		SceneConstants data{};
 		XMStoreFloat4x4(&data.view_projection, camera->GetView() * camera->GetProjection());	// Matrixから4x4へ変換
 		data.light_direction = DirectX::SimpleMath::Vector4{ light_dir[0],light_dir[1],light_dir[2],0 };	// シェーダに渡すライトの向き
 		data.camera_position = DirectX::SimpleMath::Vector4{ eyePos.x,eyePos.y,eyePos.z,0 };				// シェーダに渡すカメラの位置
-		immediate_context->UpdateSubresource(constant_buffer[0].Get(), 0, 0, &data, 0, 0);
-		immediate_context->VSSetConstantBuffers(1, 1, constant_buffer[0].GetAddressOf());	// cBufferはドローコールのたびに消去されるので都度設定する必要がある
-		immediate_context->PSSetConstantBuffers(1, 1, constant_buffer[0].GetAddressOf());
+		immediate_context->UpdateSubresource(ConstantBuffers[0].Get(), 0, 0, &data, 0, 0);
+		immediate_context->VSSetConstantBuffers(1, 1, ConstantBuffers[0].GetAddressOf());	// cBufferはドローコールのたびに消去されるので都度設定する必要がある
+		immediate_context->PSSetConstantBuffers(1, 1, ConstantBuffers[0].GetAddressOf());
 
 		immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(FRAMEWORK->DS_TRUE_WRITE), 1);			// 2Dオブジェクトとの前後関係をしっかりするため再設定
 
 		{
 			// 3DオブジェクトRender内に移植 現状ここである必要なし？
-			grid->Render(true);
+			Grid->Render(true);
 			skinned_mesh->Render();
 		}
 	}

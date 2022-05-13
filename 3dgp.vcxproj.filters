@@ -55,9 +55,6 @@
     <Filter Include="Sources\Scenes">
       <UniqueIdentifier>{d9aac7c2-af45-455a-9b65-eb299511699f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shaders\ComputeShader">
-      <UniqueIdentifier>{7bae16dd-9493-4021-b8a8-7626d9bc2e3e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Headers\DataLoad\Shaders">
       <UniqueIdentifier>{0c5e65f7-a7be-477a-8994-8a9174218f2a}</UniqueIdentifier>
     </Filter>
@@ -67,12 +64,6 @@
     <Filter Include="Sources\System">
       <UniqueIdentifier>{14724a93-b7c3-40f3-a0df-2c39419428cf}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Sources\DataLoad\GeometricPrimitives">
-      <UniqueIdentifier>{b3f9812c-1a28-4a7c-9e66-bfa6b1a9da00}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Headers\DataLoad\GeometricPrimitives">
-      <UniqueIdentifier>{c9203c75-d77d-49fe-9e3d-9e9e45f65a96}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Shaders\GPUParticle">
       <UniqueIdentifier>{714705a2-f819-444d-ab07-8fbf9a8d138b}</UniqueIdentifier>
     </Filter>
@@ -81,6 +72,27 @@
     </Filter>
     <Filter Include="Shaders\SkyBox">
       <UniqueIdentifier>{147cd3a3-7415-480e-8378-17210f33017a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Sources\DataLoad\3D Object\GeometricPrimitives">
+      <UniqueIdentifier>{b3f9812c-1a28-4a7c-9e66-bfa6b1a9da00}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Headers\DataLoad\3D Object\GeometricPrimitives">
+      <UniqueIdentifier>{c9203c75-d77d-49fe-9e3d-9e9e45f65a96}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Shadows">
+      <UniqueIdentifier>{064b1eb0-1910-4a42-9623-113c760fc701}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\GaussianBlur">
+      <UniqueIdentifier>{5cd9309c-83ae-4428-8d9d-d24a1eb97525}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Imstance_Mesh">
+      <UniqueIdentifier>{8f94a5e9-c8fc-4d24-b732-444d0561223e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Shadows\CreateShadowMap">
+      <UniqueIdentifier>{eb25c86c-ce10-48fa-837c-141b1e128cd9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Shadows\RenderShadow">
+      <UniqueIdentifier>{afccd2b3-6b1a-42df-9fe8-3396c744b360}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -102,9 +114,6 @@
     <FxCompile Include="Shaders\skinned_mesh_vs.hlsl">
       <Filter>Shaders\Skinned_Mesh</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\ComputeShader_cs.hlsl">
-      <Filter>Shaders\ComputeShader</Filter>
-    </FxCompile>
     <FxCompile Include="Shaders\GPUParticle_cs.hlsl">
       <Filter>Shaders\GPUParticle</Filter>
     </FxCompile>
@@ -123,6 +132,30 @@
     <FxCompile Include="Shaders\SkyBox_vs.hlsl">
       <Filter>Shaders\SkyBox</Filter>
     </FxCompile>
+    <FxCompile Include="Shaders\RenderShadow_vs.hlsl">
+      <Filter>Shaders\Shadows\RenderShadow</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\RenderShadow_ps.hlsl">
+      <Filter>Shaders\Shadows\RenderShadow</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\GaussianBlur_vs.hlsl">
+      <Filter>Shaders\GaussianBlur</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\GaussianBlur_ps.hlsl">
+      <Filter>Shaders\GaussianBlur</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\Instance_Mesh_ps.hlsl">
+      <Filter>Shaders\Imstance_Mesh</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\Instance_Mesh_vs.hlsl">
+      <Filter>Shaders\Imstance_Mesh</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\DepthShadow_ps.hlsl">
+      <Filter>Shaders\Shadows\CreateShadowMap</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\DepthShadow_vs.hlsl">
+      <Filter>Shaders\Shadows\CreateShadowMap</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\sprite.hlsli">
@@ -140,6 +173,24 @@
     </None>
     <None Include="Shaders\SkyBox.hlsli">
       <Filter>Shaders\SkyBox</Filter>
+    </None>
+    <None Include="Shaders\RenderShadow.hlsli">
+      <Filter>Shaders\Shadows\RenderShadow</Filter>
+    </None>
+    <None Include="Shaders\GaussianBlur.hlsli">
+      <Filter>Shaders\GaussianBlur</Filter>
+    </None>
+    <None Include="Shaders\ShadowFunc.hlsli">
+      <Filter>Shaders\Shadows</Filter>
+    </None>
+    <None Include="Shaders\ReflectiveModelFunc.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\Instance_Mesh.hlsli">
+      <Filter>Shaders\Imstance_Mesh</Filter>
+    </None>
+    <None Include="Shaders\DepthShadow.hlsli">
+      <Filter>Shaders\Shadows\CreateShadowMap</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -192,7 +243,7 @@
       <Filter>Headers\RenderOptions</Filter>
     </ClInclude>
     <ClInclude Include="Headers\geometric_primitive.h">
-      <Filter>Headers\DataLoad\GeometricPrimitives</Filter>
+      <Filter>Headers\DataLoad\3D Object\GeometricPrimitives</Filter>
     </ClInclude>
     <ClInclude Include="Headers\texture.h">
       <Filter>Headers\DataLoad</Filter>
@@ -263,6 +314,9 @@
     <ClInclude Include="Headers\SkyBox.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="Headers\instance_skinned_mesh.h">
+      <Filter>Headers\DataLoad\3D Object</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui\imgui.cpp">
@@ -290,19 +344,19 @@
       <Filter>Sources\DataLoad\Sprite</Filter>
     </ClCompile>
     <ClCompile Include="Sources\geometric_cube.cpp">
-      <Filter>Sources\DataLoad\GeometricPrimitives</Filter>
+      <Filter>Sources\DataLoad\3D Object\GeometricPrimitives</Filter>
     </ClCompile>
     <ClCompile Include="Sources\geometric_cylinder.cpp">
-      <Filter>Sources\DataLoad\GeometricPrimitives</Filter>
+      <Filter>Sources\DataLoad\3D Object\GeometricPrimitives</Filter>
     </ClCompile>
     <ClCompile Include="Sources\geometric_sphere.cpp">
-      <Filter>Sources\DataLoad\GeometricPrimitives</Filter>
+      <Filter>Sources\DataLoad\3D Object\GeometricPrimitives</Filter>
     </ClCompile>
     <ClCompile Include="Sources\geometric_capsule.cpp">
-      <Filter>Sources\DataLoad\GeometricPrimitives</Filter>
+      <Filter>Sources\DataLoad\3D Object\GeometricPrimitives</Filter>
     </ClCompile>
     <ClCompile Include="Sources\geometric_primitive.cpp">
-      <Filter>Sources\DataLoad\GeometricPrimitives</Filter>
+      <Filter>Sources\DataLoad\3D Object\GeometricPrimitives</Filter>
     </ClCompile>
     <ClCompile Include="Sources\Sampler.cpp">
       <Filter>Sources\RenderOptions</Filter>
@@ -364,9 +418,6 @@
     <ClCompile Include="Sources\Score.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="Sources\FrameRateCalculator.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
     <ClCompile Include="Sources\SceneClear.cpp">
       <Filter>Sources\Scenes</Filter>
     </ClCompile>
@@ -375,6 +426,12 @@
     </ClCompile>
     <ClCompile Include="Sources\SkyBox.cpp">
       <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\instance_skinned_mesh.cpp">
+      <Filter>Sources\DataLoad\3D Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\FrameRateCalculator.cpp">
+      <Filter>Sources\System</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

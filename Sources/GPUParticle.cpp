@@ -1,31 +1,7 @@
-#include "GPUParticle.h"
-#include "framework.h"
 #include "UseComputeShader.h"
-
-// TODO 適当 書き込み可能構造化バッファを作成する
-HRESULT CreateWriteStructuredBuffer(UINT uElementSize, UINT uCount, ID3D11Buffer** ppBuf)
-{
-	ID3D11Device* pD3DDevice = FRAMEWORK->GetDevice();
-	HRESULT hr = E_FAIL;
-	*ppBuf = nullptr;
-
-	// 構造化バッファーを作成する
-	D3D11_BUFFER_DESC BufferDesc;
-	ZeroMemory(&BufferDesc, sizeof(D3D11_BUFFER_DESC));
-
-	BufferDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-	BufferDesc.ByteWidth = uElementSize * uCount;					// バッファサイズ
-	BufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
-	BufferDesc.StructureByteStride = uElementSize;					// 構造化バッファーのサイズ (バイト単位)
-	BufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	BufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-	hr = pD3DDevice->CreateBuffer(&BufferDesc, nullptr, ppBuf);
-
-	if (FAILED(hr))_ASSERT_EXPR_A(false, "FAILED CreateStructuredBuffer");
-
-	return hr;
-}
+#include "GPUParticle.h"
+#include "Camera.h"
+#include "framework.h"
 
 bool GPUParticle::Init()
 {
@@ -34,9 +10,9 @@ bool GPUParticle::Init()
 	{
 		//コンピュート計算のワークをセット
 
-		DispathNo = 500;  // ディスパッチ数
-		const int CSnumthreadNo = 500;	// CSの実行数
-		ParticleAmount = DispathNo * CSnumthreadNo;        // パーティクルの数 (DispatchNo * CSnumthread)
+		DispathNo = 100;  // ディスパッチ数
+		const static int CS_NUMTHREAD_NO = 500;	// CSの実行数
+		ParticleAmount = DispathNo * CS_NUMTHREAD_NO;        // パーティクルの数 (DispatchNo * CS_numthread)
 		HRESULT hr = { S_OK };
 
 		// 描画用リソース・ビュー
@@ -56,7 +32,7 @@ bool GPUParticle::Init()
 			VBuffer* vBuffer = new VBuffer[ParticleAmount];
 
 			// 頂点バッファのサブリソースの定義(バッファーリソースでも一つだけ持てる）
-			D3D11_SUBRESOURCE_DATA vSubData;//初期化用データを作成
+			D3D11_SUBRESOURCE_DATA vSubData;//頂点バッファ用初期化用データを作成
 			vSubData.pSysMem = vBuffer;  // バッファ・データの初期値
 			vSubData.SysMemPitch = 0;
 			vSubData.SysMemSlicePitch = 0;
@@ -68,22 +44,21 @@ bool GPUParticle::Init()
 			for (int i = 0; i < ParticleAmount; ++i) {
 				VBuffer data;
 				// 初期位置の設定
-				data.Position.x = ((i % DispathNo) - (DispathNo / 2.0f)) / (float)DispathNo * 0.005f;
-				data.Position.z = ((i / DispathNo) - (DispathNo / 2.0f)) / (float)DispathNo * 0.005f;
+				data.Position.x = rand() % 41 - 20;
+				data.Position.z = rand() % 41 - 20;
 				data.Position.y = 0.1f;
-
+				data.Position.w = ((rand() % 101) + 50) * 0.01f;	// ここは最大ライフを格納する
 				// 初期速度の設定
 				data.Velocity.x = ((rand() % 2000) - 1000) * 0.00005f;
 				data.Velocity.y = ((rand() % 2000) - 1000) * 0.00005f;
 				data.Velocity.z = ((rand() % 2000) - 1000) * 0.00005f;
 
-				data.Force = DirectX::XMFLOAT3(0, -0.0005f, 0);//加速度
+				data.Force = DirectX::XMFLOAT3(0, GRABITY, 0);//加速度
 
 				// その他
 				data.Color = DirectX::XMFLOAT4(testColor[0], testColor[1], testColor[2], testColor[3]);
-				data.Active = true;
-				testLife = 50;
-				data.Life = testLife * (rand() % 10 + 1);
+				data.Life = ((rand() % 101) + 50) * 0.01f;
+				data.Active = false;
 
 				vVecBuf.emplace_back(data);	// 格納
 			}
@@ -105,10 +80,8 @@ bool GPUParticle::Init()
 	}
 	// Compute Shaderセッティング
 	{
-		// シーンコンスタントバッファの作成と型の設定
-		CreateConstantBuffer(ConstantBuffer.GetAddressOf(), sizeof(scene_constants));
 		// Samplerの設定
-		if (sample == nullptr)
+		if (!sample)
 		{
 			sample = std::make_shared<Sampler>(D3D11_FILTER_MIN_MAG_MIP_LINEAR, D3D11_TEXTURE_ADDRESS_CLAMP);
 		}
@@ -117,7 +90,7 @@ bool GPUParticle::Init()
 		{
 			// 入力要素
 			D3D11_INPUT_ELEMENT_DESC layout[] = {
-				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,
+				{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
 					D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 				{ "VELOCITY", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,
 					D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
@@ -125,9 +98,9 @@ bool GPUParticle::Init()
 					D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 				{ "COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
 					D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "ACTIVE",    0, DXGI_FORMAT_R32_UINT, 0,
-					D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 				{ "LIFE",    0, DXGI_FORMAT_R32_FLOAT, 0,
+					D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "ACTIVE",    0, DXGI_FORMAT_R32_UINT, 0,
 					D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 			};
 			static constexpr UINT IL_NUM = ARRAYSIZE(layout);	// ILの配列サイズ取得
@@ -142,12 +115,12 @@ bool GPUParticle::Init()
 	if (texture == nullptr)
 	{
 		texture = std::make_shared<Texture>();
-		texture->Load(L".\\Resources\\particle_W.png");
+		texture->Load(L".\\Resources\\ParticleImage\\particle_W.png");
 	}
 	return true;
 }
 
-void GPUParticle::Update(Camera* camera)
+void GPUParticle::Update()
 {
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext> immediate_context = FRAMEWORK->GetDeviceContext();
 	Microsoft::WRL::ComPtr<ID3D11Device> device = FRAMEWORK->GetDevice();
@@ -166,11 +139,11 @@ void GPUParticle::Update(Camera* camera)
 	// シェーダを設定
 	g_cbCBuffer.No = DispathNo;
 
-	g_cbCBuffer.Projection	= DirectX::XMMatrixTranspose(camera->GetProjection());
-	g_cbCBuffer.View		= DirectX::XMMatrixTranspose(camera->GetView());	// 行列をシェーダに渡すには転置行列にする
-	g_cbCBuffer.ParticleSize.x = 0.02f;
-	g_cbCBuffer.ParticleSize.y = 0.02f;
-	g_cbCBuffer.EyePos = DirectX::SimpleMath::Vector4(camera->GetPos().x, camera->GetPos().y, camera->GetPos().z, 1.0f);
+	g_cbCBuffer.projection	= DirectX::XMMatrixTranspose(Camera::getInstance().GetProjection());
+	g_cbCBuffer.view		= DirectX::XMMatrixTranspose(Camera::getInstance().GetView());	// 行列をシェーダに渡すには転置行列にする
+	g_cbCBuffer.ParticleSize.x = 0.03f;
+	g_cbCBuffer.ParticleSize.y = 0.03f;
+	g_cbCBuffer.EyePos = DirectX::SimpleMath::Vector4(Camera::getInstance().GetPos().x, Camera::getInstance().GetPos().y, Camera::getInstance().GetPos().z, 1.0f);
 
 	// ***************************************
 	// 定数バッファのマップ取得
@@ -186,11 +159,12 @@ void GPUParticle::Update(Camera* camera)
 	immediate_context->Unmap(DynamicCBuffer.Get(), NULL);
 
 	// PSに定数バッファを設定
-	immediate_context->CSSetConstantBuffers(0, 1, DynamicCBuffer.GetAddressOf());
 	immediate_context->CSSetShader(ParticleShader->GetCS(), 0, 0);
+	immediate_context->CSSetConstantBuffers(0, 1, DynamicCBuffer.GetAddressOf());
 
-	// CPUを介さずやり取りを行うため、２つのバッファで位置等を交互に出し入れしている
+	// CPUを介さずやり取りを行うため、２つのバッファで位置等を交互に出し入れしていた(過去
 	// 0の情報をもとに計算、結果を1に → 1の情報をもとに計算、結果を0に…  というように
+	// TODO:今は亡き手法、後でコメント消そう
 
 	// SRVの設定
 	immediate_context->CSSetShaderResources(0, 1, g_pSRV.GetAddressOf());
@@ -241,43 +215,66 @@ void GPUParticle::Draw()
 	texture->Set(0);
 	sample->Set(0);
 
-	const UINT MASK = 0xffffffff;
-	immediate_context->OMSetBlendState(FRAMEWORK->GetBlendState(FRAMEWORK->BS_ALPHA), nullptr, MASK);
-	immediate_context->RSSetState(FRAMEWORK->GetRasterizerState(FRAMEWORK->RS_SOLID_NONE));
-	sample->Set(0);
+	static const UINT MASK = 0xffffffff;
+	(blendNone) ? 
+		immediate_context->OMSetBlendState(FRAMEWORK->GetBlendState(FRAMEWORK->BS_NONE), nullptr, MASK)
+	  : immediate_context->OMSetBlendState(FRAMEWORK->GetBlendState(FRAMEWORK->BS_ADD), nullptr, MASK);
+
+	immediate_context->RSSetState(FRAMEWORK->GetRasterizerState(FRAMEWORK->RS_SOLID_BACK_CCW));
 	// ***************************************
 	// 描画する
 	immediate_context->Draw(ParticleAmount, 0);
 	// シェーダの無効化
 	ParticleShader->Inactivate();
+	texture->Set(0, false);
 	//----------------------------------------------------
+}
+
+void GPUParticle::Play(){
+	Update();
+	Draw();
 }
 
 void GPUParticle::SetParticle()
 {
 
-	//// forで回してActiveでなければ消す処理…なんだけどあまりにもforが多すぎて動作しない
-	//for (std::vector<VBuffer>::iterator itr = vVecBuf.begin(); itr != vVecBuf.end();)
-	//{
-	//	if(itr->Active)
-	//	{
-	//		++itr;
-	//	}
-	//	else
-	//	{
-	//		itr = vVecBuf.erase(itr);
-	//	}
-	//}
+	// TODO パーティクル一括削除。応急処置なだけ
+	//vVecBuf.clear();
+	const static int STAGE_AREA = 51;	// パーティクルを発生させる範囲
 
+	//for (int i = 0; i < ParticleAmount; ++i) {
+	for (int i = 0; i < vVecBuf.size(); ++i) {
+		VBuffer data;
+		// 初期位置の設定
+		data.Position.x = rand() % STAGE_AREA - (STAGE_AREA*0.5f);
+		data.Position.z = rand() % STAGE_AREA - (STAGE_AREA*0.5f);
+		data.Position.y = 0.1f;
+		data.Position.w = ((rand() % 101) + 50) * 0.01f;	// ここは最大ライフを格納する
+
+		// 初期速度の設定
+		data.Velocity.x = ((rand() % 2000) - 1000) * 0.00005f;
+		data.Velocity.y = ((rand() % 2000) - 1000) * 0.00005f;
+		data.Velocity.z = ((rand() % 2000) - 1000) * 0.00005f;
+		data.Force = DirectX::XMFLOAT3(0, GRABITY, 0); //加速度
+
+		// その他
+		data.Color = DirectX::XMFLOAT4(testColor[0], testColor[1], testColor[2], testColor[3]);
+		data.Life = (testLife)?testLife: ((rand() % 101) + 50) * 0.01f;
+		data.Active = true;
+		vVecBuf.at(i) = data;	// 格納
+	}
+}
+void GPUParticle::SetFirstPos(DirectX::SimpleMath::Vector3 pos) {
 	// TODO パーティクル一括削除。応急処置なだけ
 	vVecBuf.clear();
 
 	for (int i = 0; i < ParticleAmount; ++i) {
 		VBuffer data;
 		// 初期位置の設定
-		data.Position.x = ((i % DispathNo) - (DispathNo / 2.0f)) / (float)DispathNo * 0.005f;
-		data.Position.z = ((i / DispathNo) - (DispathNo / 2.0f)) / (float)DispathNo * 0.005f;
-		data.Position.y = 0.1f;
+		data.Position.x = pos.x;
+		data.Position.z = pos.z;
+		data.Position.y = pos.y;
+		data.Position.w = ((rand() % 101) + 50) * 0.01f;	// ここは最大ライフを格納する
 
 		// 初期速度の設定
 		data.Velocity.x = ((rand() % 2000) - 1000) * 0.00005f;
@@ -288,18 +285,40 @@ void GPUParticle::SetParticle()
 
 		// その他
 		data.Color = DirectX::XMFLOAT4(testColor[0], testColor[1], testColor[2], testColor[3]);
+		data.Life = ((rand() % 51) + 50) * 0.01f;
 		data.Active = true;
-		testLife = 50;
-		data.Life = testLife * (rand() % 10 + 1);
 		vVecBuf.emplace_back(data);	// 格納
 	}
+
 }
 
+void GPUParticle::SpaceEffect() {
+	static const float STAGE_AREA = 50.0f;	// パーティクルを発生させる範囲
 
-void GPUParticle::SetSceneConstantBuffer(const ID3D11Buffer* cbBuf)
-{
-	memcpy(ConstantBuffer.Get(), cbBuf, sizeof(ID3D11Buffer));
+	for (int i = 0; i < ParticleAmount; ++i) {
+		VBuffer data;
+		// 初期位置の設定
+		data.Position.x = rand() % (static_cast<int>(STAGE_AREA)*2)-STAGE_AREA;
+		data.Position.z = rand() % (static_cast<int>(STAGE_AREA)*2)-STAGE_AREA;
+		data.Position.y = 0.1f;
+		data.Position.w = ((rand() % 101) + 50) * 0.01f;	// ここは最大ライフを格納する
+
+		// 初期速度の設定
+		data.Velocity.x = ((rand() % 2000) - 1000) * 0.00005f;
+		data.Velocity.y = ((rand() % 2000) - 1000) * 0.00005f;
+		data.Velocity.z = ((rand() % 2000) - 1000) * 0.00005f;
+		const static float GRABITY = -0.005;
+		data.Force = DirectX::XMFLOAT3(0, GRABITY, 0); //加速度
+
+		// その他
+		data.Color = DirectX::XMFLOAT4(testColor[0], testColor[1], testColor[2], testColor[3]);
+		data.Active = true;
+		data.Life = ((rand() % 51) + 50) * 0.01f;
+		vVecBuf.emplace_back(data);	// 格納
+	}
+
 }
+
 
 // GPUParticleに限らないと思うので今回はメンバ関数として定義
 void GPUParticle::CreateConstantBuffer(ID3D11Buffer** dstBuf, size_t size, bool dynamicFlg)
@@ -337,10 +356,11 @@ void GPUParticle::ImguiParticles()
 	// ライト調整等グローバル設定
 	ImGui::Begin("Particles");
 
-	ImGui::SliderFloat("Life", &testLife, 0.0f, 1.0f);
+	ImGui::SliderFloat("Life", &testLife, 0.0f, 50.0f);
 	ImGui::ColorEdit4("Color", (float*)testColor);
 	ImGui::Checkbox("RunGPUParticle", &runCS);
 	if (ImGui::Button("Particle Set")) { SetParticle(); }
+	ImGui::Checkbox("BS_NONE", &blendNone);
 
 	ImGui::Separator();
 	ImGui::Text("DispatchNo: %d", DispathNo);

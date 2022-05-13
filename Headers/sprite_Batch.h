@@ -13,7 +13,7 @@ private:
 	// メンバ変数
 	Microsoft::WRL::ComPtr<ID3D11VertexShader>			vertex_shader;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader>			pixel_shader;
-	Microsoft::WRL::ComPtr<ID3D11Buffer>				vertex_buffer;
+	Microsoft::WRL::ComPtr<ID3D11Buffer>				VertexBuffer;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>	shader_resource_view;
 	Microsoft::WRL::ComPtr<ID3D11RasterizerState>		rasterizer_states[3];	// 0:片面塗りつぶし,1:片面ワイヤーフレーム,2:両面ワイヤーフレーム
 

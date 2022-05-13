@@ -65,6 +65,6 @@ void SkyBox::Render(Camera* camera)
 
 	immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(FRAMEWORK->DS_FALSE),0);
 	sample->Set(0);
-	SkyImage->Render(SkyShader.get());
+	SkyImage->Render(nullptr, SkyShader.get());
 	immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(FRAMEWORK->DS_TRUE), 0);
 }

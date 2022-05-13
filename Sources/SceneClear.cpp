@@ -12,19 +12,19 @@ bool SceneClear::Initialize() {
 	HRESULT hr = { S_OK };
 
 	// シーンコンスタントバッファの設定
-	CreateConstantBuffer(constant_buffer[0].GetAddressOf(), sizeof(scene_constants));
+	CreateConstantBuffer(ConstantBuffers[0].GetAddressOf(), sizeof(SceneConstants));
 
 	// Samplerの設定
-	sampleClamp = std::make_shared<Sampler>(D3D11_FILTER_MIN_MAG_MIP_LINEAR, D3D11_TEXTURE_ADDRESS_CLAMP);
+	DefaultSampleClamp = std::make_shared<Sampler>(D3D11_FILTER_MIN_MAG_MIP_LINEAR, D3D11_TEXTURE_ADDRESS_CLAMP);
 
 	// 各種クラス設定
 	{
 		camera = std::make_unique<Camera>();
 
 		// spriteオブジェクトを生成(今回は先頭の１つだけを生成する)
-		sprites = std::make_unique<Sprite>();
-		sprites->LoadImages(L".\\Resources\\clear.jpg");
-		sprites->setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+		Sprites = std::make_unique<Sprite>();
+		Sprites->LoadImages(L".\\Resources\\clear.jpg");
+		Sprites->setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
 
 
 		player = std::make_unique<Player>();
@@ -38,7 +38,7 @@ bool SceneClear::Initialize() {
 	// Compute Shaderセッティング
 	{
 		// CS用コンスタントバッファの設定
-		CreateConstantBuffer(constant_buffer[1].GetAddressOf(), sizeof(cs_constants));
+		CreateConstantBuffer(ConstantBuffers[1].GetAddressOf(), sizeof(cs_constants));
 
 		ComputeShader = std::make_unique<ShaderEx>();
 		ComputeShader->CreateCS(L"Shaders\\ComputeShader_cs");
@@ -65,7 +65,7 @@ bool SceneClear::Initialize() {
 }
 
 void SceneClear::Update() {
-	gpu_particle_->Update(camera.get());
+	gpu_particle_->Update();
 	const float elapsed_time = FRAMEWORK->GetElapsedTime();
 	// シーン切り替え
 	if (GetAsyncKeyState('G') & 1)
@@ -123,8 +123,8 @@ void SceneClear::Update() {
 		// コンスタントバッファ更新
 		cs_constants csData{};
 		csData.Theta = theta;
-		immediate_context->UpdateSubresource(constant_buffer[1].Get(), 0, 0, &csData, 0, 0);
-		immediate_context->CSSetConstantBuffers(2, 1, constant_buffer[1].GetAddressOf());
+		immediate_context->UpdateSubresource(ConstantBuffers[1].Get(), 0, 0, &csData, 0, 0);
+		immediate_context->CSSetConstantBuffers(2, 1, ConstantBuffers[1].GetAddressOf());
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		UseComputeShader::RunComputeShader(ComputeShader->GetCS(), pBufInputSRV.Get(), 0, pBufResultUAV.Get(), 0, 3, 1, 1);
 
@@ -158,14 +158,14 @@ void SceneClear::Render() {
 	FRAMEWORK->CreateViewPort();
 
 	// サンプラーステートをバインド
-	sampleClamp->Set(0);
+	DefaultSampleClamp->Set(0);
 
 	immediate_context->OMSetBlendState(FRAMEWORK->GetBlendState(FRAMEWORK->BS_ALPHA), nullptr, 0xFFFFFFFF);	// ブレンドインターフェースのポインタ、ブレンドファクターの配列値、サンプルカバレッジ(今回はデフォルト指定)
 
 	// 2Dオブジェクトの描画設定
 	{
 		immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(FRAMEWORK->DS_TRUE), 1);		// 3Dオブジェクトの後ろに出すため一旦
-		sprites->Render();
+		Sprites->Render();
 		immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(FRAMEWORK->DS_TRUE_WRITE), 1);	// 2Dオブジェクトとの前後関係をしっかりするため再設定
 	}
 	// 3Dオブジェクトの描画設定
@@ -173,19 +173,18 @@ void SceneClear::Render() {
 		camera->Activate();
 
 		// コンスタントバッファ更新
-		scene_constants data{};
+		SceneConstants data{};
 		XMStoreFloat4x4(&data.view_projection, camera->GetView() * camera->GetProjection());	// Matrixから4x4へ変換
 		data.light_direction = DirectX::SimpleMath::Vector4{ light_dir[0],light_dir[1],light_dir[2],0 };	// シェーダに渡すライトの向き
 		data.camera_position = DirectX::SimpleMath::Vector4{ camera->GetPos().x,camera->GetPos().y,camera->GetPos().z,0 };				// シェーダに渡すカメラの位置
-		immediate_context->UpdateSubresource(constant_buffer[0].Get(), 0, 0, &data, 0, 0);
-		immediate_context->VSSetConstantBuffers(1, 1, constant_buffer[0].GetAddressOf());	// cBufferはドローコールのたびに消去されるので都度設定する必要がある
-		immediate_context->PSSetConstantBuffers(1, 1, constant_buffer[0].GetAddressOf());
+		immediate_context->UpdateSubresource(ConstantBuffers[0].Get(), 0, 0, &data, 0, 0);
+		immediate_context->VSSetConstantBuffers(1, 1, ConstantBuffers[0].GetAddressOf());	// cBufferはドローコールのたびに消去されるので都度設定する必要がある
+		immediate_context->PSSetConstantBuffers(1, 1, ConstantBuffers[0].GetAddressOf());
 
 		{
 			StageManager::getInstance().Render();
 			player->Render();
 			EnemyManager::getInstance().Render();
-			gpu_particle_->SetSceneConstantBuffer(constant_buffer[0].Get());
 			gpu_particle_->Draw();
 		}
 	}

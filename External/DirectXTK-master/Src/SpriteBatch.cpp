@@ -112,7 +112,7 @@ private:
     void SortSprites();
     void GrowSortedSprites();
 
-    void RenderBatch(_In_ ID3D11ShaderResourceView* texture, _In_reads_(count) SpriteInfo const* const* sprites, size_t count);
+    void RenderBatch(_In_ ID3D11ShaderResourceView* texture, _In_reads_(count) SpriteInfo const* const* Sprites, size_t count);
 
     static void XM_CALLCONV RenderSprite(_In_ SpriteInfo const* sprite,
         _Out_writes_(VerticesPerSprite) VertexPositionColorTexture* vertices,
@@ -722,7 +722,7 @@ void SpriteBatch::Impl::GrowSortedSprites()
 
 // Submits a batch of sprites to the GPU.
 _Use_decl_annotations_
-void SpriteBatch::Impl::RenderBatch(ID3D11ShaderResourceView* texture, SpriteInfo const* const* sprites, size_t count)
+void SpriteBatch::Impl::RenderBatch(ID3D11ShaderResourceView* texture, SpriteInfo const* const* Sprites, size_t count)
 {
     auto deviceContext = mContextResources->deviceContext.Get();
 
@@ -778,7 +778,7 @@ void SpriteBatch::Impl::RenderBatch(ID3D11ShaderResourceView* texture, SpriteInf
         {
             assert(i < count);
             _Analysis_assume_(i < count);
-            RenderSprite(sprites[i], vertices, textureSize, inverseTextureSize);
+            RenderSprite(Sprites[i], vertices, textureSize, inverseTextureSize);
 
             vertices += VerticesPerSprite;
         }
@@ -800,7 +800,7 @@ void SpriteBatch::Impl::RenderBatch(ID3D11ShaderResourceView* texture, SpriteInf
         mContextResources->vertexBufferPosition += batchSize;
 #endif
 
-        sprites += batchSize;
+        Sprites += batchSize;
         count -= batchSize;
     }
 }

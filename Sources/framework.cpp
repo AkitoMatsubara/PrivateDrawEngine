@@ -1,6 +1,7 @@
 ﻿#include "framework.h"
 
 #include "SceneGame.h"	// 初期シーンセット用 初期シーンには必須
+#include "SceneLoading.h"
 
 #include "FrameRateCalculator.h"
 
@@ -45,19 +46,19 @@ bool framework::initialize()
 		// 深度ステンシルビューの作成
 		CreateDepthStencileView();
 
-		// サンプラーステートの生成
+		// 深度ステートの生成
 		CreateDepthStencileState();
 
 		// ラスタライザステートの生成
 		CreateRasterizerState();
 
-		// RenderTargetの設定
+		// レンダーターゲットの設定
 		immediate_context->OMSetRenderTargets(1, render_target_view.GetAddressOf(), depth_stencil_view.Get());
 
 		// ビューポートの設定
 		CreateViewPort();
 
-		// Blenderの設定
+		// ブレンドステートの設定
 		CreateBlendState();
 	}
 	return true;
@@ -65,7 +66,21 @@ bool framework::initialize()
 
 framework::~framework()
 {
-	debug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
+	// RTV,DTVの削除
+	ID3D11RenderTargetView* nullViews[] = { nullptr };
+	immediate_context->OMSetRenderTargets(_countof(nullViews), nullViews, nullptr);
+
+	// 各Viewの破棄
+	render_target_view.Reset();
+	depth_stencil_view.Reset();
+
+	// Flush the immediate context to force cleanup
+	immediate_context->Flush();
+	immediate_context->ClearState();
+#if _DEBUG
+	debug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);	// 詳細表示
+	debug->ReportLiveDeviceObjects(D3D11_RLDO_SUMMARY);	// クラスと個数
+#endif
 }
 
 bool framework::uninitialize()
@@ -160,6 +175,7 @@ bool framework::CreateDepthStencileState() {
 	/*-----------------------深度テスト:ON 深度ライト:OFF-----------------------*/
 	depth_stencil_desc.DepthEnable = TRUE;							 // 深度テストの有効
 	depth_stencil_desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO; // 深度ステンシルバッファへの書き込みの無効
+	depth_stencil_desc.DepthFunc = D3D11_COMPARISON_LESS;
 	hr = device->CreateDepthStencilState(&depth_stencil_desc, &depth_stencil_state[DS_TRUE]);
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 	/*-----------------------深度テスト:OFF 深度ライト:ON-----------------------*/
@@ -170,6 +186,7 @@ bool framework::CreateDepthStencileState() {
 	/*-----------------------深度テスト:ON 深度ライト:ON-----------------------*/
 	depth_stencil_desc.DepthEnable = TRUE;	                        // 深度テストの有効
 	depth_stencil_desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;	// 深度ステンシルバッファへの書き込みの有効
+
 	hr = device->CreateDepthStencilState(&depth_stencil_desc, &depth_stencil_state[DS_TRUE_WRITE]);
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 
@@ -248,7 +265,7 @@ bool framework::CreateBlendState() {
 	if (FAILED(hr))assert("NONE_BLEND ERROR");
 
 	/*----------[BS_ALPHA] 透過----------*/
-	blend_desc.AlphaToCoverageEnable = TRUE;
+	blend_desc.AlphaToCoverageEnable = FALSE;				// TRUEなら四角形の画像感が消えるがalpha0.5以下で描画されなくなる、FALSEは四角形の画像感が出るがalpha0.5以下でも半透明になる
 	blend_desc.IndependentBlendEnable = FALSE;
 	blend_desc.RenderTarget[0].BlendEnable = TRUE;
 	blend_desc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;					// 今回はピクセルシェーダのアルファデータを指定、ブレンディング前の処理は無し
@@ -263,7 +280,7 @@ bool framework::CreateBlendState() {
 	if (FAILED(hr))assert("ALPHA_BLEND ERROR");
 
 	/*----------[BS_ADD] 加算----------*/
-	blend_desc.AlphaToCoverageEnable = TRUE;
+	blend_desc.AlphaToCoverageEnable = FALSE;
 	blend_desc.IndependentBlendEnable = FALSE;
 	blend_desc.RenderTarget[0].BlendEnable = TRUE;
 	blend_desc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
@@ -368,12 +385,12 @@ bool framework::CreateBlendState() {
 }
 
 // ビューポートの作成
-bool framework::CreateViewPort() {
+bool framework::CreateViewPort(float width, float height) {
 	D3D11_VIEWPORT viewport{};
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
-	viewport.Width = static_cast<float>(SCREEN_WIDTH);
-	viewport.Height = static_cast<float>(SCREEN_HEIGHT);
+	viewport.Width  = width;
+	viewport.Height = height;
 	viewport.MinDepth = 0.0f;
 	viewport.MaxDepth = 1.0f;
 	immediate_context->RSSetViewports(1, &viewport);
@@ -416,6 +433,7 @@ int framework::run() {
 
 	FrameRateCalculator::getInstance().Init();
 	SceneManager::getInstance().ChangeScene(new SceneGame());
+	//SceneManager::getInstance().ChangeScene(new SceneLoading(std::make_unique<SceneGame>()));
 
 	while (WM_QUIT != msg.message)
 	{

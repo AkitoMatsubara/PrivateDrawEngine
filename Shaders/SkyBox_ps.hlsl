@@ -4,8 +4,6 @@
 Texture2D Image : register(t0);
 
 SamplerState diffuse_sampler_state : register(s0);
-SamplerState linear_sampler_state : register(s1); // linearFüŒ`
-SamplerState anisotropic_sampler_state : register(s2); // anisotropicFˆÙ•û«
 
 float4 main(PS_IN pin) : SV_TARGET
 {

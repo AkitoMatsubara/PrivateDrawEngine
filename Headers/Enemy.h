@@ -3,7 +3,7 @@
 #include "skinned_mesh.h"
 #include "shaderEx.h"
 #include "Object3d.h"
-#include "Singleton.h"
+#include "GPUParticle.h"
 
 #include <memory>
 
@@ -32,6 +32,8 @@ private:
 	float interval;	// ”­Ë‚µ‚Ä‚©‚ç‚¢‚­‚ç‚©
 	bool shoted;	// Œ‚‚Á‚½‚©‚Ç‚¤‚©
 
+	bool death;	// ‘Ì—Í‚ªs‚«‚½‚©‚Ç‚¤‚©
+
 public:
 	std::unique_ptr<Object3d> Parameters;
 	// ŠÖ”
@@ -42,7 +44,7 @@ private:
 public:
 	void Initialize();
 	void Update();
-	void Render();
+	void Render(Shader* shader = nullptr);
 
 	/// <summary>ƒ^[ƒQƒbƒg•ûŒü‚ÖŒü‚­</summary>
 	/// <param name="focusAngle">‹–ìŠp“x 0.0f`360.0f</param>
@@ -53,7 +55,10 @@ public:
 	/// <summary>‚ ‚Æ”­ËŠÔŠu‚ÌŠÇ—</summary>
 	void Shot();
 
+	// ”íŒ‚’Ä‰‰o
+	bool Destroy();
 
+	void setDeath(bool flg) { death = flg; }
 
 	bool getExist() { return Parameters->Exist; }
 	void setExist(const bool flg) { Parameters->Exist = flg; }
@@ -71,7 +76,7 @@ public:
 
 	void Initialize();
 	void Update();	// ‘¶İ‚µ‚Ä‚¢‚È‚¢’e‚Í“à•”‚Åíœ‚µ‚Ä‚¢‚é
-	void Render();
+	void Render(Shader* shader = nullptr);
 
 	static EnemyManager& getInstance()
 	{
