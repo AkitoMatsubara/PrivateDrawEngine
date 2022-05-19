@@ -95,10 +95,10 @@ private:
 public:
 
 	bool Init();
-	void Update();
-	void Draw();
+	void Update(ID3D11DeviceContext* device_context);
+	void Draw(ID3D11DeviceContext* device_context);
 
-	void Play(); // パーティクルの再生 やることは更新と描画の両方
+	void Play(ID3D11DeviceContext* device_context); // パーティクルの再生 やることは更新と描画の両方
 
 	void SetParticle();	// パーティクルの再設定
 	void SetFirstPos(DirectX::SimpleMath::Vector3 pos);

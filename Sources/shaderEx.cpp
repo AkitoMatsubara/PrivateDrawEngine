@@ -238,7 +238,6 @@ HRESULT ShaderEx::create_cs_from_cso(ID3D11Device* device, const char* cso_name,
 bool ShaderEx::CreatePS(const WCHAR* psfilename)
 {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
-	ID3D11DeviceContext* device_context = FRAMEWORK->GetDeviceContext();
 	//ワイド文字からマルチバイト文字へ変換
 	char fullname[256];
 
@@ -255,7 +254,6 @@ bool ShaderEx::CreatePS(const WCHAR* psfilename)
 bool ShaderEx::CreateVS(const WCHAR* vsfilename, const UINT IL_NUM, D3D11_INPUT_ELEMENT_DESC ia_desc[])
 {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
-	ID3D11DeviceContext* device_context = FRAMEWORK->GetDeviceContext();
 	UINT numElements = 0;
 
 	//ワイド文字からマルチバイト文字へ変換
@@ -272,13 +270,9 @@ bool ShaderEx::CreateVS(const WCHAR* vsfilename, const UINT IL_NUM, D3D11_INPUT_
 	}
 	else	// 未指定であればデフォルトのdescを使用
 	{
-		numElements = sizeof(input_element_desc) / sizeof(input_element_desc[0]);
+		numElements = std::size(input_element_desc);
 		create_vs_from_cso(device, fullname, VS.GetAddressOf(), InputLayout.GetAddressOf(), input_element_desc, numElements);
 	}
-
-	device_context->IASetInputLayout(InputLayout.Get());
-
-
  	return false;
 
 }

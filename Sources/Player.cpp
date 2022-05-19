@@ -89,11 +89,11 @@ void Player::Update() {
 	//-----------------------------------------------------------------------------------------------------------------------------------------------------
 }
 
-void Player::Render(Shader* shader) {
-	if (Parameters->Exist) { 
-		(shader) ? Model->Render(shader) : Model->Render();	// シェーダーが外部から設定されていれば使用する
+void Player::Render(ID3D11DeviceContext* device_context, Shader* shader) {
+	if (Parameters->Exist) {
+		(shader) ? Model->Render(device_context,shader) : Model->Render(device_context);	// シェーダーが外部から設定されていれば使用する
 	}
-	ShotsManager->Render();
+	ShotsManager->Render(device_context);
 #ifdef _DEBUG
 	//Capcule->Render        (FRAMEWORK->RS_WIRE_NONE);
 	//testSphere2->Render    (FRAMEWORK->RS_WIRE_NONE);

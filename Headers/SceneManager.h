@@ -42,12 +42,12 @@ private:
 protected:
 	void CreateConstantBuffer(ID3D11Buffer** ppBuffer, u_int size);
 public:
-	SceneBase() :NewScene(nullptr){}
+	SceneBase() :NewScene(nullptr) {}
 	virtual ~SceneBase();
 
 	virtual bool Initialize() = 0;
-	virtual void Update()     = 0;
-	virtual void Render()     = 0;
+	virtual void Update() = 0;
+	virtual void Render() = 0;
 
 	void imguiSceneChanger();
 
@@ -70,9 +70,10 @@ public:
 // 起動時実行シーンはframework.cppにインクルードして指定。初回起動に使うにはframework.cppにインクルードして指定する
 
 
-class SceneManager{
+class SceneManager {
 private:
 	std::unique_ptr<SceneBase> CurrentScene;
+	bool LoadComplete;	//	ロードが完了したフレームだけ真になるフラグ
 public:
 	static SceneManager& getInstance() {
 		static SceneManager instance;
@@ -80,10 +81,14 @@ public:
 	}
 
 
-	SceneManager() :CurrentScene(nullptr) {}
+	SceneManager() :CurrentScene(nullptr), LoadComplete(false) {}
 
 	void Update();
 	void Render();
 	void ChangeScene(SceneBase* newScene);	// シーン切り替え関数
 	//void ChangeScene(std::unique_ptr<SceneBase> newScene);	// シーン切り替え関数
+	void setLoadComplete(bool flg) { LoadComplete = flg; }
+
+	bool getLoadComplete() { return LoadComplete; }
+	SceneBase* getCurrentScene() { return CurrentScene.get(); }
 };

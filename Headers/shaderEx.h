@@ -31,7 +31,8 @@ public:
 	bool CreateGS(const WCHAR* gsfilename);
 	bool CreateCS(const WCHAR* csfilename);
 
-	ID3D11ComputeShader*	GetCS() { return CS.Get(); }
-	ID3D11PixelShader*		GetPS() { return PS.Get(); }
 	ID3D11VertexShader*		GetVS() { return VS.Get(); }
+	ID3D11PixelShader*		GetPS() { return PS.Get(); }
+	ID3D11InputLayout*		GetIL() { return InputLayout.Get(); }
+	ID3D11ComputeShader*	GetCS() { return CS.Get(); }
 };

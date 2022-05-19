@@ -20,7 +20,7 @@ public:
 	bool Load(const wchar_t* filename = nullptr);
 	bool LoadMipMap(const wchar_t* filename = nullptr);
 
-	void Set(UINT Slot = 0, BOOL flg = TRUE);
+	void Set(ID3D11DeviceContext* device_context, UINT Slot = 0, BOOL flg = TRUE);
 
 	bool Create(u_int width, u_int height, DXGI_FORMAT format);
 	bool CreateMipMap(u_int width, u_int height, DXGI_FORMAT format);

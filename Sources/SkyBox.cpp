@@ -53,7 +53,7 @@ SkyBox::~SkyBox() {	}
 
 void SkyBox::Render(Camera* camera)
 {
-	const Microsoft::WRL::ComPtr<ID3D11DeviceContext> immediate_context = FRAMEWORK->GetDeviceContext();
+	static const Microsoft::WRL::ComPtr<ID3D11DeviceContext> immediate_context = FRAMEWORK->GetDeviceContext();
 
 	SkycBuffer.CameraPos = DirectX::SimpleMath::Vector4{ camera->GetPos().x,camera->GetPos().y,camera->GetPos().z,1.0f };
 	SkycBuffer.InverseView = DirectX::XMMatrixInverse(nullptr, camera->GetView());	// ‹ts—ñ‚ðŒvŽZ
@@ -64,7 +64,7 @@ void SkyBox::Render(Camera* camera)
 	immediate_context->UpdateSubresource(cBuffer.Get(), 0, 0, &SkycBuffer, 0, 0);
 
 	immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(FRAMEWORK->DS_FALSE),0);
-	sample->Set(0);
-	SkyImage->Render(nullptr, SkyShader.get());
+	sample->Set(immediate_context.Get(), 0);
+	SkyImage->Render(immediate_context.Get(), nullptr, SkyShader.get());
 	immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(FRAMEWORK->DS_TRUE), 0);
 }

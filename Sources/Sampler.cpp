@@ -56,10 +56,8 @@ Sampler::Sampler(D3D11_FILTER filter, D3D11_TEXTURE_ADDRESS_MODE Address_mode, F
 	//----------------------------------------------------------------
 }
 
-void Sampler::Set(UINT Slot)
+void Sampler::Set(ID3D11DeviceContext* device_context, UINT Slot)
 {
-	ID3D11DeviceContext* device_context = FRAMEWORK->GetDeviceContext();
-
 	if (sampler_state) {
 		device_context->PSSetSamplers(Slot, 1, sampler_state.GetAddressOf());
 		device_context->DSSetSamplers(Slot, 1, sampler_state.GetAddressOf());

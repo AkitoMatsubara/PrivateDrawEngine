@@ -41,8 +41,8 @@ void Enemy::Update() {
 #endif
 }
 
-void Enemy::Render(Shader* shader) {
-	(shader) ? Model->Render(shader) : Model->Render();
+void Enemy::Render(ID3D11DeviceContext* device_context, Shader* shader) {
+	(shader) ? Model->Render(device_context,shader) : Model->Render(device_context);
 	//Capcule->Render(true);
 }
 
@@ -179,14 +179,14 @@ void EnemyManager::Update()
 	shotsManager->Update();
 }
 
-void EnemyManager::Render(Shader* shader)
+void EnemyManager::Render(ID3D11DeviceContext* device_context, Shader* shader)
 {
 	for (auto enem = Enemys.begin(); enem != Enemys.end(); ++enem)
 	{
 		// “G‚Ì•`‰æ
-		enem->get()->Render(shader);
+		enem->get()->Render(device_context, shader);
 	}
-	shotsManager->Render();
+	shotsManager->Render(device_context);
 }
 
 void EnemyManager::newSet(const Object3d* initData)

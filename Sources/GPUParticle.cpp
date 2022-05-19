@@ -120,18 +120,17 @@ bool GPUParticle::Init()
 	return true;
 }
 
-void GPUParticle::Update()
+void GPUParticle::Update(ID3D11DeviceContext* device_context)
 {
-	Microsoft::WRL::ComPtr<ID3D11DeviceContext> immediate_context = FRAMEWORK->GetDeviceContext();
 	Microsoft::WRL::ComPtr<ID3D11Device> device = FRAMEWORK->GetDevice();
 	HRESULT hr = { S_OK };
 
 	D3D11_MAPPED_SUBRESOURCE subRes;
-	immediate_context->Map(InputBuffer.Get(), NULL, D3D11_MAP_WRITE_DISCARD, NULL, &subRes);	// subResにInputBufferをマップ
+	device_context->Map(InputBuffer.Get(), NULL, D3D11_MAP_WRITE_DISCARD, NULL, &subRes);	// subResにInputBufferをマップ
 	{
 		memcpy(subRes.pData, vVecBuf.data(), sizeof(VBuffer) * ParticleAmount);	// SRVのバッファに初期化情報をコピー
 	}
-	immediate_context->Unmap(InputBuffer.Get(), 0);
+	device_context->Unmap(InputBuffer.Get(), 0);
 
 	// **********************************************************
 	// コンピュート・シェーダを使った演算
@@ -150,89 +149,91 @@ void GPUParticle::Update()
 
 	D3D11_MAPPED_SUBRESOURCE MappedResource;
 	// D3D11_MAP_WRITE_DISCARD : もとのデータを無効にして書き込む
-	immediate_context->Map(DynamicCBuffer.Get(), NULL, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource);
+	device_context->Map(DynamicCBuffer.Get(), NULL, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource);
 	{
 		// 動的コンスタントバッファの値にコピーする
 		CopyMemory(MappedResource.pData, &g_cbCBuffer, sizeof(cbCBuffer));
 	}
 	// マップ解除
-	immediate_context->Unmap(DynamicCBuffer.Get(), NULL);
+	device_context->Unmap(DynamicCBuffer.Get(), NULL);
 
 	// PSに定数バッファを設定
-	immediate_context->CSSetShader(ParticleShader->GetCS(), 0, 0);
-	immediate_context->CSSetConstantBuffers(0, 1, DynamicCBuffer.GetAddressOf());
+	device_context->CSSetShader(ParticleShader->GetCS(), 0, 0);
+	device_context->CSSetConstantBuffers(0, 1, DynamicCBuffer.GetAddressOf());
 
 	// CPUを介さずやり取りを行うため、２つのバッファで位置等を交互に出し入れしていた(過去
 	// 0の情報をもとに計算、結果を1に → 1の情報をもとに計算、結果を0に…  というように
 	// TODO:今は亡き手法、後でコメント消そう
 
 	// SRVの設定
-	immediate_context->CSSetShaderResources(0, 1, g_pSRV.GetAddressOf());
+	device_context->CSSetShaderResources(0, 1, g_pSRV.GetAddressOf());
 
 	// UAVの設定
-	immediate_context->CSSetUnorderedAccessViews(0, 1, g_pUAV.GetAddressOf(), 0);
+	device_context->CSSetUnorderedAccessViews(0, 1, g_pUAV.GetAddressOf(), 0);
 	// CSの実行
-	if(runCS) immediate_context->Dispatch(DispathNo, 1, 1);
+	if(runCS) device_context->Dispatch(DispathNo, 1, 1);
 
-	immediate_context->CopyResource(VerticesBuffer.Get(), InputBuffer.Get());	// 描画前に計算した値を頂点バッファに入れる
+	device_context->CopyResource(VerticesBuffer.Get(), InputBuffer.Get());	// 描画前に計算した値を頂点バッファに入れる
 
 	// 結果をCPUから読み込む
-	immediate_context->CopyResource(CPUReadBackBuffer.Get(), OutputBuffer.Get());
+	device_context->CopyResource(CPUReadBackBuffer.Get(), OutputBuffer.Get());
 	// 結果を頂点バッファ情報へコピーする
-	hr = immediate_context->Map(CPUReadBackBuffer.Get(), 0, D3D11_MAP_READ, 0, &MappedResource);
+	if (device_context->GetType() == D3D11_DEVICE_CONTEXT_IMMEDIATE)	// DeferredContextでは動かないように設定 MAP_READは使えないため
 	{
-		VBuffer* pt = static_cast<VBuffer*>(MappedResource.pData);
-		memcpy(vVecBuf.data(), pt, sizeof(VBuffer) * ParticleAmount);
+		hr = device_context->Map(CPUReadBackBuffer.Get(), 0, D3D11_MAP_READ, 0, &MappedResource);
+		{
+			VBuffer* pt = static_cast<VBuffer*>(MappedResource.pData);
+			memcpy(vVecBuf.data(), pt, sizeof(VBuffer) * ParticleAmount);
+		}
+		device_context->Unmap(CPUReadBackBuffer.Get(), 0);
 	}
-	immediate_context->Unmap(CPUReadBackBuffer.Get(), 0);
 	//----------------------------------------------------
 }
 
-void GPUParticle::Draw()
+void GPUParticle::Draw(ID3D11DeviceContext* device_context)
 {
-	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();
 
 	// ***************************************
 	// VSに定数バッファを設定
-	immediate_context->VSSetConstantBuffers(0, 1, DynamicCBuffer.GetAddressOf());
+	device_context->VSSetConstantBuffers(0, 1, DynamicCBuffer.GetAddressOf());
 	// PSに定数バッファを設定
-	immediate_context->PSSetConstantBuffers(0, 1, DynamicCBuffer.GetAddressOf());
-	immediate_context->GSSetConstantBuffers(0, 1, DynamicCBuffer.GetAddressOf());
+	device_context->PSSetConstantBuffers(0, 1, DynamicCBuffer.GetAddressOf());
+	device_context->GSSetConstantBuffers(0, 1, DynamicCBuffer.GetAddressOf());
 
 	// ***************************************
 
 	// IAに頂点バッファを設定
 	UINT strides[1] = { sizeof(VBuffer) };
 	UINT offsets[1] = { 0 };
-	immediate_context->IASetVertexBuffers(0, 1, VerticesBuffer.GetAddressOf(), strides, offsets);
+	device_context->IASetVertexBuffers(0, 1, VerticesBuffer.GetAddressOf(), strides, offsets);
 
 	// IAにプリミティブの種類を設定
-	immediate_context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
+	device_context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
 
 	// 各シェーダのセット
-	ParticleShader->Activate();
+	ParticleShader->Activate(device_context);
 
-	texture->Set(0);
-	sample->Set(0);
+	texture->Set(device_context,0);
+	sample->Set (device_context,0);
 
 	static const UINT MASK = 0xffffffff;
-	(blendNone) ? 
-		immediate_context->OMSetBlendState(FRAMEWORK->GetBlendState(FRAMEWORK->BS_NONE), nullptr, MASK)
-	  : immediate_context->OMSetBlendState(FRAMEWORK->GetBlendState(FRAMEWORK->BS_ADD), nullptr, MASK);
+	(blendNone) ?
+		device_context->OMSetBlendState(FRAMEWORK->GetBlendState(FRAMEWORK->BS_NONE), nullptr, MASK)
+	  : device_context->OMSetBlendState(FRAMEWORK->GetBlendState(FRAMEWORK->BS_ADD), nullptr, MASK);
 
-	immediate_context->RSSetState(FRAMEWORK->GetRasterizerState(FRAMEWORK->RS_SOLID_BACK_CCW));
+	device_context->RSSetState(FRAMEWORK->GetRasterizerState(FRAMEWORK->RS_SOLID_BACK_CCW));
 	// ***************************************
 	// 描画する
-	immediate_context->Draw(ParticleAmount, 0);
+	device_context->Draw(ParticleAmount, 0);
 	// シェーダの無効化
-	ParticleShader->Inactivate();
-	texture->Set(0, false);
+	ParticleShader->Inactivate(device_context);
+	texture->Set(device_context,0, false);
 	//----------------------------------------------------
 }
 
-void GPUParticle::Play(){
-	Update();
-	Draw();
+void GPUParticle::Play(ID3D11DeviceContext* device_context){
+	Update(device_context);
+	Draw(device_context);
 }
 
 void GPUParticle::SetParticle()

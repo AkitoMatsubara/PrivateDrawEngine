@@ -7,13 +7,19 @@ class SceneLoading:public SceneBase{
 private:
 	std::unique_ptr<SceneBase> NextScene;	// ロードするシーン
 
+	// マルチスレッド用DeferrerdContext
+	Microsoft::WRL::ComPtr<ID3D11DeviceContext> deferredContext;
+
 	std::unique_ptr<Sprite> LoadingImage;
 
 	// シーン定数バッファ
-	struct SceneConstants {
-		DirectX::SimpleMath::Matrix view_projection;	// VP変換行列
-		DirectX::SimpleMath::Vector4 light_direction;	// ライトの向き
-		DirectX::SimpleMath::Vector4 camera_position;	// カメラの位置
+	struct SceneConstants
+	{
+		DirectX::SimpleMath::Matrix view_projection;
+		DirectX::SimpleMath::Vector4 light_direction;
+		DirectX::SimpleMath::Vector4 camera_position;
+		DirectX::SimpleMath::Matrix  view;
+		DirectX::SimpleMath::Matrix  projection;
 	};
 
 	Microsoft::WRL::ComPtr<ID3D11Buffer> ConstantBuffers[8];
@@ -32,6 +38,7 @@ protected:
 private:
 	// ローディングスレッド
 	static void LoadingThread(SceneLoading* scene);
+	std::thread Thread;
 public:
 	SceneLoading(std::unique_ptr<SceneBase>nextScene) :NextScene(nullptr)
 	{

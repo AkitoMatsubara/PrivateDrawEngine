@@ -22,7 +22,7 @@ public:
 	//	D3D11_TEXTURE_ADDRESS_BORDER -color[4]ÇÃêFÇ≈ìhÇËÇ¬Ç‘Ç∑
 	Sampler(D3D11_FILTER filter, D3D11_TEXTURE_ADDRESS_MODE Address_mode, FLOAT color[4] = { 0 });
 
-	void Set(UINT Slot = 0);
+	void Set(ID3D11DeviceContext* device_context, UINT Slot = 0);
 
 	ID3D11SamplerState* GetSamplerState() { return sampler_state.Get(); }
 };

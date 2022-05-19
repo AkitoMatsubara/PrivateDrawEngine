@@ -44,7 +44,7 @@ private:
 public:
 	void Initialize();
 	void Update();
-	void Render(Shader* shader = nullptr);
+	void Render(ID3D11DeviceContext* device_context, Shader* shader = nullptr);
 
 	/// <summary>ƒ^[ƒQƒbƒg•ûŒü‚ÖŒü‚­</summary>
 	/// <param name="focusAngle">‹–ìŠp“x 0.0f`360.0f</param>
@@ -76,7 +76,7 @@ public:
 
 	void Initialize();
 	void Update();	// ‘¶İ‚µ‚Ä‚¢‚È‚¢’e‚Í“à•”‚Åíœ‚µ‚Ä‚¢‚é
-	void Render(Shader* shader = nullptr);
+	void Render(ID3D11DeviceContext* device_context, Shader* shader = nullptr);
 
 	static EnemyManager& getInstance()
 	{

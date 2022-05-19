@@ -82,7 +82,7 @@ void Geometric_Primitive::Render(int rs_state) {
 	immediate_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// シェーダの有効化
-	GeometricShader->Activate();
+	GeometricShader->Activate(immediate_context);
 
 	DirectX::XMMATRIX S{ DirectX::XMMatrixScaling(Parameters->Scale.x,Parameters->Scale.y,Parameters->Scale.z) };	// 拡縮
 	//DirectX::XMMATRIX R{ DirectX::XMMatrixRotationRollPitchYaw(DirectX::XMConvertToRadians(Parameters->Rotate.x), DirectX::XMConvertToRadians(Parameters->Rotate.y), DirectX::XMConvertToRadians(Parameters->Rotate.z)) };	// 回転
@@ -109,7 +109,7 @@ void Geometric_Primitive::Render(int rs_state) {
 	immediate_context->DrawIndexed(buffer_desc.ByteWidth / sizeof(uint32_t), 0, 0);	// 描画するインデックスの数,最初のインデックスの場所,頂点バッファから読み取る前に追加する値
 
 	// シェーダの無効化
-	GeometricShader->Inactivate();
+	GeometricShader->Inactivate(immediate_context);
 }
 
 void Geometric_Primitive::imguiWindow(const char* beginname) {

@@ -29,7 +29,7 @@ public:
 
 	void Initialize();
 	void Update(bool inst);
-	void Render(UINT drawCount, bool inst, Shader* shader = 0);
+	void Render(ID3D11DeviceContext* device_context, UINT drawCount, bool inst, Shader* shader = 0);
 
 	//bool onObject(const Object3d& obj);	// 三角形モデルのとき 前方に少しずらして判定をとってた
 	bool onObjectSphere(const Object3d& obj, const float& radian);	// 球モデル時の判定
@@ -51,7 +51,7 @@ public:
 	StageManager();
 	void Initialize();
 	void Update();
-	void Render(Shader* shader = nullptr);
+	void Render(ID3D11DeviceContext* device_context, Shader* shader = nullptr);
 
 	static StageManager& getInstance()
 	{

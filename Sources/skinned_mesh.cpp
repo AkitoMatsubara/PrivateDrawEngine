@@ -137,8 +137,7 @@ Skinned_Mesh::Skinned_Mesh(const char* fbx_filename, int cstNo, bool triangulate
 	Parameters->Color = DirectX::SimpleMath::Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
-void Skinned_Mesh::Render(Shader* shader, int rs_state) {
-	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();
+void Skinned_Mesh::Render(ID3D11DeviceContext* device_context, Shader* shader, int rs_state) {
 
 	{
 		// 単位をセンチメートルからメートルに変更するため、scale_factorを0.01に設定する
@@ -156,14 +155,14 @@ void Skinned_Mesh::Render(Shader* shader, int rs_state) {
 
 		uint32_t stride{ sizeof(Vertex) };	// stride:刻み幅
 		uint32_t offset{ 0 };
-		immediate_context->IASetVertexBuffers(0, 1, mesh.VertexBuffer.GetAddressOf(), &stride, &offset);
-		immediate_context->IASetIndexBuffer(mesh.index_buffer.Get(), DXGI_FORMAT_R32_UINT, 0);
-		immediate_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		device_context->IASetVertexBuffers(0, 1, mesh.VertexBuffer.GetAddressOf(), &stride, &offset);
+		device_context->IASetIndexBuffer(mesh.index_buffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+		device_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 		// シェーダの設定
-		shader->Activate();
+		shader->Activate(device_context);
 		// ラスタライザステートの設定
-		immediate_context->RSSetState(FRAMEWORK->GetRasterizerState(rs_state));
+		device_context->RSSetState(FRAMEWORK->GetRasterizerState(rs_state));
 
 		Constants data{ matWorld,Parameters->Color };
 		DirectX::XMStoreFloat4x4(&data.world,
@@ -175,24 +174,24 @@ void Skinned_Mesh::Render(Shader* shader, int rs_state) {
 				const Material& material = materials.at(subset.material_unique_id);
 				if (materials.size() > 0)	// マテリアル情報があるか確認
 				{
-					immediate_context->PSSetShaderResources(0, 1, material.srv[0].GetAddressOf());
+					device_context->PSSetShaderResources(0, 1, material.srv[0].GetAddressOf());
 					DirectX::XMStoreFloat4(&data.material_color, DirectX::XMVectorMultiply(DirectX::XMLoadFloat4(&Parameters->Color), DirectX::XMLoadFloat4(&material.Kd)));	// マテリアルとカラーを合成
 				}
 			}
 			else
 			{
-				immediate_context->PSSetShaderResources(0, 1, dummyTexture.GetAddressOf());	// ダミーテクスチャを使用する
+				device_context->PSSetShaderResources(0, 1, dummyTexture.GetAddressOf());	// ダミーテクスチャを使用する
 			}
 
-			immediate_context->VSSetConstantBuffers(0, 1, ConstantBuffers.GetAddressOf());
-			immediate_context->UpdateSubresource(ConstantBuffers.Get(), 0, 0, &data, 0, 0);
-			immediate_context->DrawIndexed(subset.index_count, subset.start_index_location, 0);	// 描画するインデックスの数,最初のインデックスの場所,頂点バッファから読み取る前に追加する値
+			device_context->VSSetConstantBuffers(0, 1, ConstantBuffers.GetAddressOf());
+			device_context->UpdateSubresource(ConstantBuffers.Get(), 0, 0, &data, 0, 0);
+			device_context->DrawIndexed(subset.index_count, subset.start_index_location, 0);	// 描画するインデックスの数,最初のインデックスの場所,頂点バッファから読み取る前に追加する値
 		}
 	}
 	constexpr static ID3D11ShaderResourceView* nullSrv[1] = { nullptr };
-	immediate_context->PSSetShaderResources(0, 1, nullSrv);	// SRVを未設定にする ここではテクスチャ
+	device_context->PSSetShaderResources(0, 1, nullSrv);	// SRVを未設定にする ここではテクスチャ
 	// シェーダの無効化
-	shader->Inactivate();
+	shader->Inactivate(device_context);
 
 }
 

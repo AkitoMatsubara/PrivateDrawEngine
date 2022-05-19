@@ -25,27 +25,21 @@ bool SceneTitle::Initialize() {
 	{
 		// spriteオブジェクトを生成(今回は先頭の１つだけを生成する)
 		TitleImage = std::make_unique<Sprite>();
-		TitleImage->LoadImages(L".\\Resources\\screenshot.jpg");
-		TitleImage->setSize(1280, 720);
+		TitleImage->LoadImages(L".\\Resources\\Title\\Title.png");
 
 		// Geometric_primitiveオブジェクトの生成
 		{
 			Grid = std::make_unique<Geometric_Cube>();
 			Grid->setPos(DirectX::SimpleMath::Vector3(0, -1, 0));
 			Grid->setSize(DirectX::SimpleMath::Vector3(10, 0.1f, 10));
-			GeomtricShader = std::make_unique<ShaderEx>();
-			GeomtricShader->CreateVS(L"Shaders\\geometric_primitive_vs");
-			GeomtricShader->CreatePS(L"Shaders\\geometric_primitive_ps");
 		}
 
-		//skinned_mesh = make_unique<Skinned_Mesh>(".\\Resources\\cube.000.fbx");		// テクスチャ、マテリアル無し
-		skinned_mesh = std::make_unique<Skinned_Mesh>(".\\Resources\\cube.001.0.fbx");	// テクスチャ使用
-		//skinned_mesh = make_unique<Skinned_Mesh>(".\\Resources\\cube.001.1.fbx");	// 埋め込みテクスチャ
-		//skinned_mesh = make_unique<Skinned_Mesh>(".\\Resources\\cube.002.0.fbx");	// 3種テクスチャ使用
-		//skinned_mesh = make_unique<Skinned_Mesh>(".\\Resources\\cube.002.1.fbx");	// テクスチャ有り無し、マテリアル有り無し混合
-		//skinned_mesh = make_unique<Skinned_Mesh>(".\\Resources\\cube.003.0.fbx");	// 複数メッシュ キューブと猿
-		//skinned_mesh = make_unique<Skinned_Mesh>(".\\Resources\\cube.003.1.fbx", Skinned_Mesh::CST_RIGHT_Z, true);	// 3角形化されていない複数メッシュ キューブ
-		camera = std::make_unique<Camera>();
+		GpuParticle = std::make_unique<GPUParticle>();
+		GpuParticle->Init();
+
+		skinned_mesh = std::make_unique<Skinned_Mesh>(".\\Resources\\Player\\Player.fbx");
+
+		Camera::getInstance().SetProjection(DirectX::XMConvertToRadians(30), Camera::getInstance().GetWidth() / Camera::getInstance().GetHeight(), Camera::getInstance().GetNear(), Camera::getInstance().GetFar());
 	}
 	return true;
 }
@@ -64,58 +58,51 @@ void SceneTitle::Update() {
 	}
 	//if (GetAsyncKeyState('G') & 1) setScene(std::make_unique<SceneGame>());
 	// カメラ操作
-	static float speed = 7.0f;
-	if (GetKeyState('D') < 0)  eyePos.x += speed * elapsed_time;	// 右に
-	if (GetKeyState('A') < 0)  eyePos.x -= speed * elapsed_time;	// 左に
-	if (GetKeyState('W') < 0)  eyePos.z += speed * elapsed_time;	// 前に
-	if (GetKeyState('S') < 0)  eyePos.z -= speed * elapsed_time;	// 後ろに
-	if (GetKeyState(VK_SPACE) < 0)  eyePos.y += speed * elapsed_time;	// 上に
-	if (GetKeyState(VK_SHIFT) < 0)  eyePos.y -= speed * elapsed_time;	// 下に
-
-	// 透視投影行列の作成
-	camera->Set(eyePos, DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f), DirectX::XMFLOAT3(0, 1, 0));
-	camera->SetProjection(DirectX::XMConvertToRadians(30), camera->GetWidth() / camera->GetHeight(), camera->GetNear(), camera->GetFar());
+	// カメラ設定
+	Camera::getInstance().Set(Camera::getInstance().GetPos(), DirectX::SimpleMath::Vector3(0, 0, 0), DirectX::XMFLOAT3(0, 1, 0));
+	// カメラ操作
+	Camera::getInstance().Operate();
+	Camera::getInstance().Activate();
 }
 
 void SceneTitle::Render() {
 	HRESULT hr{ S_OK };
 
-	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();	// DevCon取得
+	static const Microsoft::WRL::ComPtr<ID3D11DeviceContext> immediate_context = FRAMEWORK->GetDeviceContext();
 
-	FRAMEWORK->Clear(ClearColor);	// 一旦クリア
+	FRAMEWORK->Clear(ClearColor,immediate_context.Get());	// 一旦クリア
 
 		// ビューポートの設定
-	FRAMEWORK->CreateViewPort();
+	FRAMEWORK->CreateViewPort(immediate_context.Get());
 
 	// サンプラーステートをバインド
-	DefaultSampleClamp->Set(0);
+	DefaultSampleClamp->Set(immediate_context.Get(), 0);
 
 	immediate_context->OMSetBlendState(FRAMEWORK->GetBlendState(FRAMEWORK->BS_ALPHA), nullptr, 0xFFFFFFFF);	// ブレンドインターフェースのポインタ、ブレンドファクターの配列値、サンプルカバレッジ(今回はデフォルト指定)
 
 	// 2Dオブジェクトの描画設定
 	{
-		immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(FRAMEWORK->DS_TRUE), 1);	// 3Dオブジェクトの後ろに出すため一旦
-		TitleImage->Render();
+		immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(FRAMEWORK->DS_FALSE), 1);	// 3Dオブジェクトの後ろに出すため一旦
+		TitleImage->Render(immediate_context.Get());
+		immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(FRAMEWORK->DS_TRUE_WRITE), 1);			// 2Dオブジェクトとの前後関係をしっかりするため再設定
 	}
 	// 3Dオブジェクトの描画設定
 	{
-		camera->Activate();
-
 		// コンスタントバッファ更新
 		SceneConstants data{};
-		XMStoreFloat4x4(&data.view_projection, camera->GetView() * camera->GetProjection());	// Matrixから4x4へ変換
+		XMStoreFloat4x4(&data.view_projection, Camera::getInstance().GetView() * Camera::getInstance().GetProjection());	// Matrixから4x4へ変換
 		data.light_direction = DirectX::SimpleMath::Vector4{ light_dir[0],light_dir[1],light_dir[2],0 };	// シェーダに渡すライトの向き
 		data.camera_position = DirectX::SimpleMath::Vector4{ eyePos.x,eyePos.y,eyePos.z,0 };				// シェーダに渡すカメラの位置
+		data.view = Camera::getInstance().GetView();
+		data.projection = Camera::getInstance().GetProjection();
 		immediate_context->UpdateSubresource(ConstantBuffers[0].Get(), 0, 0, &data, 0, 0);
 		immediate_context->VSSetConstantBuffers(1, 1, ConstantBuffers[0].GetAddressOf());	// cBufferはドローコールのたびに消去されるので都度設定する必要がある
 		immediate_context->PSSetConstantBuffers(1, 1, ConstantBuffers[0].GetAddressOf());
-
-		immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(FRAMEWORK->DS_TRUE_WRITE), 1);			// 2Dオブジェクトとの前後関係をしっかりするため再設定
-
 		{
 			// 3DオブジェクトRender内に移植 現状ここである必要なし？
 			Grid->Render(true);
-			skinned_mesh->Render();
+			//skinned_mesh->Render(immediate_context.Get());
+			//GpuParticle->Play(immediate_context.Get());
 		}
 	}
 
@@ -136,7 +123,7 @@ void SceneTitle::imguiUpdate() {
 	// 2D用 内部関数で完結させてる
 	TitleImage->ImguiWindow();
 	// 3D用パラメータ
-	skinned_mesh->imguiWindow("fbx");
+	//skinned_mesh->imguiWindow("fbx");
 
 	// ライト調整等グローバル設定
 	ImGui::Begin("Light");

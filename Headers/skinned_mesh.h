@@ -207,7 +207,7 @@ public:
 	// マテリアルの取り出し
 	void Fetch_Materials(FbxScene* fbx_scene, std::unordered_map<uint64_t, Material>& materials);
 
-	void Render(Shader* shader = SkinnedShader.get(), int rs_state = 0);	// デフォルトでシェーダを持っているので未指定でも可
+	void Render(ID3D11DeviceContext* device_context, Shader* shader = SkinnedShader.get(), int rs_state = 0);	// デフォルトでシェーダを持っているので未指定でも可
 
 	// paramを編集するimguiウィンドウ
 	void imguiWindow(const char* beginname = "skinned_mesh");

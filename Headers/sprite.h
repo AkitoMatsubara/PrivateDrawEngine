@@ -31,10 +31,10 @@ public:
 	void LoadImages(const wchar_t* filename);
 
 	// 頂点情報の生成、更新
-	void CreateVertexData(Texture* texture, Shader* shader);
+	void CreateVertexData(ID3D11DeviceContext* device_context, Texture* texture, Shader* shader, ID3D11CommandList** comand_list);
 
 	// メンバ変数のパラメータで描画
-	void Render(Texture* texture = nullptr, Shader* shader = SpriteShader.get());	// immediate(対象となるデータそのものをコード中に記したものを即値という)
+	void Render(ID3D11DeviceContext* device_context, Texture* texture = nullptr, Shader* shader = SpriteShader.get(), ID3D11CommandList** comand_list = nullptr);	// immediate(対象となるデータそのものをコード中に記したものを即値という)
 
 	//// 位置だけ指定するRender アニメーション不可
 	//void Render(Shader* shader, DirectX::SimpleMath::Vector2 Pos, DirectX::SimpleMath::Vector2 Size);
@@ -70,6 +70,7 @@ public:
 	float getAngle() { return Parameter->Angle; }
 	DirectX::SimpleMath::Vector4 getColor  () { return Parameter->Color;}
 	Texture* getTexture() { return SpriteTexture.get(); }
+	Shader* getShader() { return SpriteShader.get(); }
 };
 
 namespace SpriteMath

@@ -43,8 +43,6 @@ private:
 public:
 	// Sprite型 画像描画用
 	std::unique_ptr<Sprite> Sprites;
-	//std::unique_ptr<sprite_Batch> sprite_batches[8];
-	//std::unique_ptr<Font> font;
 	std::unique_ptr<SkyBox> Skybox;
 
 	// シーン定数バッファ
@@ -78,7 +76,7 @@ public:
 	// カメラ管理クラス的に実装してる 多分管理…うん…
 	//std::unique_ptr<Camera> camera = nullptr;
 	// instance使ってどこからでも呼び出せるように変更、不具合や不都合が分かれば戻そう
-	
+
 	// 関数 //
 private:
 	void DepthShadowMapping();	// 深度値を用いたシャドウマッピング

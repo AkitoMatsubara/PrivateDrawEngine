@@ -90,14 +90,14 @@ public:
 	framework(framework&&) noexcept = delete;
 	framework& operator=(framework&&) noexcept = delete;
 
-	void Clear(FLOAT color[4]);
+	void Clear(FLOAT color[4], ID3D11DeviceContext* device_context);
 	void Flip(int n = 0);
 
 	int run();	// ゲームループ
 	LRESULT CALLBACK handle_message(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 	static framework* getInstance() { return instance; }
 
-	bool CreateViewPort(float width = SCREEN_WIDTH, float height = SCREEN_HEIGHT);				// ViewPortの作成
+	bool CreateViewPort(ID3D11DeviceContext* device_context, float width = SCREEN_WIDTH, float height = SCREEN_HEIGHT);	// ViewPortの作成
 
 	// ゲッター
 	ID3D11Device* GetDevice() { return device.Get(); }

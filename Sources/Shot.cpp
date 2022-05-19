@@ -36,9 +36,9 @@ void Shot::Update()
 	Model->getParameters()->CopyParam(Parameters.get());
 }
 
-void Shot::Render()
+void Shot::Render(ID3D11DeviceContext* device_context)
 {
-	if (Exist) { Model->Render(); }
+	if (Exist) { Model->Render(device_context); }
 }
 
 void Shot::set(const Object3d* parent)
@@ -99,12 +99,12 @@ void ShotManager::Update()
 	}
 }
 
-void ShotManager::Render()
+void ShotManager::Render(ID3D11DeviceContext* device_context)
 {
 	for (auto it = Shots.begin(); it != Shots.end(); ++it)
 	{
 		// ’e‚Ì•`‰æ
-		it->get()->Render();
+		it->get()->Render(device_context);
 	}
 }
 

@@ -24,7 +24,7 @@ bool SceneGame::Initialize() {
 	{
 		// spriteオブジェクトを生成
 		Sprites = std::make_unique<Sprite>();
-		Sprites->LoadImages(L".\\Resources\\screenshot.jpg");
+		Sprites->LoadImages(L".\\Resources\\Loading\\TempImage.jpg");
 		Sprites->setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
 
 		// Geometric_primitiveオブジェクトの生成
@@ -53,7 +53,7 @@ bool SceneGame::Initialize() {
 	//font->LoadFont(L".\\Resources\\fonts\\APJapanesefontF.ttf", L"あんずもじ湛");
 	//font->CreateFontTexture(L"D");
 
-	// シャドウマップ　
+	// シャドウマップ
 	ShadowMapDrawer= std::make_unique<Sprite>();	// シャドウマップ確認用
 	for (int i = 0;i < 2;i++) {
 		ShadowMapTexture[i] = std::make_unique<Texture>();	// レンダーターゲット用テクスチャ
@@ -83,14 +83,14 @@ bool SceneGame::Initialize() {
 void SceneGame::Update() {
 	const float elapsed_time = FRAMEWORK->GetElapsedTime();
 	// シーン切り替え
-	//if (GetAsyncKeyState('L') & 1)
-	//{
-	//	setScene(std::make_unique<SceneLoading>(std::make_unique<SceneTitle>()));
-	//}
-	//if (GetAsyncKeyState('C') & 1)
-	//{
-	//	setScene(std::make_unique<SceneLoading>(std::make_unique<SceneClear>()));
-	//}
+	if (GetAsyncKeyState('T') & 1)
+	{
+		setScene(std::make_unique<SceneLoading>(std::make_unique<SceneTitle>()));
+	}
+	if (GetAsyncKeyState('C') & 1)
+	{
+		setScene(std::make_unique<SceneLoading>(std::make_unique<SceneClear>()));
+	}
 
 	player->Update();
 	StageManager::getInstance().Update();
@@ -121,14 +121,6 @@ void SceneGame::Update() {
 
 		EnemyManager::getInstance().Update();	// 敵更新
 	}
-
-	// コンピュートシェーダーを実行する
-	{
-		Microsoft::WRL::ComPtr<ID3D11DeviceContext> immediate_context = FRAMEWORK->GetDeviceContext();
-		Microsoft::WRL::ComPtr<ID3D11Device> device = FRAMEWORK->GetDevice();
-		HRESULT hr = { S_OK };
-
-	}
 	imguiUpdate();
 }
 
@@ -155,7 +147,7 @@ void SceneGame::GaussianFilter(DirectX::SimpleMath::Vector4* array, int karnel_s
 }
 
 void SceneGame::DepthShadowMapping() {
-	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();	// DevCon取得
+	Microsoft::WRL::ComPtr<ID3D11DeviceContext> immediate_context = FRAMEWORK->GetDeviceContext();	// DevCon取得
 
 	// ShadowTextuereをターゲットに設定
 	ID3D11RenderTargetView* rtv[2] = {ShadowMapTexture[0]->GetRenderTargetView(),ShadowMapTexture[1]->GetRenderTargetView()};
@@ -167,7 +159,7 @@ void SceneGame::DepthShadowMapping() {
 	immediate_context->ClearDepthStencilView(dsv, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 	// ビューポートの設定
-	FRAMEWORK->CreateViewPort(ShadowMapTexture[0]->GetWidth(), ShadowMapTexture[0]->GetHeight());
+	FRAMEWORK->CreateViewPort(immediate_context.Get(), ShadowMapTexture[0]->GetWidth(), ShadowMapTexture[0]->GetHeight());
 
 	// 3Dオブジェクトの描画設定
 	{
@@ -208,12 +200,12 @@ void SceneGame::DepthShadowMapping() {
 		immediate_context->OMSetBlendState(FRAMEWORK->GetBlendState(FRAMEWORK->BS_ALPHA), nullptr, 0xFFFFFFFF);
 		immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(FRAMEWORK->DS_TRUE_WRITE), 1);
 		// サンプラーステートをバインド
-		DefaultSampleClamp->Set(0);
+		DefaultSampleClamp->Set(immediate_context.Get(), 0);
 
 		{
 			// シャドウマップに深度を書き出すためにオブジェクトを描画する
-			player->Render(ShadowShader.get());
-			EnemyManager::getInstance().Render(ShadowShader.get());
+			player->Render(immediate_context.Get(), ShadowShader.get());
+			EnemyManager::getInstance().Render(immediate_context.Get(), ShadowShader.get());
 			//GpuParticle->Play();
 		}
 
@@ -241,12 +233,12 @@ void SceneGame::DepthShadowMapping() {
 		ShadowMapDrawer->setTexSize(size.x,size.y);
 		ShadowMapDrawer->setPos(0,0);
 		ShadowMapDrawer->setSize(size.x,size.y);
-		ShadowMapDrawer->Render(ShadowMapTexture[0].get(),GaussianBlur.get());	// ぼかし処理の実行、結果がレンダーターゲットのテクスチャに出力される
+		ShadowMapDrawer->Render(immediate_context.Get(), ShadowMapTexture[0].get(), GaussianBlur.get());	// ぼかし処理の実行、結果がレンダーターゲットのテクスチャに出力される
 
 		// お片付け
 		constexpr static ID3D11RenderTargetView* nullView[1] = {nullptr};
 		immediate_context->OMSetRenderTargets(0, nullView, nullptr);
-	
+
 		// シャドウコンスタントバッファ更新
 		immediate_context->UpdateSubresource(ConstantBuffers[3].Get(), 0, 0, &ShadowConstant, 0, 0);
 		immediate_context->VSSetConstantBuffers(3, 1, ConstantBuffers[3].GetAddressOf());
@@ -256,14 +248,15 @@ void SceneGame::DepthShadowMapping() {
 }
 
 void SceneGame::Render() {
+
 	DepthShadowMapping();	// シャドウマップ生成
 
-	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();	// DevCon取得
+	static const Microsoft::WRL::ComPtr<ID3D11DeviceContext> immediate_context = FRAMEWORK->GetDeviceContext();
 
-	FRAMEWORK->Clear(ClearColor);	// RTVの再設定
+	FRAMEWORK->Clear(ClearColor,immediate_context.Get());	// RTVの再設定
 
 	// ビューポートの設定
-	FRAMEWORK->CreateViewPort();
+	FRAMEWORK->CreateViewPort(immediate_context.Get());
 
 	immediate_context->OMSetBlendState(FRAMEWORK->GetBlendState(FRAMEWORK->BS_ALPHA), nullptr, 0xFFFFFFFF);	// ブレンドインターフェースのポインタ、ブレンドファクターの配列値、サンプルカバレッジ(今回はデフォルト指定)
 
@@ -288,33 +281,32 @@ void SceneGame::Render() {
 
 
 		// サンプラーステートをバインド
-		DefaultSampleClamp->Set(0);		// サンプラー (s0)
-		ShadowMapTexture[1]->Set(3);	// ぼかしたシャドウマップをセット	(t3)
-		DefaultSampleClamp->Set(3);		// シャドウマップ用サンプラー (s3)　
+		DefaultSampleClamp->Set(immediate_context.Get(), 0);		// サンプラー (s0)
+		ShadowMapTexture[1]->Set(immediate_context.Get() ,3);	// ぼかしたシャドウマップをセット	(t3)
+		DefaultSampleClamp->Set(immediate_context.Get(),3);		// シャドウマップ用サンプラー (s3)
 		{
 			// 3Dオブジェクト描画
 			Grid->Render(true);
-			StageManager::getInstance().Render(RenderShadowShader.get());
-			/*if(lightForCamera)*/player->Render(RenderShadowShader.get());
-			EnemyManager::getInstance().Render();
-			GpuParticle->Play();
+			StageManager::getInstance().Render(immediate_context.Get(), RenderShadowShader.get());
+			/*if(lightForCamera)*/player->Render(immediate_context.Get(), RenderShadowShader.get());
+			EnemyManager::getInstance().Render(immediate_context.Get());
+			GpuParticle->Play(immediate_context.Get());
 
 			// 2Dオブジェクト描画
 			{
 				immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(FRAMEWORK->DS_FALSE), 1);		// 3Dオブジェクトの前に出すため
 				immediate_context->OMSetBlendState(FRAMEWORK->GetBlendState(FRAMEWORK->BS_ALPHA), nullptr, 0xFFFFFFFF);	// ブレンドインターフェースのポインタ、ブレンドファクターの配列値、サンプルカバレッジ(今回はデフォルト指定)
-				////font->Render();
 				if (renderShadowMap) {
 					ShadowMapDrawer->setTexSize(ShadowDepth->GetWidth(), ShadowDepth->GetHeight());
 					DirectX::XMFLOAT2 size = { static_cast<float>(ShadowDepth->GetWidth() / 3), static_cast<float>(ShadowDepth->GetHeight() / 3) };
 					ShadowMapDrawer->setPos(0,0);
 					ShadowMapDrawer->setSize(size.x*0.5f, size.y*0.5f);
-					ShadowMapDrawer->Render(ShadowMapTexture[shadowNo].get());
+					ShadowMapDrawer->Render(immediate_context.Get(), ShadowMapTexture[shadowNo].get());
 				}
 			}
 		}
-		ShadowMapTexture[1]->Set(3, false);	// 3番スロットのテクスチャ設定を剥がす
-		ShadowDepth->Set(0, false);			// 0番スロットのテクスチャ設定を剥がす
+		ShadowMapTexture[1]->Set(immediate_context.Get(), 3, false);	// 3番スロットのテクスチャ設定を剥がす
+		ShadowDepth->Set(immediate_context.Get(), 0, false);			// 0番スロットのテクスチャ設定を剥がす
 	}
 
 #ifdef USE_IMGUI
@@ -358,8 +350,9 @@ void SceneGame::imguiUpdate() {
 			if (ImGui::Button("Particle Set")) { GpuParticle->SetParticle(); }
 		}
 		ImGui::PopStyleColor(2);	// ImGui::PushStyleColor一つにつき引数一つ増えるっぽい
-		ImGui::End();
 	}
+	ImGui::End();
+
 	ImGui::Begin("LightDirection");
 	{
 		ImGui::SliderFloat3("Light_Direction", light_dir, -50.0f, 50.0f);

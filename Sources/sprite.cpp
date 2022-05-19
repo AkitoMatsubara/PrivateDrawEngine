@@ -76,12 +76,11 @@ void Sprite::LoadImages(const wchar_t* filename)
 	//Parameter->TexSize = DirectX::SimpleMath::Vector2(static_cast<float>(texture2d_desc.Width), static_cast<float>(texture2d_desc.Height));
 }
 
-void Sprite::CreateVertexData(Texture* texture, Shader* shader) {
-	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();
+void Sprite::CreateVertexData(ID3D11DeviceContext* device_context, Texture* texture, Shader* shader, ID3D11CommandList** comand_list) {
 	// スクリーン(ビューポート)のサイズを取得する
 	D3D11_VIEWPORT viewport{};
 	UINT num_viewports{ 1 };
-	immediate_context->RSGetViewports(&num_viewports, &viewport);
+	device_context->RSGetViewports(&num_viewports, &viewport);
 
 	// 引数から矩形の各頂点の位置を計算する
 	/*		left_top	*----*	right_top			*/
@@ -134,7 +133,7 @@ void Sprite::CreateVertexData(Texture* texture, Shader* shader) {
 	HRESULT hr = { S_OK };
 	D3D11_MAPPED_SUBRESOURCE mapped_subrecource{};
 	// mapped_subrecourceをvertex_bufferにマッピング
-	hr = immediate_context->Map(VertexBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_subrecource);	// 動的な定数バッファーを Map して書き込むときは D3D11_MAP_WRITE_DISCARD を使用する
+	hr = device_context->Map(VertexBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_subrecource);	// 動的な定数バッファーを Map して書き込むときは D3D11_MAP_WRITE_DISCARD を使用する
 	_ASSERT_EXPR(SUCCEEDED(hr), hr_trace(hr));
 
 	Vertex* vertices{ reinterpret_cast<Vertex*>(mapped_subrecource.pData) };	// reinterpret_cast：ありえないような変換のときに使用する？
@@ -161,19 +160,19 @@ void Sprite::CreateVertexData(Texture* texture, Shader* shader) {
 		vertices[3].normal =DirectX::SimpleMath::Vector3(0, 0, 1);
 
 	}
-	immediate_context->Unmap(VertexBuffer.Get(), 0);	// マッピング解除 頂点バッファを上書きしたら必ず実行。Map&Unmapはセットで使用する
+	device_context->Unmap(VertexBuffer.Get(), 0);	// マッピング解除 頂点バッファを上書きしたら必ず実行。Map&Unmapはセットで使用する
 
 
 	// シェーダの有効化
-	shader->Activate();
+	shader->Activate(device_context);
 
-	// SRVバインド
-	(texture) ? texture->Set(0) : SpriteTexture->Set(0);	/// テクスチャが外部からの指定があればそちらをSRVにセットする
+	// テクスチャが外部からの指定があればそちらをSRVにセットする
+	(texture) ? texture->Set(device_context, 0) : SpriteTexture->Set(device_context, 0);
 
 	// 頂点バッファのバインド
 	const UINT stride{ sizeof(Vertex) };
 	const UINT offset{ 0 };
-	immediate_context->IASetVertexBuffers(
+	device_context->IASetVertexBuffers(
 		0,								// 入力スロットの開始番号
 		1,								// 頂点バッファの数
 		VertexBuffer.GetAddressOf(),	// 頂点バッファの配列
@@ -181,19 +180,27 @@ void Sprite::CreateVertexData(Texture* texture, Shader* shader) {
 		&offset);						// 頂点バッファの開始位置をずらすオフセットの配列
 
 	//プリミティブタイプ及びデータの順序に関する情報のバインド
-	immediate_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);	// プリミティブの形状を指定できる 今回は連続三角形に変更
+	device_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);	// プリミティブの形状を指定できる 今回は連続三角形に変更
 
 	// ラスタライザステートの設定
-	immediate_context->RSSetState(FRAMEWORK->GetRasterizerState(FRAMEWORK->RS_SOLID_NONE));
+	device_context->RSSetState(FRAMEWORK->GetRasterizerState(FRAMEWORK->RS_SOLID_NONE));
 	// プリミティブの描画
-	immediate_context->Draw(4, 0);	// 頂点の数、描画開始時点で使う頂点バッファの最初のインデックス
-	texture->Set(0, false);
+	device_context->Draw(4, 0);	// 頂点の数、描画開始時点で使う頂点バッファの最初のインデックス
+
+	// テクスチャの無効化
+	texture->Set(device_context,0, false);
 	// シェーダの無効化
-	shader->Inactivate();
+	shader->Inactivate(device_context);
+
+	// DeferredContextの場合、コマンドリストに登録する
+	if (device_context->GetType() == D3D11_DEVICE_CONTEXT_DEFERRED)
+	{
+		device_context->FinishCommandList(true, comand_list);
+	}
 }
 
-void Sprite::Render(Texture* texture, Shader* shader) {
-	CreateVertexData(texture, shader);
+void Sprite::Render(ID3D11DeviceContext* device_context, Texture* texture, Shader* shader, ID3D11CommandList** comand_list) {
+	CreateVertexData(device_context, texture, shader, comand_list);
 }
 
 void Sprite::ImguiWindow() {

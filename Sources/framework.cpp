@@ -1,6 +1,7 @@
-﻿#include "framework.h"
-
+﻿#include <d3d11_4.h>
+#include "framework.h"
 #include "SceneGame.h"	// 初期シーンセット用 初期シーンには必須
+#include "SceneTitle.h"
 #include "SceneLoading.h"
 
 #include "FrameRateCalculator.h"
@@ -56,7 +57,7 @@ bool framework::initialize()
 		immediate_context->OMSetRenderTargets(1, render_target_view.GetAddressOf(), depth_stencil_view.Get());
 
 		// ビューポートの設定
-		CreateViewPort();
+		CreateViewPort(immediate_context.Get());
 
 		// ブレンドステートの設定
 		CreateBlendState();
@@ -74,7 +75,6 @@ framework::~framework()
 	render_target_view.Reset();
 	depth_stencil_view.Reset();
 
-	// Flush the immediate context to force cleanup
 	immediate_context->Flush();
 	immediate_context->ClearState();
 #if _DEBUG
@@ -116,6 +116,11 @@ bool framework::CreateDeviceAndSwapCain() {
 	// デバイスをもとに作成
 	device->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast<void**>(debug.GetAddressOf()));
 
+	Microsoft::WRL::ComPtr<ID3D11Multithread> MultiThread;
+	if (immediate_context.As(&MultiThread) == S_OK)
+	{
+		MultiThread->SetMultithreadProtected(true);	// マルチスレッド保護を有効にする
+	}
 	return true;
 }
 
@@ -385,26 +390,27 @@ bool framework::CreateBlendState() {
 }
 
 // ビューポートの作成
-bool framework::CreateViewPort(float width, float height) {
+bool framework::CreateViewPort(ID3D11DeviceContext* device_context, float width, float height) {
 	D3D11_VIEWPORT viewport{};
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
-	viewport.Width  = width;
+	viewport.Width = width;
 	viewport.Height = height;
 	viewport.MinDepth = 0.0f;
 	viewport.MaxDepth = 1.0f;
-	immediate_context->RSSetViewports(1, &viewport);
+	device_context->RSSetViewports(1, &viewport);
 
 	return true;
 }
 
 // レンダーターゲットの初期化
-void framework::Clear(FLOAT c[4]) {
-	immediate_context->OMSetRenderTargets(1, render_target_view.GetAddressOf(), depth_stencil_view.Get());
+void framework::Clear(FLOAT c[4], ID3D11DeviceContext* device_context)
+{
+	device_context->OMSetRenderTargets(1, render_target_view.GetAddressOf(), depth_stencil_view.Get());
 
-	immediate_context->ClearRenderTargetView(render_target_view.Get(), c);	// クリア対象のView、クリアする色
-	immediate_context->ClearDepthStencilView(depth_stencil_view.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-	immediate_context->OMSetDepthStencilState(depth_stencil_state[DS_TRUE].Get(), 1);	// バインドする深度ステンシルステート、参照値？
+	device_context->ClearRenderTargetView(render_target_view.Get(), c);	// クリア対象のView、クリアする色
+	device_context->ClearDepthStencilView(depth_stencil_view.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	device_context->OMSetDepthStencilState(depth_stencil_state[DS_TRUE].Get(), 1);	// バインドする深度ステンシルステート、参照値？
 }
 
 void framework::Flip(int n) {
@@ -432,7 +438,7 @@ int framework::run() {
 #endif
 
 	FrameRateCalculator::getInstance().Init();
-	SceneManager::getInstance().ChangeScene(new SceneGame());
+	SceneManager::getInstance().ChangeScene(new SceneTitle());
 	//SceneManager::getInstance().ChangeScene(new SceneLoading(std::make_unique<SceneGame>()));
 
 	while (WM_QUIT != msg.message)
@@ -446,6 +452,14 @@ int framework::run() {
 		{
 			tictoc.tick();
 			SceneManager::getInstance().Update();
+			if (SceneManager::getInstance().getLoadComplete())	// ロードが終わったらループ先頭に戻る
+			{
+				// ImGui用に一回描画、エラー回避
+				ImGui::Render();
+				ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+				SceneManager::getInstance().setLoadComplete(false);
+				continue;
+			}
 			SceneManager::getInstance().Render();
 
 #ifdef USE_IMGUI
@@ -471,9 +485,6 @@ int framework::run() {
 			calculate_frame_stats();
 		}
 	}
-
-	//delete scenemanager;	// 開放
-
 #ifdef USE_IMGUI	// IMGUI後片付け
 	ImGui_ImplDX11_Shutdown();
 	ImGui_ImplWin32_Shutdown();

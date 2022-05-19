@@ -60,443 +60,122 @@
 // -------------------- ----- ------ -------- -------- ------- ------
 // no Output
 cs_5_0
-dcl_globalFlags refactoringAllowed | skipOptimization
+dcl_globalFlags refactoringAllowed
 dcl_resource_structured t0, 64
 dcl_uav_structured u0, 64
 dcl_input vThreadID.xy
-dcl_temps 6
+dcl_temps 10
 dcl_thread_group 500, 1, 1
-//
-// Initial variable locations:
-//   vThreadGroupID.x <- Gid.x; vThreadGroupID.y <- Gid.y; vThreadGroupID.z <- Gid.z; 
-//   vThreadIDInGroup.x <- GTid.x; vThreadIDInGroup.y <- GTid.y; vThreadIDInGroup.z <- GTid.z; 
-//   vThreadID.x <- DTid.x; vThreadID.y <- DTid.y; vThreadID.z <- DTid.z
-//
-#line 75 "F:\修琁EプロジェクチEPrivateEngine\Shaders\GPUParticle_cs.hlsl"
-mov r0.x, vThreadID.x  // r0.x <- node
-
-#line 78
-ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r0.y, r0.x, l(60), t0.xxxx
-if_nz r0.y
-
-#line 81
-  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r1.x, r0.x, l(0), t0.xxxx  // r1.x <- pos.x
-  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r1.y, r0.x, l(4), t0.xxxx  // r1.y <- pos.y
-  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r1.z, r0.x, l(8), t0.xxxx  // r1.z <- pos.z
-  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r0.y, r0.x, l(12), t0.xxxx  // r0.y <- pos.w
-
-#line 82
-  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r2.x, r0.x, l(16), t0.xxxx  // r2.x <- vel.x
-  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r2.y, r0.x, l(20), t0.xxxx  // r2.y <- vel.y
-  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r2.z, r0.x, l(24), t0.xxxx  // r2.z <- vel.z
-
-#line 83
-  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r3.x, r0.x, l(28), t0.xxxx  // r3.x <- force.x
-  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r3.y, r0.x, l(32), t0.xxxx  // r3.y <- force.y
-  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r3.z, r0.x, l(36), t0.xxxx  // r3.z <- force.z
-
-#line 84
-  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r0.z, r0.x, l(56), t0.xxxx  // r0.z <- life
-
-#line 85
-  div r0.w, r0.z, r0.y
-  mul r0.w, r0.w, l(3.150000)
-  sincos r0.w, null, r0.w
-  mul r0.w, r0.w, l(1.500000)  // r0.w <- alpha
-
-#line 86
-  mov r1.w, l(-0.010000)
-  add r0.z, r0.z, r1.w
-
-#line 87
-  add r1.xyz, r1.xyzx, r2.xyzx
-
-#line 88
-  add r2.xyz, r2.xyzx, r3.xyzx
-
-#line 91
-  store_structured u0.x, r0.x, l(0), r1.x
-  store_structured u0.x, r0.x, l(4), r1.y
-  store_structured u0.x, r0.x, l(8), r1.z
-  store_structured u0.x, r0.x, l(12), r0.y
-
-#line 92
-  store_structured u0.x, r0.x, l(16), r2.x
-  store_structured u0.x, r0.x, l(20), r2.y
-  store_structured u0.x, r0.x, l(24), r2.z
-
-#line 93
-  store_structured u0.x, r0.x, l(28), r3.x
-  store_structured u0.x, r0.x, l(32), r3.y
-  store_structured u0.x, r0.x, l(36), r3.z
-
-#line 94
-  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r0.y, r0.x, l(40), t0.xxxx
-  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r1.x, r0.x, l(44), t0.xxxx
-  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r1.y, r0.x, l(48), t0.xxxx
-  store_structured u0.x, r0.x, l(40), r0.y
-  store_structured u0.x, r0.x, l(44), r1.x
-  store_structured u0.x, r0.x, l(48), r1.y
-
-#line 95
-  store_structured u0.x, r0.x, l(52), r0.w
-
-#line 96
-  store_structured u0.x, r0.x, l(56), r0.z
-
-#line 98
-  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r0.y, r0.x, l(56), u0.xxxx
-  ge r0.y, l(0.000000), r0.y
-  movc r0.y, r0.y, l(0), l(-1)
-  store_structured u0.x, r0.x, l(60), r0.y
-
-#line 99
+ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r0.x, vThreadID.x, l(60), t0.xxxx
+if_nz r0.x
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r0.xyzw, vThreadID.x, l(0), t0.xyzw
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r1.xyzw, vThreadID.x, l(16), t0.xyzw
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r2.xyzw, vThreadID.x, l(32), t0.xyzw
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r3.x, vThreadID.x, l(56), t0.xxxx
+  div r3.y, r3.x, r0.w
+  mul r3.y, r3.y, l(3.150000)
+  sincos r3.y, null, r3.y
+  mul r4.y, r3.y, l(1.500000)
+  add r4.z, r3.x, l(-0.010000)
+  add r0.xyz, r0.xyzx, r1.xyzx
+  mov r3.w, r1.w
+  mov r3.xy, r2.xyxx
+  add r3.xyz, r1.xyzx, r3.wxyw
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r4.x, vThreadID.x, l(48), t0.xxxx
+  ge r1.x, l(0.000000), r4.z
+  ieq r4.w, r1.x, l(0)
 else 
-
-#line 103
-  nop 
-  mov r0.yz, vThreadID.xxyx
-
-#line 39
-  mov r0.y, r0.y  // r0.y <- node
-
-#line 41
-  mov r0.w, l(1)
-  iadd r0.w, r0.w, r0.y
-  mov r1.x, l(2)
-  iadd r0.z, r0.z, r1.x
-  utof r1.x, r0.w
-  utof r1.y, r0.z
-  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r2.x, r0.y, l(0), t0.xxxx
-  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r2.y, r0.y, l(8), t0.xxxx
-  mul r0.zw, r1.xxxy, r2.xxxy  // r0.z <- seed.x; r0.w <- seed.y
-
-#line 42
-  nop 
-  mov r0.zw, r0.zzzw
-  mov r1.x, l(10.000000)
-
-#line 33
-  nop 
-  itof r1.yz, l(0, 1, 1, 0)
-  mul r1.yz, r0.zzwz, r1.yyzy
-  mov r1.x, r1.x
-
-#line 28
-  dp2 r1.y, r1.yzyy, l(12.989800, 78.233002, 0.000000, 0.000000)
-  sincos r1.y, null, r1.y
-  mul r1.y, r1.y, l(10000.000000)
-  frc r1.y, r1.y
-  mul r1.y, r1.y, l(2.000000)
-  mov r1.z, l(-1.000000)
-  add r1.y, r1.z, r1.y
-  mul r2.x, r1.x, r1.y  // r2.x <- <rand return value>
-
-#line 33
-  nop 
-  itof r1.yz, l(0, 2, 2, 0)
-  mul r1.yz, r0.zzwz, r1.yyzy
-
-#line 28
-  dp2 r1.y, r1.yzyy, l(12.989800, 78.233002, 0.000000, 0.000000)
-  sincos r1.y, null, r1.y
-  mul r1.y, r1.y, l(10000.000000)
-  frc r1.y, r1.y
-  mul r1.y, r1.y, l(2.000000)
-  mov r1.z, l(-1.000000)
-  add r1.y, r1.z, r1.y
-  mul r2.y, r1.x, r1.y  // r2.y <- <rand return value>
-
-#line 33
-  nop 
-  itof r1.yz, l(0, 3, 3, 0)
-  mul r1.yz, r0.zzwz, r1.yyzy
-
-#line 28
-  dp2 r1.y, r1.yzyy, l(12.989800, 78.233002, 0.000000, 0.000000)
-  sincos r1.y, null, r1.y
-  mul r1.y, r1.y, l(10000.000000)
-  frc r1.y, r1.y
-  mul r1.y, r1.y, l(2.000000)
-  mov r1.z, l(-1.000000)
-  add r1.y, r1.z, r1.y
-  mul r2.z, r1.x, r1.y  // r2.z <- <rand return value>
-
-#line 33
-  mov r1.xyz, l(-0.500000,-0.500000,-0.500000,-0.000000)
-  add r1.xyz, r1.xyzx, r2.xyzx
-  mul r1.xyz, r1.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)  // r1.x <- <rand3 return value>.x; r1.y <- <rand3 return value>.y; r1.z <- <rand3 return value>.z
-
-#line 42
-  mov r1.xyz, r1.xyzx  // r1.x <- pos.x; r1.y <- pos.y; r1.z <- pos.z
-
-#line 43
-  nop 
-  mul r2.xy, r0.zwzz, r1.xyxx
-  mov r1.w, l(5.000000)
-
-#line 28
-  dp2 r2.x, r2.xyxx, l(12.989800, 78.233002, 0.000000, 0.000000)
-  sincos r2.x, null, r2.x
-  mul r2.x, r2.x, l(10000.000000)
-  frc r2.x, r2.x
-  mul r2.x, r2.x, l(2.000000)
-  mov r2.y, l(-1.000000)
-  add r2.x, r2.y, r2.x
-  mul r1.y, r1.w, r2.x  // r1.y <- <rand return value>
-
-#line 43
-  mov r1.y, r1.y  // r1.y <- pos.y
-
-#line 45
-  nop 
-  mov r1.w, l(50.000000)
-
-#line 33
-  nop 
-  itof r2.xy, l(1, 1, 0, 0)
-  mul r2.xy, r0.zwzz, r2.xyxx
-  mov r1.w, r1.w
-
-#line 28
-  dp2 r2.x, r2.xyxx, l(12.989800, 78.233002, 0.000000, 0.000000)
-  sincos r2.x, null, r2.x
-  mul r2.x, r2.x, l(10000.000000)
-  frc r2.x, r2.x
-  mul r2.x, r2.x, l(2.000000)
-  mov r2.y, l(-1.000000)
-  add r2.x, r2.y, r2.x
-  mul r2.x, r1.w, r2.x  // r2.x <- <rand return value>
-
-#line 33
-  nop 
-  nop 
-  itof r2.yw, l(0, 3, 0, 3)
-  mul r2.yw, r0.zzzw, r2.yyyw
-
-#line 28
-  dp2 r2.y, r2.ywyy, l(12.989800, 78.233002, 0.000000, 0.000000)
-  sincos r2.y, null, r2.y
-  mul r2.y, r2.y, l(10000.000000)
-  frc r2.y, r2.y
-  mul r2.y, r2.y, l(2.000000)
-  mov r2.w, l(-1.000000)
-  add r2.y, r2.w, r2.y
-  mul r2.z, r1.w, r2.y  // r2.z <- <rand return value>
-
-#line 33
-  mov r2.yw, l(-0.000000,-0.500000,-0.000000,-0.500000)
-  add r2.xy, r2.ywyy, r2.xzxx
-  mul r2.xy, r2.xyxx, l(2.000000, 2.000000, 0.000000, 0.000000)  // r2.x <- <rand3 return value>.x; r2.y <- <rand3 return value>.z
-
-#line 45
-  mul r2.xy, r2.xyxx, l(0.000500, 0.000500, 0.000000, 0.000000)  // r2.x <- vel.x; r2.y <- vel.z
-
-#line 46
-  nop 
-  mov r0.zw, r0.zzzw
-  mov r1.w, l(5.000000)
-
-#line 28
-  dp2 r0.z, r0.zwzz, l(12.989800, 78.233002, 0.000000, 0.000000)
-  sincos r0.z, null, r0.z
-  mul r0.z, r0.z, l(10000.000000)
-  frc r0.z, r0.z
-  mul r0.z, r0.z, l(2.000000)
-  mov r0.w, l(-1.000000)
-  add r0.z, r0.w, r0.z
-  mul r0.z, r1.w, r0.z  // r0.z <- <rand return value>
-
-#line 46
-  mul r2.z, r0.z, l(0.000500)  // r2.z <- vel.y
-
-#line 48
-  nop 
-  mov r2.xy, r2.xyxx
-  mov r0.z, l(50.000000)
-
-#line 33
-  nop 
-  itof r3.xy, l(1, 1, 0, 0)
-  mul r3.xy, r2.xyxx, r3.xyxx
-  mov r0.z, r0.z
-
-#line 28
-  dp2 r0.w, r3.xyxx, l(12.989800, 78.233002, 0.000000, 0.000000)
-  sincos r0.w, null, r0.w
-  mul r0.w, r0.w, l(10000.000000)
-  frc r0.w, r0.w
-  mul r0.w, r0.w, l(2.000000)
-  mov r1.w, l(-1.000000)
-  add r0.w, r0.w, r1.w
-  mul r3.x, r0.z, r0.w  // r3.x <- <rand return value>
-
-#line 33
-  nop 
-  itof r4.xy, l(2, 2, 0, 0)
-  mul r4.xy, r2.xyxx, r4.xyxx
-
-#line 28
-  dp2 r0.w, r4.xyxx, l(12.989800, 78.233002, 0.000000, 0.000000)
-  sincos r0.w, null, r0.w
-  mul r0.w, r0.w, l(10000.000000)
-  frc r0.w, r0.w
-  mul r0.w, r0.w, l(2.000000)
-  mov r1.w, l(-1.000000)
-  add r0.w, r0.w, r1.w
-  mul r3.y, r0.z, r0.w  // r3.y <- <rand return value>
-
-#line 33
-  nop 
-  itof r4.xy, l(3, 3, 0, 0)
-  mul r4.xy, r2.xyxx, r4.xyxx
-
-#line 28
-  dp2 r0.w, r4.xyxx, l(12.989800, 78.233002, 0.000000, 0.000000)
-  sincos r0.w, null, r0.w
-  mul r0.w, r0.w, l(10000.000000)
-  frc r0.w, r0.w
-  mul r0.w, r0.w, l(2.000000)
-  mov r1.w, l(-1.000000)
-  add r0.w, r0.w, r1.w
-  mul r3.z, r0.z, r0.w  // r3.z <- <rand return value>
-
-#line 33
-  mov r4.xyz, l(-0.500000,-0.500000,-0.500000,-0.000000)
-  add r3.xyz, r3.xyzx, r4.xyzx
-  mul r3.xyz, r3.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)  // r3.x <- <rand3 return value>.x; r3.y <- <rand3 return value>.y; r3.z <- <rand3 return value>.z
-
-#line 48
-  mul r3.xyz, r3.xyzx, l(0.000000, 0.000000, 0.000000, 0.000000)  // r3.x <- force.x; r3.y <- force.y; r3.z <- force.z
-
-#line 50
-  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r0.y, r0.y, l(12), t0.xxxx  // r0.y <- p.Position.w
-
-#line 51
-  mov r1.xz, r1.xxzx  // r1.x <- p.Position.x; r1.z <- p.Position.z
-  mov r1.y, r1.y  // r1.y <- p.Position.y
-
-#line 52
-  mov r2.xy, r2.xyxx  // r2.x <- p.Velocity.x; r2.y <- p.Velocity.z
-  mov r2.z, r2.z  // r2.z <- p.Velocity.y
-
-#line 53
-  mov r3.xyz, r3.xyzx  // r3.x <- p.Force.x; r3.y <- p.Force.y; r3.z <- p.Force.z
-
-#line 55
-  nop 
-  mov r1.x, r1.x
-  mov r1.y, r1.y
-  mov r0.z, l(1.000000)
-
-#line 33
-  nop 
-  itof r4.xy, l(1, 1, 0, 0)
-  mul r4.xy, r1.xyxx, r4.xyxx
-  mov r0.z, r0.z
-
-#line 28
-  dp2 r0.w, r4.xyxx, l(12.989800, 78.233002, 0.000000, 0.000000)
-  sincos r0.w, null, r0.w
-  mul r0.w, r0.w, l(10000.000000)
-  frc r0.w, r0.w
-  mul r0.w, r0.w, l(2.000000)
-  mov r1.w, l(-1.000000)
-  add r0.w, r0.w, r1.w
-  mul r4.x, r0.z, r0.w  // r4.x <- <rand return value>
-
-#line 33
-  nop 
-  itof r5.xy, l(2, 2, 0, 0)
-  mul r5.xy, r1.xyxx, r5.xyxx
-
-#line 28
-  dp2 r0.w, r5.xyxx, l(12.989800, 78.233002, 0.000000, 0.000000)
-  sincos r0.w, null, r0.w
-  mul r0.w, r0.w, l(10000.000000)
-  frc r0.w, r0.w
-  mul r0.w, r0.w, l(2.000000)
-  mov r1.w, l(-1.000000)
-  add r0.w, r0.w, r1.w
-  mul r4.y, r0.z, r0.w  // r4.y <- <rand return value>
-
-#line 33
-  nop 
-  itof r5.xy, l(3, 3, 0, 0)
-  mul r5.xy, r1.xyxx, r5.xyxx
-
-#line 28
-  dp2 r0.w, r5.xyxx, l(12.989800, 78.233002, 0.000000, 0.000000)
-  sincos r0.w, null, r0.w
-  mul r0.w, r0.w, l(10000.000000)
-  frc r0.w, r0.w
-  mul r0.w, r0.w, l(2.000000)
-  mov r1.w, l(-1.000000)
-  add r0.w, r0.w, r1.w
-  mul r4.z, r0.z, r0.w  // r4.z <- <rand return value>
-
-#line 33
-  mov r5.xyz, l(-0.500000,-0.500000,-0.500000,-0.000000)
-  add r4.xyz, r4.xyzx, r5.xyzx
-  mul r4.xyz, r4.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)  // r4.x <- <rand3 return value>.x; r4.y <- <rand3 return value>.y; r4.z <- <rand3 return value>.z
-
-#line 55
-  mov r4.w, l(0)
-  mov r4.xyzw, r4.xyzw  // r4.x <- p.Color.x; r4.y <- p.Color.y; r4.z <- p.Color.z; r4.w <- p.Color.w
-
-#line 56
-  nop 
-  mov r1.z, r1.z
-  mov r0.z, l(5.000000)
-
-#line 23
-  sincos r0.w, null, r1.z
-  mul r0.w, r0.w, l(100000.000000)
-  frc r0.w, r0.w
-  mul r0.w, r0.w, l(2.000000)
-  mov r1.w, l(-1.000000)
-  add r0.w, r0.w, r1.w
-  mul r0.z, r0.z, r0.w  // r0.z <- <rand return value>
-
-#line 56
-  ftou r0.z, r0.z
-  utof r0.z, r0.z  // r0.z <- p.Life
-
-#line 57
-  mov r0.w, l(-1)  // r0.w <- p.Active
-
-#line 58
-  mov r1.xyz, r1.xyzx  // r1.x <- <Reset return value>.Position.x; r1.y <- <Reset return value>.Position.y; r1.z <- <Reset return value>.Position.z
-  mov r0.y, r0.y  // r0.y <- <Reset return value>.Position.w
-  mov r2.xyz, r2.xyzx  // r2.x <- <Reset return value>.Velocity.x; r2.y <- <Reset return value>.Velocity.z; r2.z <- <Reset return value>.Velocity.y
-  mov r3.x, r3.x  // r3.x <- <Reset return value>.Force.x
-  mov r3.yz, r3.yyzy  // r3.y <- <Reset return value>.Force.y; r3.z <- <Reset return value>.Force.z
-  mov r4.xy, r4.xyxx  // r4.x <- <Reset return value>.Color.x; r4.y <- <Reset return value>.Color.y
-  mov r4.zw, r4.zzzw  // r4.z <- <Reset return value>.Color.z; r4.w <- <Reset return value>.Color.w
-  mov r0.z, r0.z  // r0.z <- <Reset return value>.Life
-  mov r0.w, r0.w  // r0.w <- <Reset return value>.Active
-
-#line 103
-  store_structured u0.x, r0.x, l(0), r1.x
-  store_structured u0.x, r0.x, l(4), r1.y
-  store_structured u0.x, r0.x, l(8), r1.z
-  store_structured u0.x, r0.x, l(12), r0.y
-  store_structured u0.x, r0.x, l(16), r2.x
-  store_structured u0.x, r0.x, l(20), r2.z
-  store_structured u0.x, r0.x, l(24), r2.y
-  store_structured u0.x, r0.x, l(28), r3.x
-  store_structured u0.x, r0.x, l(32), r3.y
-  store_structured u0.x, r0.x, l(36), r3.z
-  store_structured u0.x, r0.x, l(40), r4.x
-  store_structured u0.x, r0.x, l(44), r4.y
-  store_structured u0.x, r0.x, l(48), r4.z
-  store_structured u0.x, r0.x, l(52), r4.w
-  store_structured u0.x, r0.x, l(56), r0.z
-  store_structured u0.x, r0.x, l(60), r0.w
-
-#line 104
+  iadd r1.xy, vThreadID.xyxx, l(1, 2, 0, 0)
+  utof r1.xy, r1.xyxx
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r0.x, vThreadID.x, l(0), t0.xxxx
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r0.yw, vThreadID.x, l(8), t0.xxxy
+  mul r1.xy, r0.xyxx, r1.xyxx
+  dp2 r1.w, r1.xyxx, l(12.989800, 78.233002, 0.000000, 0.000000)
+  sincos r1.w, null, r1.w
+  mul r1.w, r1.w, l(10000.000000)
+  frc r1.w, r1.w
+  mad r1.w, r1.w, l(2.000000), l(-1.000000)
+  mul r5.xyz, r1.wwww, l(10.000000, 50.000000, 0.002500, 0.000000)
+  add r6.xy, r1.xyxx, r1.xyxx
+  dp2 r1.w, r6.xyxx, l(12.989800, 78.233002, 0.000000, 0.000000)
+  sincos r1.w, null, r1.w
+  mul r1.w, r1.w, l(10000.000000)
+  frc r1.w, r1.w
+  mad r1.w, r1.w, l(2.000000), l(-1.000000)
+  mul r6.x, r1.w, l(10.000000)
+  mul r7.xy, r1.xyxx, l(3.000000, 3.000000, 0.000000, 0.000000)
+  dp2 r1.w, r7.xyxx, l(12.989800, 78.233002, 0.000000, 0.000000)
+  sincos r1.w, null, r1.w
+  mul r1.w, r1.w, l(10000.000000)
+  frc r1.w, r1.w
+  mad r1.w, r1.w, l(2.000000), l(-1.000000)
+  mul r6.yz, r1.wwww, l(0.000000, 10.000000, 50.000000, 0.000000)
+  mov r6.w, r5.x
+  add r7.xyz, r6.wxyw, l(-0.500000, -0.500000, -0.500000, 0.000000)
+  mov r1.z, l(2.000000)
+  mul r8.xyz, r1.zyzz, r7.xyzx
+  mul r1.xy, r1.xzxx, r8.xyxx
+  dp2 r1.x, r1.xyxx, l(12.989800, 78.233002, 0.000000, 0.000000)
+  sincos r1.x, null, r1.x
+  mul r1.x, r1.x, l(10000.000000)
+  frc r1.x, r1.x
+  mad r7.w, r1.x, l(2.000000), l(-1.000000)
+  mul r8.w, r7.w, l(5.000000)
+  mov r5.w, r6.z
+  add r1.xy, r5.ywyy, l(-0.500000, -0.500000, 0.000000, 0.000000)
+  mul r6.xyzw, r1.xyxy, l(0.001000, 0.001000, 0.002000, 0.002000)
+  dp2 r1.z, r6.xyxx, l(12.989800, 78.233002, 0.000000, 0.000000)
+  sincos r1.z, null, r1.z
+  mul r1.xyz, r1.xyzx, l(0.003000, 0.003000, 10000.000000, 0.000000)
+  frc r1.z, r1.z
+  mad r1.z, r1.z, l(2.000000), l(-1.000000)
+  mul r9.x, r1.z, l(50.000000)
+  dp2 r1.z, r6.zwzz, l(12.989800, 78.233002, 0.000000, 0.000000)
+  sincos r1.z, null, r1.z
+  mul r1.z, r1.z, l(10000.000000)
+  frc r1.z, r1.z
+  mad r1.z, r1.z, l(2.000000), l(-1.000000)
+  dp2 r1.x, r1.xyxx, l(12.989800, 78.233002, 0.000000, 0.000000)
+  sincos r1.x, null, r1.x
+  mul r1.x, r1.x, l(10000.000000)
+  frc r1.x, r1.x
+  mad r1.x, r1.x, l(2.000000), l(-1.000000)
+  mul r9.yz, r1.zzxz, l(0.000000, 50.000000, 50.000000, 0.000000)
+  add r1.xyz, r9.xyzx, l(-0.500000, -0.500000, -0.500000, 0.000000)
+  mul r3.xyw, r1.yzyx, l(0.000000, 0.000000, 0.000000, 0.000000)
+  dp2 r1.x, r8.xwxx, l(12.989800, 78.233002, 0.000000, 0.000000)
+  sincos r1.x, null, r1.x
+  mul r1.x, r1.x, l(10000.000000)
+  frc r1.x, r1.x
+  mul r6.xyzw, r7.xwxw, l(4.000000, 10.000000, 6.000000, 15.000000)
+  dp2 r1.w, r6.xyxx, l(12.989800, 78.233002, 0.000000, 0.000000)
+  sincos r1.w, null, r1.w
+  mul r1.w, r1.w, l(10000.000000)
+  frc r1.w, r1.w
+  add r1.xy, r1.xwxx, r1.xwxx
+  dp2 r1.w, r6.zwzz, l(12.989800, 78.233002, 0.000000, 0.000000)
+  sincos r1.w, null, r1.w
+  mul r1.w, r1.w, l(10000.000000)
+  frc r1.w, r1.w
+  add r1.z, r1.w, r1.w
+  add r1.xyz, r1.xyzx, l(-1.500000, -1.500000, -1.500000, 0.000000)
+  add r2.xzw, r1.zzxy, r1.zzxy
+  sincos r1.x, null, r8.z
+  mul r1.x, r1.x, l(100000.000000)
+  frc r1.x, r1.x
+  mad r1.x, r1.x, l(2.000000), l(-1.000000)
+  mul r1.x, r1.x, l(5.000000)
+  ftou r1.x, r1.x
+  utof r4.z, r1.x
+  mov r4.x, r2.x
+  mov r4.yw, l(0,0,0,-1)
+  mov r2.xy, r3.xyxx
+  mad r3.xyz, r5.yzwy, l(0.001000, 1.000000, 0.001000, 0.000000), l(-0.000500, 0.000000, -0.000500, 0.000000)
+  mov r0.xyz, r8.xwzx
 endif 
-
-#line 105
+store_structured u0.xyzw, vThreadID.x, l(48), r4.xyzw
+store_structured u0.xyzw, vThreadID.x, l(32), r2.xyzw
+store_structured u0.xyzw, vThreadID.x, l(16), r3.xyzw
+store_structured u0.xyzw, vThreadID.x, l(0), r0.xyzw
 ret 
-// Approximately 282 instruction slots used
+// Approximately 112 instruction slots used

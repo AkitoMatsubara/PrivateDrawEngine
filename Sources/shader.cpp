@@ -24,7 +24,6 @@ HRESULT Shader::Compile(WCHAR* filename, LPCSTR method, LPCSTR shaderModel, ID3D
 
 bool Shader::Create(WCHAR* filename, LPCSTR VSFunc, LPCSTR PSFunc) {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
-	ID3D11DeviceContext* device_context = FRAMEWORK->GetDeviceContext();
 
 	HRESULT hr = S_OK;
 
@@ -50,9 +49,6 @@ bool Shader::Create(WCHAR* filename, LPCSTR VSFunc, LPCSTR PSFunc) {
 	hr = device->CreateInputLayout(layout, numElements, VSBlob->GetBufferPointer(), VSBlob->GetBufferSize(), InputLayout.GetAddressOf());
 	assert(SUCCEEDED(hr));
 
-	// 入力レイアウト設定
-	device_context->IASetInputLayout(InputLayout.Get());
-
 	// ピクセルシェーダ
 	ComPtr<ID3DBlob> PSBlob = NULL;	// PSのコンパイル結果を受け取るBlob
 	hr = Compile(filename, PSFunc, "ps_5_0", &PSBlob);
@@ -67,9 +63,7 @@ bool Shader::Create(WCHAR* filename, LPCSTR VSFunc, LPCSTR PSFunc) {
 	return true;
 }
 
-void Shader::Activate() {
-	ID3D11DeviceContext* device_context = FRAMEWORK->GetDeviceContext();
-
+void Shader::Activate(ID3D11DeviceContext* device_context) {
 	// 0609 入力レイアウト設定
 	device_context->IASetInputLayout(InputLayout.Get());
 
@@ -80,8 +74,7 @@ void Shader::Activate() {
 	device_context->GSSetShader(GS.Get(), NULL, 0);
 }
 
-void Shader::Inactivate() {
-	ID3D11DeviceContext* device_context = FRAMEWORK->GetDeviceContext();
+void Shader::Inactivate(ID3D11DeviceContext* device_context) {
 
 	// 0609 入力レイアウト設定
 	device_context->IASetInputLayout(InputLayout.Get());

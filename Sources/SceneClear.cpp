@@ -65,7 +65,6 @@ bool SceneClear::Initialize() {
 }
 
 void SceneClear::Update() {
-	gpu_particle_->Update();
 	const float elapsed_time = FRAMEWORK->GetElapsedTime();
 	// シーン切り替え
 	if (GetAsyncKeyState('G') & 1)
@@ -150,22 +149,22 @@ void SceneClear::Update() {
 void SceneClear::Render() {
 	HRESULT hr{ S_OK };
 
-	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();	// DevCon取得
+	static const Microsoft::WRL::ComPtr<ID3D11DeviceContext> immediate_context = FRAMEWORK->GetDeviceContext();
 
-	FRAMEWORK->Clear(ClearColor);	// 一旦クリア
+	FRAMEWORK->Clear(ClearColor,immediate_context.Get());	// 一旦クリア
 
 	// ビューポートの設定
-	FRAMEWORK->CreateViewPort();
+	FRAMEWORK->CreateViewPort(immediate_context.Get());
 
 	// サンプラーステートをバインド
-	DefaultSampleClamp->Set(0);
+	DefaultSampleClamp->Set(immediate_context.Get(), 0);
 
 	immediate_context->OMSetBlendState(FRAMEWORK->GetBlendState(FRAMEWORK->BS_ALPHA), nullptr, 0xFFFFFFFF);	// ブレンドインターフェースのポインタ、ブレンドファクターの配列値、サンプルカバレッジ(今回はデフォルト指定)
 
 	// 2Dオブジェクトの描画設定
 	{
 		immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(FRAMEWORK->DS_TRUE), 1);		// 3Dオブジェクトの後ろに出すため一旦
-		Sprites->Render();
+		Sprites->Render(immediate_context.Get());
 		immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(FRAMEWORK->DS_TRUE_WRITE), 1);	// 2Dオブジェクトとの前後関係をしっかりするため再設定
 	}
 	// 3Dオブジェクトの描画設定
@@ -182,10 +181,10 @@ void SceneClear::Render() {
 		immediate_context->PSSetConstantBuffers(1, 1, ConstantBuffers[0].GetAddressOf());
 
 		{
-			StageManager::getInstance().Render();
-			player->Render();
-			EnemyManager::getInstance().Render();
-			gpu_particle_->Draw();
+			StageManager::getInstance().Render(immediate_context.Get());
+			player->Render(immediate_context.Get());
+			EnemyManager::getInstance().Render(immediate_context.Get());
+			gpu_particle_->Play(immediate_context.Get());
 		}
 	}
 

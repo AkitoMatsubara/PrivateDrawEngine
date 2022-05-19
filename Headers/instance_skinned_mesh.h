@@ -158,10 +158,10 @@ public:
 	DirectX::SimpleMath::Matrix CulcWorldMatrix(const float scale_factor);
 	// ワールド位置や回転の保存
 	void addWorldData();
-	// 色を指定するための関数 
+	// 色を指定するための関数
 	void setColor(int no, DirectX::XMFLOAT4 color) { worldData.at(no).color = color; };
 
-	void Render(UINT drawInstance);	// デフォルトでシェーダを持っているので未指定でも可
+	void Render(ID3D11DeviceContext* device_context, UINT drawInstance);	// デフォルトでシェーダを持っているので未指定でも可
 
 	// paramを編集するimguiウィンドウ
 	void imguiWindow(const char* beginname = "Instance_Skinned_Mesh");

@@ -84,9 +84,8 @@ bool Texture::LoadMipMap(const wchar_t* filename)
 }
 
 
-void Texture::Set(UINT slot, BOOL flg)
+void Texture::Set(ID3D11DeviceContext* device_context, UINT slot, BOOL flg)
 {
-	ID3D11DeviceContext* device_context = FRAMEWORK->GetDeviceContext();
 
 
 	if (flg == FALSE) {
@@ -290,10 +289,9 @@ bool Texture::CreateMipMap(u_int width, u_int height, DXGI_FORMAT format)
 
 bool Texture::CreateFontImage(u_int width, u_int height, ID3D11Texture2D* texture2d) {
 	ID3D11Device* device = FRAMEWORK->GetDevice();
-	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();
 
 	HRESULT hr = S_OK;
-	
+
 	//// CPUで書き込みができるテクスチャを作成 ////
 	ZeroMemory(&texture2d_desc, sizeof(D3D11_TEXTURE2D_DESC));
 	texture2d_desc.Width  = width;

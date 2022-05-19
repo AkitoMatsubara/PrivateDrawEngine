@@ -39,7 +39,7 @@ public:
 
 	void Initialize();
 	void Update();
-	void Render(Shader* shader = nullptr);
+	void Render(ID3D11DeviceContext* device_context, Shader* shader = nullptr);
 
 	ShotManager* getShotManager() { return ShotsManager.get(); }
 	static Player* getInstance() { 

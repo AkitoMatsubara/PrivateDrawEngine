@@ -38,7 +38,7 @@ public:
 
 	void Initialize();
 	void Update();
-	void Render();
+	void Render(ID3D11DeviceContext* device_context);
 
 	void set(const Object3d* parent);	// オブジェクトは全てObject3dクラスを保有している前提で各種パラメータをコピー
 	void setExist(bool flg) { Exist = flg; }
@@ -61,7 +61,7 @@ public:
 
 	void Initialize(MASTER ms) { Shots.clear(); Master = ms; }
 	void Update();	// 存在していない弾は内部で削除している
-	void Render();
+	void Render(ID3D11DeviceContext* device_context);
 
 	// 生成、格納系
 	void newSet(const Object3d* initData);

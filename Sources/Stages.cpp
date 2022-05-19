@@ -27,10 +27,10 @@ void StageParts::Update(bool inst)
 	//InstanceModel->getParameters()->CopyParam(Parameters.get());
 }
 
-void StageParts::Render(UINT drawCount, bool inst, Shader* shader)
+void StageParts::Render(ID3D11DeviceContext* device_context, UINT drawCount, bool inst, Shader* shader)
 {
 	if (Parameters->Exist) {
-		(!inst) ? Model->Render(shader) : InstanceModel->Render(drawCount);	// 引数instによってモデル単体描画かインスタンス描画か分ける
+		(!inst) ? Model->Render(device_context,shader) : InstanceModel->Render(device_context,drawCount);	// 引数instによってモデル単体描画かインスタンス描画か分ける
 	}
 }
 
@@ -285,17 +285,17 @@ void StageManager::Update()
 	}
 }
 
-void StageManager::Render(Shader* shader)
+void StageManager::Render(ID3D11DeviceContext* device_context, Shader* shader)
 {
 	if (GetAsyncKeyState('I') & 1) inst = !inst;	// インスタンス描画切り替え
 	if (!inst) {
 		for (auto& it : Stages)
 		{
-			it->Render(PARTS_SIZE, inst ,shader);	// 大量描画パス
+			it->Render(device_context, PARTS_SIZE, inst, shader);	// 大量描画パス
 		}
 	}
 	else {
-		Stages.at(0)->Render(PARTS_SIZE,inst);	// インスタンス描画 今回は０番目だけにドローコールを通す、インスタンス描画
+		Stages.at(0)->Render(device_context, PARTS_SIZE, inst);	// インスタンス描画 今回は０番目だけにドローコールを通す、インスタンス描画
 	}
 }
 

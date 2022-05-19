@@ -41,8 +41,6 @@ inline DirectX::SimpleMath::Vector4 ConvertToXmfloat4(const FbxDouble4& fbxdoubl
 }
 
 InstanceSkinnedMesh::InstanceSkinnedMesh(const char* fbx_filename, int draw_amount, int cstNo, bool triangulate) {
-	ID3D11Device* device = FRAMEWORK->GetDevice();
-
 	FbxManager* fbx_manager{ FbxManager::Create() };	// マネージャの生成
 
 	// 引数ファイル名.fbx拡張子を.cerealに変換、ファイル名.cerealが存在している場合は.cerealをロード、存在しない場合には.fbxをロードする
@@ -132,7 +130,6 @@ InstanceSkinnedMesh::InstanceSkinnedMesh(const char* fbx_filename, int draw_amou
 
 	//インスタンス描画準備----------------------------------------------------------------------------------
 	{
-		ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();
 		ID3D11Device* device = FRAMEWORK->GetDevice();
 		HRESULT hr = {S_OK};
 
@@ -194,9 +191,9 @@ void InstanceSkinnedMesh::addWorldData()
 	worldData.emplace_back(d);
 }
 
-void InstanceSkinnedMesh::Render(UINT drawInstance) {
-	ID3D11DeviceContext* immediate_context = FRAMEWORK->GetDeviceContext();
+void InstanceSkinnedMesh::Render(ID3D11DeviceContext* device_context, UINT drawInstance) {
 
+	device_context->IASetInputLayout(InstanceShader->GetIL());
 	// 単位をセンチメートルからメートルに変更するため、scale_factorを0.01に設定する
 	static const float SCALE_FACTOR = 1.0f;
 	{
@@ -220,13 +217,13 @@ void InstanceSkinnedMesh::Render(UINT drawInstance) {
 		}
 		// SRV指定のバッファにデータを入れる
 		D3D11_MAPPED_SUBRESOURCE subRes;
-		immediate_context->Map(InputBuffer.Get(), NULL, D3D11_MAP_WRITE_DISCARD, NULL, &subRes);	// subResにInputBufferをマップ
+		device_context->Map(InputBuffer.Get(), NULL, D3D11_MAP_WRITE_DISCARD, NULL, &subRes);	// subResにInputBufferをマップ
 		{
 			memcpy(subRes.pData, instanceData.data(), sizeof(InstanceData) * worldData.size());	// SRVのバッファに初期化情報をコピー
 		}
-		immediate_context->Unmap(InputBuffer.Get(), 0);
+		device_context->Unmap(InputBuffer.Get(), 0);
 		// セットする
-		immediate_context->VSSetShaderResources(0, 1, SRV.GetAddressOf());	// (t0)
+		device_context->VSSetShaderResources(0, 1, SRV.GetAddressOf());	// (t0)
 	}
 
 	for (const Mesh& mesh : meshes) {
@@ -236,14 +233,14 @@ void InstanceSkinnedMesh::Render(UINT drawInstance) {
 
 		uint32_t stride{ sizeof(Vertex) };	// stride:刻み幅
 		uint32_t offset{ 0 };
-		immediate_context->IASetVertexBuffers(0, 1, mesh.VertexBuffer.GetAddressOf(), &stride, &offset);
-		immediate_context->IASetIndexBuffer(mesh.index_buffer.Get(), DXGI_FORMAT_R32_UINT, 0);
-		immediate_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		device_context->IASetVertexBuffers(0, 1, mesh.VertexBuffer.GetAddressOf(), &stride, &offset);
+		device_context->IASetIndexBuffer(mesh.index_buffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+		device_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 		// シェーダの設定
-		InstanceShader->Activate();
+		InstanceShader->Activate(device_context);
 		// ラスタライザステートの設定
-		immediate_context->RSSetState(FRAMEWORK->GetRasterizerState(FRAMEWORK->RS_SOLID_NONE));
+		device_context->RSSetState(FRAMEWORK->GetRasterizerState(FRAMEWORK->RS_SOLID_NONE));
 
 		for (const Mesh::Subset& subset : mesh.subsets) {	// マテリアル別メッシュの数回すよ
 			if (subset.material_unique_id != 0)	// unique_idの確認
@@ -251,23 +248,23 @@ void InstanceSkinnedMesh::Render(UINT drawInstance) {
 				const Material& material = materials.at(subset.material_unique_id);
 				if (materials.size() > 0)	// マテリアル情報があるか確認
 				{
-					immediate_context->PSSetShaderResources(0, 1, material.srv[0].GetAddressOf());
+					device_context->PSSetShaderResources(0, 1, material.srv[0].GetAddressOf());
 					DirectX::XMStoreFloat4(&data.material_color, DirectX::XMVectorMultiply(DirectX::XMLoadFloat4(&Parameters->Color), DirectX::XMLoadFloat4(&material.Kd)));	// マテリアルとカラーを合成
 				}
 			}
 			else
 			{
-				immediate_context->PSSetShaderResources(0, 1, dummyTexture.GetAddressOf());	// ダミーテクスチャを使用する
+				device_context->PSSetShaderResources(0, 1, dummyTexture.GetAddressOf());	// ダミーテクスチャを使用する
 			}
 
-			immediate_context->VSSetConstantBuffers(0, 1, ConstantBuffers.GetAddressOf());
-			immediate_context->UpdateSubresource(ConstantBuffers.Get(), 0, 0, &data, 0, 0);
-			immediate_context->DrawIndexedInstanced(subset.index_count, drawInstance, subset.start_index_location, 0 ,0);
+			device_context->VSSetConstantBuffers(0, 1, ConstantBuffers.GetAddressOf());
+			device_context->UpdateSubresource(ConstantBuffers.Get(), 0, 0, &data, 0, 0);
+			device_context->DrawIndexedInstanced(subset.index_count, drawInstance, subset.start_index_location, 0 ,0);
 			//immediate_context->DrawIndexedInstancedIndirect(引数分からん);	// 描画するインデックスの数,最初のインデックスの場所,頂点バッファから読み取る前に追加する値
 		}
 	}	// autpFor末
 	// シェーダの無効化
-	InstanceShader->Inactivate();
+	InstanceShader->Inactivate(device_context);
 }
 
 void InstanceSkinnedMesh::Create_com_buffers(const char* fbx_filename) {

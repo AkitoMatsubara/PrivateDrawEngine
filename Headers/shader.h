@@ -30,8 +30,8 @@ public:
 	bool Create(WCHAR* filename, LPCSTR VSName, LPCSTR PSName, LPCSTR GSName);
 	bool Create(WCHAR* filename, LPCSTR VSName, LPCSTR PSName, LPCSTR GSName, LPCSTR HSName, LPCSTR DSName);
 
-	void Activate();
-	void Inactivate();
+	void Activate(ID3D11DeviceContext* device_context);
+	void Inactivate(ID3D11DeviceContext* device_context);
 
 protected:
 	// ファイルパス, エントリポイント, シェーダモデル, 受け取りID3DBlobポインタ

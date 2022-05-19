@@ -47,4 +47,5 @@ Cache/
 *.exp
 *.pdb
 
+# 拡張子前の名前を指定して除外
 DebugBuild.*
