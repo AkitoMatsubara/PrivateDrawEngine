@@ -23,9 +23,9 @@ bool SceneGame::Initialize() {
 	// 各種クラス設定
 	{
 		// spriteオブジェクトを生成
-		Sprites = std::make_unique<Sprite>();
-		Sprites->LoadImages(L".\\Resources\\Loading\\TempImage.jpg");
-		Sprites->setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+		//Sprites = std::make_unique<Sprite>();
+		//Sprites->LoadImages(L".\\Resources\\Loading\\TempImage.jpg");
+		//Sprites->setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
 
 		// Geometric_primitiveオブジェクトの生成
 		{
@@ -276,7 +276,7 @@ void SceneGame::Render() {
 		data.view = Camera::getInstance().GetView();
 		data.projection = Camera::getInstance().GetProjection();
 		immediate_context->UpdateSubresource(ConstantBuffers[0].Get(), 0, 0, &data, 0, 0);
-		immediate_context->VSSetConstantBuffers(1, 1, ConstantBuffers[0].GetAddressOf());	// cBufferはドローコールのたびに消去されるので都度設定する必要がある
+		immediate_context->VSSetConstantBuffers(1, 1, ConstantBuffers[0].GetAddressOf());
 		immediate_context->PSSetConstantBuffers(1, 1, ConstantBuffers[0].GetAddressOf());
 
 
@@ -288,7 +288,7 @@ void SceneGame::Render() {
 			// 3Dオブジェクト描画
 			Grid->Render(true);
 			StageManager::getInstance().Render(immediate_context.Get(), RenderShadowShader.get());
-			/*if(lightForCamera)*/player->Render(immediate_context.Get(), RenderShadowShader.get());
+			player->Render(immediate_context.Get(), RenderShadowShader.get());
 			EnemyManager::getInstance().Render(immediate_context.Get());
 			GpuParticle->Play(immediate_context.Get());
 

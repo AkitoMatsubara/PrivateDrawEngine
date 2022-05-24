@@ -148,7 +148,7 @@ private:
 public:
 	InstanceSkinnedMesh(const char* fbx_filename, int draw_amount, int cstNo = 0, const bool triangulate = false);
 
-	virtual ~InstanceSkinnedMesh() = default;
+	~InstanceSkinnedMesh() { worldData.clear(); };
 
 	// ƒƒbƒVƒ…‚Ìæ‚èo‚µ
 	void Fetch_Meshes(FbxScene* fbx_scene, std::vector<Mesh>& meshes);

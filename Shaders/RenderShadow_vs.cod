@@ -63,7 +63,7 @@
 // TEXCOORD                 4   xyz         5     NONE   float   xyz 
 //
 vs_5_0
-dcl_globalFlags refactoringAllowed
+dcl_globalFlags refactoringAllowed | skipOptimization
 dcl_constantbuffer CB0[5], immediateIndexed
 dcl_constantbuffer CB3[4], immediateIndexed
 dcl_constantbuffer CB1[4], immediateIndexed
@@ -76,45 +76,161 @@ dcl_output o2.xyz
 dcl_output o3.xyz
 dcl_output o4.xy
 dcl_output o5.xyz
-dcl_temps 2
-mul r0.xyzw, cb0[1].yyyy, cb1[1].xyzw
-mad r0.xyzw, cb0[1].xxxx, cb1[0].xyzw, r0.xyzw
-mad r0.xyzw, cb0[1].zzzz, cb1[2].xyzw, r0.xyzw
-mad r0.xyzw, cb0[1].wwww, cb1[3].xyzw, r0.xyzw
-mul r0.xyzw, r0.xyzw, v0.yyyy
-mul r1.xyzw, cb0[0].yyyy, cb1[1].xyzw
-mad r1.xyzw, cb0[0].xxxx, cb1[0].xyzw, r1.xyzw
-mad r1.xyzw, cb0[0].zzzz, cb1[2].xyzw, r1.xyzw
-mad r1.xyzw, cb0[0].wwww, cb1[3].xyzw, r1.xyzw
-mad r0.xyzw, v0.xxxx, r1.xyzw, r0.xyzw
-mul r1.xyzw, cb0[2].yyyy, cb1[1].xyzw
-mad r1.xyzw, cb0[2].xxxx, cb1[0].xyzw, r1.xyzw
-mad r1.xyzw, cb0[2].zzzz, cb1[2].xyzw, r1.xyzw
-mad r1.xyzw, cb0[2].wwww, cb1[3].xyzw, r1.xyzw
-mad r0.xyzw, v0.zzzz, r1.xyzw, r0.xyzw
-mul r1.xyzw, cb0[3].yyyy, cb1[1].xyzw
-mad r1.xyzw, cb0[3].xxxx, cb1[0].xyzw, r1.xyzw
-mad r1.xyzw, cb0[3].zzzz, cb1[2].xyzw, r1.xyzw
-mad r1.xyzw, cb0[3].wwww, cb1[3].xyzw, r1.xyzw
-mad o0.xyzw, v0.wwww, r1.xyzw, r0.xyzw
-mov o1.xyzw, cb0[4].xyzw
-dp4 r0.x, cb0[0].xyzw, v1.xyzw
-dp4 r0.y, cb0[1].xyzw, v1.xyzw
-dp4 r0.z, cb0[2].xyzw, v1.xyzw
-dp3 r0.w, r0.xyzx, r0.xyzx
-rsq r0.w, r0.w
-mul o2.xyz, r0.wwww, r0.xyzx
-mul r0.xyz, v0.yyyy, cb0[1].xyzx
-mad r0.xyz, v0.xxxx, cb0[0].xyzx, r0.xyzx
-mad r0.xyz, v0.zzzz, cb0[2].xyzx, r0.xyzx
-mad r0.xyz, v0.wwww, cb0[3].xyzx, r0.xyzx
+dcl_temps 9
+//
+// Initial variable locations:
+//   v0.x <- input.Position.x; v0.y <- input.Position.y; v0.z <- input.Position.z; v0.w <- input.Position.w; 
+//   v1.x <- input.Normal.x; v1.y <- input.Normal.y; v1.z <- input.Normal.z; v1.w <- input.Normal.w; 
+//   v2.x <- input.Tex.x; v2.y <- input.Tex.y; 
+//   v3.x <- input.Color.x; v3.y <- input.Color.y; v3.z <- input.Color.z; v3.w <- input.Color.w; 
+//   o5.x <- <main return value>.vShadow.x; o5.y <- <main return value>.vShadow.y; o5.z <- <main return value>.vShadow.z; 
+//   o4.x <- <main return value>.Tex.x; o4.y <- <main return value>.Tex.y; 
+//   o3.x <- <main return value>.wPosition.x; o3.y <- <main return value>.wPosition.y; o3.z <- <main return value>.wPosition.z; 
+//   o2.x <- <main return value>.wNormal.x; o2.y <- <main return value>.wNormal.y; o2.z <- <main return value>.wNormal.z; 
+//   o1.x <- <main return value>.Color.x; o1.y <- <main return value>.Color.y; o1.z <- <main return value>.Color.z; o1.w <- <main return value>.Color.w; 
+//   o0.x <- <main return value>.Position.x; o0.y <- <main return value>.Position.y; o0.z <- <main return value>.Position.z; o0.w <- <main return value>.Position.w
+//
+#line 10 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine\Shaders\RenderShadow_vs.hlsl"
+mov r0.xyzw, v0.xyzw  // r0.x <- P.x; r0.y <- P.y; r0.z <- P.z; r0.w <- P.w
+
+#line 11
+mul r1.xyzw, cb0[0].xxxx, cb1[0].xyzw
+mul r2.xyzw, cb0[0].yyyy, cb1[1].xyzw
+add r1.xyzw, r1.xyzw, r2.xyzw
+mul r2.xyzw, cb0[0].zzzz, cb1[2].xyzw
+add r1.xyzw, r1.xyzw, r2.xyzw
+mul r2.xyzw, cb0[0].wwww, cb1[3].xyzw
+add r1.xyzw, r1.xyzw, r2.xyzw
+mul r2.xyzw, cb0[1].xxxx, cb1[0].xyzw
+mul r3.xyzw, cb0[1].yyyy, cb1[1].xyzw
+add r2.xyzw, r2.xyzw, r3.xyzw
+mul r3.xyzw, cb0[1].zzzz, cb1[2].xyzw
+add r2.xyzw, r2.xyzw, r3.xyzw
+mul r3.xyzw, cb0[1].wwww, cb1[3].xyzw
+add r2.xyzw, r2.xyzw, r3.xyzw
+mul r3.xyzw, cb0[2].xxxx, cb1[0].xyzw
+mul r4.xyzw, cb0[2].yyyy, cb1[1].xyzw
+add r3.xyzw, r3.xyzw, r4.xyzw
+mul r4.xyzw, cb0[2].zzzz, cb1[2].xyzw
+add r3.xyzw, r3.xyzw, r4.xyzw
+mul r4.xyzw, cb0[2].wwww, cb1[3].xyzw
+add r3.xyzw, r3.xyzw, r4.xyzw
+mul r4.xyzw, cb0[3].xxxx, cb1[0].xyzw
+mul r5.xyzw, cb0[3].yyyy, cb1[1].xyzw
+add r4.xyzw, r4.xyzw, r5.xyzw
+mul r5.xyzw, cb0[3].zzzz, cb1[2].xyzw
+add r4.xyzw, r4.xyzw, r5.xyzw
+mul r5.xyzw, cb0[3].wwww, cb1[3].xyzw
+add r4.xyzw, r4.xyzw, r5.xyzw
+mov r5.x, r1.x  // r5.x <- matWVP._m00
+mov r5.y, r2.x  // r5.y <- matWVP._m10
+mov r5.z, r3.x  // r5.z <- matWVP._m20
+mov r5.w, r4.x  // r5.w <- matWVP._m30
+mov r6.x, r1.y  // r6.x <- matWVP._m01
+mov r6.y, r2.y  // r6.y <- matWVP._m11
+mov r6.z, r3.y  // r6.z <- matWVP._m21
+mov r6.w, r4.y  // r6.w <- matWVP._m31
+mov r7.x, r1.z  // r7.x <- matWVP._m02
+mov r7.y, r2.z  // r7.y <- matWVP._m12
+mov r7.z, r3.z  // r7.z <- matWVP._m22
+mov r7.w, r4.z  // r7.w <- matWVP._m32
+mov r4.x, r1.w  // r4.x <- matWVP._m03
+mov r4.y, r2.w  // r4.y <- matWVP._m13
+mov r4.z, r3.w  // r4.z <- matWVP._m23
+mov r4.w, r4.w  // r4.w <- matWVP._m33
+
+#line 13
+dp4 r1.x, r0.xyzw, r5.xyzw  // r1.x <- output.Position.x
+dp4 r1.y, r0.xyzw, r6.xyzw  // r1.y <- output.Position.y
+dp4 r1.z, r0.xyzw, r7.xyzw  // r1.z <- output.Position.z
+dp4 r1.w, r0.xyzw, r4.xyzw  // r1.w <- output.Position.w
+
+#line 15
+mul r2.xyz, r0.xxxx, cb0[0].xyzx
+mul r3.xyz, r0.yyyy, cb0[1].xyzx
+add r2.xyz, r2.xyzx, r3.xyzx
+mul r0.xyz, r0.zzzz, cb0[2].xyzx
+add r0.xyz, r0.xyzx, r2.xyzx
+mul r2.xyz, r0.wwww, cb0[3].xyzx
+add r0.xyz, r0.xyzx, r2.xyzx  // r0.x <- wPos.x; r0.y <- wPos.y; r0.z <- wPos.z
+
+#line 16
+mov r0.xyz, r0.xyzx  // r0.x <- output.wPosition.x; r0.y <- output.wPosition.y; r0.z <- output.wPosition.z
+
+#line 18
+dp4 r2.x, cb0[0].xyzw, v1.xyzw  // r2.x <- wN.x
+dp4 r2.y, cb0[1].xyzw, v1.xyzw  // r2.y <- wN.y
+dp4 r2.z, cb0[2].xyzw, v1.xyzw  // r2.z <- wN.z
+
+#line 19
+dp3 r2.w, r2.xyzx, r2.xyzx
+rsq r2.w, r2.w
+mul r2.xyz, r2.wwww, r2.xyzx
+
+#line 20
+mov r2.xyz, r2.xyzx  // r2.x <- output.wNormal.x; r2.y <- output.wNormal.y; r2.z <- output.wNormal.z
+
+#line 22
+mov r3.xy, v2.xyxx  // r3.x <- output.Tex.x; r3.y <- output.Tex.y
+
+#line 23
+mov r4.xyzw, cb0[4].xyzw  // r4.x <- output.Color.x; r4.y <- output.Color.y; r4.z <- output.Color.z; r4.w <- output.Color.w
+
+#line 26
+nop 
+mov r5.x, cb3[0].x
+mov r5.y, cb3[1].x
+mov r5.z, cb3[2].x
+mov r5.w, cb3[3].x
+mov r6.x, cb3[0].y
+mov r6.y, cb3[1].y
+mov r6.z, cb3[2].y
+mov r6.w, cb3[3].y
+mov r7.x, cb3[0].z
+mov r7.y, cb3[1].z
+mov r7.z, cb3[2].z
+mov r7.w, cb3[3].z
+mov r8.x, cb3[0].w
+mov r8.y, cb3[1].w
+mov r8.z, cb3[2].w
+mov r8.w, cb3[3].w
+mov r0.xyz, r0.xyzx
+
+#line 25 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine\Shaders\ShadowFunc.hlsli"
+mov r0.xyz, r0.xyzx  // r0.x <- wvpPos.x; r0.y <- wvpPos.y; r0.z <- wvpPos.z
+
+#line 26
+mov r0.w, l(1.000000)  // r0.w <- wvpPos.w
+
+#line 28
+dp4 r5.x, r5.xyzw, r0.xyzw  // r5.x <- wvpPos.x
+dp4 r5.y, r6.xyzw, r0.xyzw  // r5.y <- wvpPos.y
+dp4 r5.z, r7.xyzw, r0.xyzw  // r5.z <- wvpPos.z
+dp4 r0.w, r8.xyzw, r0.xyzw
+
+#line 30
+div r5.xyz, r5.xyzx, r0.wwww
+
+#line 32
+mov r5.w, -r5.y  // r5.w <- wvpPos.y
+
+#line 33
+mul r3.zw, r5.xxxw, l(0.000000, 0.000000, 0.500000, 0.500000)
+add r5.xy, r3.zwzz, l(0.500000, 0.500000, 0.000000, 0.000000)  // r5.y <- wvpPos.y
+
+#line 34
+mov r5.xy, r5.xyxx  // r5.x <- <GetShadowTex return value>.x; r5.y <- <GetShadowTex return value>.y
+mov r5.z, r5.z  // r5.z <- <GetShadowTex return value>.z
+
+#line 26 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine\Shaders\RenderShadow_vs.hlsl"
+mov r5.xyz, r5.xyzx  // r5.x <- output.vShadow.x; r5.y <- output.vShadow.y; r5.z <- output.vShadow.z
+
+#line 28
+mov o0.xyzw, r1.xyzw
+mov o1.xyzw, r4.xyzw
+mov o2.xyz, r2.xyzx
 mov o3.xyz, r0.xyzx
-mov o4.xy, v2.xyxx
-mul r1.xyzw, r0.yyyy, cb3[1].xyzw
-mad r1.xyzw, cb3[0].xyzw, r0.xxxx, r1.xyzw
-mad r0.xyzw, cb3[2].xyzw, r0.zzzz, r1.xyzw
-add r0.xyzw, r0.xyzw, cb3[3].xyzw
-div r0.xyz, r0.xyzx, r0.wwww
-mad o5.xyz, r0.xyzx, l(0.500000, -0.500000, 1.000000, 0.000000), l(0.500000, 0.500000, 0.000000, 0.000000)
+mov o5.xyz, r5.xyzx
+mov o4.xy, r3.xyxx
 ret 
-// Approximately 40 instruction slots used
+// Approximately 104 instruction slots used

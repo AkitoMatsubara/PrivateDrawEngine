@@ -45,14 +45,16 @@
 // TEXCOORD                 2   xyz         2     NONE   float   xyz 
 // COLOR                    0   xyzw        3     NONE   float   xyzw
 //
-gs_4_0
+gs_5_0
+dcl_globalFlags refactoringAllowed | skipOptimization
 dcl_constantbuffer CB0[9], immediateIndexed
 dcl_input_siv v[1][0].xyzw, position
 dcl_input v[1][1].xy
 dcl_input v[1][1].z
 dcl_input v[1][2].xyzw
-dcl_temps 3
+dcl_temps 7
 dcl_inputprimitive point 
+dcl_stream m0
 dcl_outputtopology trianglestrip 
 dcl_output_siv o0.xyzw, position
 dcl_output o1.xy
@@ -60,76 +62,155 @@ dcl_output o1.z
 dcl_output o2.xyz
 dcl_output o3.xyzw
 dcl_maxout 4
-mul r0.xy, cb0[8].xyxx, l(-1.000000, 1.000000, 0.000000, 0.000000)
+//
+// Initial variable locations:
+//   m0 <- Stream; 
+//   v[0][0].x <- In[0].Pos.x; v[0][0].y <- In[0].Pos.y; v[0][0].z <- In[0].Pos.z; v[0][0].w <- In[0].Pos.w; 
+//   v[0][1].x <- In[0].Tex.x; v[0][1].y <- In[0].Tex.y; 
+//   v[0][2].x <- In[0].Color.x; v[0][2].y <- In[0].Color.y; v[0][2].z <- In[0].Color.z; v[0][2].w <- In[0].Color.w; 
+//   v[0][1].z <- In[0].Life
+//
+#line 7 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine\Shaders\GPUParticle_gs.hlsl"
+mov r0.xyz, v[0][0].xyzx  // r0.x <- pos.x; r0.y <- pos.y; r0.z <- pos.z
+
+#line 8
+mov r0.w, l(1.000000)  // r0.w <- pos.w
+
+#line 10
+dp4 r1.x, r0.xyzw, cb0[0].xyzw  // r1.x <- pos.x
+dp4 r1.y, r0.xyzw, cb0[1].xyzw  // r1.y <- pos.y
+dp4 r1.z, r0.xyzw, cb0[2].xyzw  // r1.z <- pos.z
+dp4 r1.w, r0.xyzw, cb0[3].xyzw  // r1.w <- pos.w
+
+#line 12
+mov r1.xyzw, r1.xyzw  // r1.x <- pPos.x; r1.y <- pPos.y; r1.z <- pPos.z; r1.w <- pPos.w
+
+#line 15
+mov r0.x, -cb0[8].x
+mov r0.y, cb0[8].y
 mov r0.zw, l(0,0,0,0)
-mov r1.xyz, v[0][0].xyzx
-mov r1.w, l(1.000000)
-dp4 r2.x, r1.xyzw, cb0[0].xyzw
-dp4 r2.y, r1.xyzw, cb0[1].xyzw
-dp4 r2.z, r1.xyzw, cb0[2].xyzw
-dp4 r2.w, r1.xyzw, cb0[3].xyzw
-mad r0.xyzw, r0.xyzw, r2.wwww, r2.xyzw
-dp4 r1.x, r0.xyzw, cb0[4].xyzw
-mov o0.x, r1.x
-dp4 r1.x, r0.xyzw, cb0[5].xyzw
-mov o0.y, r1.x
-dp4 r1.x, r0.xyzw, cb0[6].xyzw
-mov o0.z, r1.x
-dp4 r0.w, r0.xyzw, cb0[7].xyzw
-mov o0.w, r0.w
-mov o1.xy, l(0,0,0,0)
-mov o1.z, v[0][1].z
+mul r0.xyzw, r1.wwww, r0.xyzw
+add r0.xyzw, r0.xyzw, r1.xyzw  // r0.x <- posLT.x; r0.y <- posLT.y; r0.z <- posLT.z; r0.w <- posLT.w
+
+#line 16
+mov r2.x, -cb0[8].x
+mov r2.y, -cb0[8].y
+mov r2.zw, l(0,0,0,0)
+mul r2.xyzw, r1.wwww, r2.xyzw
+add r2.xyzw, r1.xyzw, r2.xyzw  // r2.x <- posLB.x; r2.y <- posLB.y; r2.z <- posLB.z; r2.w <- posLB.w
+
+#line 17
+mov r3.xy, cb0[8].xyxx
+mov r3.z, l(0)
+mul r4.xyzw, r1.wwww, r3.xyzz
+add r4.xyzw, r1.xyzw, r4.xyzw  // r4.x <- posRT.x; r4.y <- posRT.y; r4.z <- posRT.z; r4.w <- posRT.w
+
+#line 18
+mov r3.w, -cb0[8].y
+mul r3.xyzw, r1.wwww, r3.xwzz
+add r1.xyzw, r1.xyzw, r3.xyzw  // r1.x <- posRB.x; r1.y <- posRB.y; r1.z <- posRB.z; r1.w <- posRB.w
+
+#line 21
+mov r3.xyzw, v[0][2].xyzw  // r3.x <- Out.Color.x; r3.y <- Out.Color.y; r3.z <- Out.Color.z; r3.w <- Out.Color.w
+
+#line 22
+mov r5.x, v[0][1].z  // r5.x <- Out.Life
+
+#line 25
+dp4 r6.x, r0.xyzw, cb0[4].xyzw  // r6.x <- Out.Pos.x
+dp4 r6.y, r0.xyzw, cb0[5].xyzw  // r6.y <- Out.Pos.y
+dp4 r6.z, r0.xyzw, cb0[6].xyzw  // r6.z <- Out.Pos.z
+dp4 r6.w, r0.xyzw, cb0[7].xyzw  // r6.w <- Out.Pos.w
+
+#line 26
+mov r5.yz, l(0,0,0,0)  // r5.y <- Out.Tex.x; r5.z <- Out.Tex.y
+
+#line 27
+mov r0.xyz, r0.xyzx  // r0.x <- wPos.x; r0.y <- wPos.y; r0.z <- wPos.z
+
+#line 28
+mov r0.xyz, r0.xyzx  // r0.x <- Out.wPosition.x; r0.y <- Out.wPosition.y; r0.z <- Out.wPosition.z
+
+#line 29
+mov o0.xyzw, r6.xyzw
+mov o1.xy, r5.yzyy
+mov o1.z, r5.x
 mov o2.xyz, r0.xyzx
-mov o3.xyzw, v[0][2].xyzw
-emit 
-mov r0.xy, -cb0[8].xyxx
-mov r0.zw, l(0,0,0,0)
-mad r0.xyzw, r0.xyzw, r2.wwww, r2.xyzw
-dp4 r1.x, r0.xyzw, cb0[4].xyzw
-mov o0.x, r1.x
-dp4 r1.x, r0.xyzw, cb0[5].xyzw
-mov o0.y, r1.x
-dp4 r1.x, r0.xyzw, cb0[6].xyzw
-mov o0.z, r1.x
-dp4 r0.w, r0.xyzw, cb0[7].xyzw
-mov o0.w, r0.w
-mov o1.xy, l(1.000000,0,0,0)
-mov o1.z, v[0][1].z
-mov o2.xyz, r0.xyzx
-mov o3.xyzw, v[0][2].xyzw
-emit 
-mov r0.xy, cb0[8].xyxx
-mov r0.zw, l(0,0,0,0)
-mad r0.xyzw, r0.xyzw, r2.wwww, r2.xyzw
-dp4 r1.x, r0.xyzw, cb0[4].xyzw
-mov o0.x, r1.x
-dp4 r1.x, r0.xyzw, cb0[5].xyzw
-mov o0.y, r1.x
-dp4 r1.x, r0.xyzw, cb0[6].xyzw
-mov o0.z, r1.x
-dp4 r0.w, r0.xyzw, cb0[7].xyzw
-mov o0.w, r0.w
-mov o1.xy, l(0,1.000000,0,0)
-mov o1.z, v[0][1].z
-mov o2.xyz, r0.xyzx
-mov o3.xyzw, v[0][2].xyzw
-emit 
-mul r0.xy, cb0[8].xyxx, l(1.000000, -1.000000, 0.000000, 0.000000)
-mov r0.zw, l(0,0,0,0)
-mad r0.xyzw, r0.xyzw, r2.wwww, r2.xyzw
-dp4 r1.x, r0.xyzw, cb0[4].xyzw
-mov o0.x, r1.x
-dp4 r1.x, r0.xyzw, cb0[5].xyzw
-mov o0.y, r1.x
-dp4 r1.x, r0.xyzw, cb0[6].xyzw
-mov o0.z, r1.x
-dp4 r0.w, r0.xyzw, cb0[7].xyzw
-mov o0.w, r0.w
-mov o1.xy, l(1.000000,1.000000,0,0)
-mov o1.z, v[0][1].z
-mov o2.xyz, r0.xyzx
-mov o3.xyzw, v[0][2].xyzw
-emit 
-cut 
+mov o3.xyzw, r3.xyzw
+emit_stream m0
+
+#line 32
+dp4 r0.x, r2.xyzw, cb0[4].xyzw  // r0.x <- Out.Pos.x
+dp4 r0.y, r2.xyzw, cb0[5].xyzw  // r0.y <- Out.Pos.y
+dp4 r0.z, r2.xyzw, cb0[6].xyzw  // r0.z <- Out.Pos.z
+dp4 r0.w, r2.xyzw, cb0[7].xyzw  // r0.w <- Out.Pos.w
+
+#line 33
+mov r5.yz, l(0,1.000000,0,0)
+
+#line 34
+mov r2.xyz, r2.xyzx  // r2.x <- wPos.x; r2.y <- wPos.y; r2.z <- wPos.z
+
+#line 35
+mov r2.xyz, r2.xyzx  // r2.x <- Out.wPosition.x; r2.y <- Out.wPosition.y; r2.z <- Out.wPosition.z
+
+#line 36
+mov o0.xyzw, r0.xyzw
+mov o1.xy, r5.yzyy
+mov o1.z, r5.x
+mov o2.xyz, r2.xyzx
+mov o3.xyzw, r3.xyzw
+emit_stream m0
+
+#line 39
+dp4 r0.x, r4.xyzw, cb0[4].xyzw
+dp4 r0.y, r4.xyzw, cb0[5].xyzw
+dp4 r0.z, r4.xyzw, cb0[6].xyzw
+dp4 r0.w, r4.xyzw, cb0[7].xyzw
+
+#line 40
+mov r2.xy, l(0,1.000000,0,0)  // r2.x <- Out.Tex.x; r2.y <- Out.Tex.y
+
+#line 41
+mov r4.xyz, r4.xyzx  // r4.x <- wPos.x; r4.y <- wPos.y; r4.z <- wPos.z
+
+#line 42
+mov r4.xyz, r4.xyzx  // r4.x <- Out.wPosition.x; r4.y <- Out.wPosition.y; r4.z <- Out.wPosition.z
+
+#line 43
+mov o0.xyzw, r0.xyzw
+mov o1.xy, r2.xyxx
+mov o1.z, r5.x
+mov o2.xyz, r4.xyzx
+mov o3.xyzw, r3.xyzw
+emit_stream m0
+
+#line 46
+dp4 r0.x, r1.xyzw, cb0[4].xyzw
+dp4 r0.y, r1.xyzw, cb0[5].xyzw
+dp4 r0.z, r1.xyzw, cb0[6].xyzw
+dp4 r0.w, r1.xyzw, cb0[7].xyzw
+
+#line 47
+mov r2.xy, l(1.000000,1.000000,0,0)
+
+#line 48
+mov r1.xyz, r1.xyzx  // r1.x <- wPos.x; r1.y <- wPos.y; r1.z <- wPos.z
+
+#line 49
+mov r1.xyz, r1.xyzx  // r1.x <- Out.wPosition.x; r1.y <- Out.wPosition.y; r1.z <- Out.wPosition.z
+
+#line 50
+mov o0.xyzw, r0.xyzw
+mov o1.xy, r2.xyxx
+mov o1.z, r5.x
+mov o2.xyz, r1.xyzx
+mov o3.xyzw, r3.xyzw
+emit_stream m0
+
+#line 52
+cut_stream m0
+
+#line 53
 ret 
-// Approximately 72 instruction slots used
+// Approximately 80 instruction slots used

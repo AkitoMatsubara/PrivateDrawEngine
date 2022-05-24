@@ -477,7 +477,7 @@ int framework::run() {
 			ImGui::End();
 			ImGui::Render();
 			ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-			Flip();	// ImGui用
+			Flip(1);
 #endif
 
 			// fps計算

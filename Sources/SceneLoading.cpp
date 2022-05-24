@@ -52,6 +52,7 @@ void SceneLoading::Update() {
 		// 次のシーンへ
 		if (NextScene->isReady())
 		{
+			//Thread.join();
 			SceneManager::getInstance().setLoadComplete(true);	// ロード完了
 			SceneManager::getInstance().ChangeScene(NextScene.release());
 			return;
@@ -111,10 +112,10 @@ void SceneLoading::Render() {
 #else
 		static const Microsoft::WRL::ComPtr<ID3D11DeviceContext> immediate_context = FRAMEWORK->GetDeviceContext();
 		Microsoft::WRL::ComPtr<ID3D11CommandList> CommandList;
-		FRAMEWORK->Clear(ClearColor);	// 一旦クリア
+		FRAMEWORK->Clear(ClearColor,immediate_context.Get());	// 一旦クリア
 
 		// ビューポートの設定
-		FRAMEWORK->CreateViewPort(SCREEN_WIDTH, SCREEN_HEIGHT, immediate_context.Get());
+		FRAMEWORK->CreateViewPort(immediate_context.Get(), SCREEN_WIDTH, SCREEN_HEIGHT);
 
 		// サンプラーステートをバインド
 		DefaultSampleClamp->Set(immediate_context.Get(), 0);
@@ -135,7 +136,7 @@ void SceneLoading::Render() {
 		// 2Dオブジェクトの描画設定
 		{
 			immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(FRAMEWORK->DS_FALSE), 1);	// 3Dオブジェクトの後ろに出すため一旦
-			//LoadingImage->Render(immediate_context.Get(), LoadingImage->getTexture(), LoadingImage->getShader(), CommandList.GetAddressOf());
+			LoadingImage->Render(immediate_context.Get(), LoadingImage->getTexture(), LoadingImage->getShader(), CommandList.GetAddressOf());
 			LoadingImage->Render(immediate_context.Get(), LoadingImage->getTexture(), LoadingImage->getShader(), CommandList.GetAddressOf());
 			immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(FRAMEWORK->DS_TRUE_WRITE), 1);			// 2Dオブジェクトとの前後関係をしっかりするため再設
 		}
@@ -144,9 +145,6 @@ void SceneLoading::Render() {
 			//GpuParticle->Play(deferredContext.Get());
 			//immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(DS_TRUE_WRITE), 1);			// 2Dオブジェクトとの前後関係をしっかりするため再設定
 		}
-
-		//ディファード コンテキストで作成したコマンドリストを実行
-		//immediate_context->ExecuteCommandList(CommandList.Get(), FALSE);
 		#endif
 	}
 #ifdef USE_IMGUI

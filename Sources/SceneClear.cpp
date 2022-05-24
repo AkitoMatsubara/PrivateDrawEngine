@@ -23,7 +23,7 @@ bool SceneClear::Initialize() {
 
 		// spriteオブジェクトを生成(今回は先頭の１つだけを生成する)
 		Sprites = std::make_unique<Sprite>();
-		Sprites->LoadImages(L".\\Resources\\clear.jpg");
+		Sprites->LoadImages(L".\\Resources\\Clear\\Clear.png");
 		Sprites->setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
 
 
@@ -35,39 +35,15 @@ bool SceneClear::Initialize() {
 		StageManager::getInstance().Initialize();
 	}
 
-	// Compute Shaderセッティング
-	{
-		// CS用コンスタントバッファの設定
-		CreateConstantBuffer(ConstantBuffers[1].GetAddressOf(), sizeof(cs_constants));
-
-		ComputeShader = std::make_unique<ShaderEx>();
-		ComputeShader->CreateCS(L"Shaders\\ComputeShader_cs");
-
-		// 入力用バッファーに初期値を設定する
-		for (int i = 0; i < NUM_ELEMENTS; i++)
-		{
-			vBufInArray[i].i = i;
-			vBufInArray[i].f = static_cast<float>(NUM_ELEMENTS - 1 - i);
-		}
-
-		// コンピュートシェーダーへの入力時に使用するSRVを作成する
-		UseComputeShader::CreateStructuredBufferAndSRV(sizeof(BUFIN_TYPE), NUM_ELEMENTS, &vBufInArray[0], pBufInput.GetAddressOf(), pBufInputSRV.GetAddressOf());
-
-		// コンピュートシェーダーからの出力時に使用するUAVを作成する
-		UseComputeShader::CreateStructuredBufferAndUAV(sizeof(BUFOUT_TYPE), NUM_ELEMENTS, NULL, pBufResult.GetAddressOf(), pBufResultUAV.GetAddressOf());
-	}
 
 	camera->SetProjection(DirectX::XMConvertToRadians(30), camera->GetWidth() / camera->GetHeight(), camera->GetNear(), camera->GetFar());
-
-	gpu_particle_ = std::make_unique<GPUParticle>();
-	gpu_particle_->Init();
 	return true;
 }
 
 void SceneClear::Update() {
 	const float elapsed_time = FRAMEWORK->GetElapsedTime();
 	// シーン切り替え
-	if (GetAsyncKeyState('G') & 1)
+	if (GetAsyncKeyState('T') & 1)
 	{
 		setScene(std::make_unique<SceneTitle>());
 	}
@@ -100,47 +76,6 @@ void SceneClear::Update() {
 		}
 
 		EnemyManager::getInstance().Update();	// 敵更新
-	}
-
-	// コンピュートシェーダーを実行する
-	{
-		Microsoft::WRL::ComPtr<ID3D11DeviceContext> immediate_context = FRAMEWORK->GetDeviceContext();
-		Microsoft::WRL::ComPtr<ID3D11Device> device = FRAMEWORK->GetDevice();
-		HRESULT hr = { S_OK };
-
-		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		static float theta = 0.0f;
-		theta = (theta <= 1.0f) ? theta + 0.01f : 0.0f;	// チカチカすりゅ～！(色が)
-
-		//D3D11_MAPPED_SUBRESOURCE subRes;	// 別の更新方法 のはず。未完成
-		//immediate_context->Map(pBufInput.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &subRes);
-		//BUFIN_TYPE* pBufType = (BUFIN_TYPE*)subRes.pData;
-		//pBufType->f += 5;
-		////memcpy(subRes.pData, vBufInArray, sizeof(BUFIN_TYPE) * NUM_ELEMENTS);
-		//immediate_context->Unmap(pBufInput.Get(), 0);
-
-		// コンスタントバッファ更新
-		cs_constants csData{};
-		csData.Theta = theta;
-		immediate_context->UpdateSubresource(ConstantBuffers[1].Get(), 0, 0, &csData, 0, 0);
-		immediate_context->CSSetConstantBuffers(2, 1, ConstantBuffers[1].GetAddressOf());
-		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		UseComputeShader::RunComputeShader(ComputeShader->GetCS(), pBufInputSRV.Get(), 0, pBufResultUAV.Get(), 0, 3, 1, 1);
-
-		// アンオーダードアクセスビューのバッファの内容を CPU から読み込み可能なバッファへコピーする
-		ID3D11Buffer* debugbuf = nullptr;
-		UseComputeShader::CreateAndCopyToBuffer(pBufResult.Get(), &debugbuf);
-
-		D3D11_MAPPED_SUBRESOURCE MappedResource = { 0 };
-		hr = immediate_context->Map(debugbuf, 0, D3D11_MAP_READ, 0, &MappedResource);	// 読み取り専用でマップ
-		{
-			BUFOUT_TYPE* p;	// 受け取る型の変数を用意する
-			// "p,配列要素数"とウォッチ式に入力すると値が見れる これ便利
-			p = (BUFOUT_TYPE*)MappedResource.pData;	// 型変換して代入
-			player->Parameters->Color = DirectX::SimpleMath::Vector4{ p[1].i, p[0].i, p[2].i, 1.0f };
-		}
-		immediate_context->Unmap(debugbuf, 0);	// マップ解除
-		debugbuf->Release();	// CS受け取りポインタを解放
 	}
 
 	imguiUpdate();
@@ -184,7 +119,6 @@ void SceneClear::Render() {
 			StageManager::getInstance().Render(immediate_context.Get());
 			player->Render(immediate_context.Get());
 			EnemyManager::getInstance().Render(immediate_context.Get());
-			gpu_particle_->Play(immediate_context.Get());
 		}
 	}
 

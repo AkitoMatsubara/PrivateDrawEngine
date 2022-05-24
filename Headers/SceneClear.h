@@ -8,39 +8,6 @@ class SceneClear :public SceneBase {
 
 	// 変数 //
 private:
-	// てすと-------------------------------------------------------------------------
-	std::unique_ptr<ShaderEx> ComputeShader;
-
-
-	const static UINT NUM_ELEMENTS = 128;
-
-	struct BUFIN_TYPE
-	{
-		int i;
-		float f;
-	};
-
-	struct BUFOUT_TYPE
-	{
-		float i;
-	};
-
-	// シーン定数バッファ
-	struct cs_constants {
-		float Theta;	// sinカーブ用
-		DirectX::SimpleMath::Vector3 dummy;
-	};
-
-	Microsoft::WRL::ComPtr<ID3D11Buffer> pBufInput = nullptr;                      // 入力用の構造化バッファー
-	Microsoft::WRL::ComPtr<ID3D11Buffer> pBufResult = nullptr;                      // 出力用の構造化バッファー
-
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>	pBufInputSRV = nullptr;        // 入力用の構造化バッファーから作成されるシェーダーリソースビュー
-	Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView>	pBufResultUAV = nullptr;        // 出力用の構造化バッファーから作成されるアンオーダード アクセス ビュー
-
-	BUFIN_TYPE vBufInArray[NUM_ELEMENTS];               // 入力用バッファーの配列を宣言
-
-	std::unique_ptr<GPUParticle> gpu_particle_;
-	// てすとしめ---------------------------------------------------------------------
 
 public:
 	// Sprite型 画像描画用

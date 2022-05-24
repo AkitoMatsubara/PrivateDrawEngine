@@ -192,10 +192,8 @@ void InstanceSkinnedMesh::addWorldData()
 }
 
 void InstanceSkinnedMesh::Render(ID3D11DeviceContext* device_context, UINT drawInstance) {
-
-	device_context->IASetInputLayout(InstanceShader->GetIL());
 	// 単位をセンチメートルからメートルに変更するため、scale_factorを0.01に設定する
-	static const float SCALE_FACTOR = 1.0f;
+	static constexpr  float SCALE_FACTOR = 1.0f;
 	{
 		instanceData.clear();	// リセット
 

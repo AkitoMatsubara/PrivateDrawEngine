@@ -233,21 +233,21 @@ void StageManager::Initialize()
 
 	// 真ん中を0とするため、真ん中からの差分を開始地点、終点地点においている。「1,2,3」で言うと2を真ん中、1と3を始点終点にする。
 	// 奇数(上記3)を偶数に一度変換するので-1している。
-	for (int i = static_cast<int>(-((COL_PARTS - 1) * 0.5f)); i <= static_cast<int>(((COL_PARTS - 1) * 0.5f)); i++)
+	for (int y = static_cast<int>(-((COL_PARTS - 1) * 0.5f)); y <= static_cast<int>(((COL_PARTS - 1) * 0.5f)); y++)
 	{
-		for (int j = static_cast<int>(-((ROW_PARTS - 1) * 0.5f)); j <= static_cast<int>(((ROW_PARTS - 1) * 0.5f)); j++)
+		for (int x = static_cast<int>(-((ROW_PARTS - 1) * 0.5f)); x <= static_cast<int>(((ROW_PARTS - 1) * 0.5f)); x++)
 		{
-			int row = CENTER + j;		// 予め要素番号の計算を行っておく
-			int col = COL_PARTS * i;
+			int row = CENTER + x;		// 予め要素番号の計算を行っておく
+			int col = COL_PARTS * y;
 			int node = row + col;	// 現在参照している要素番号
 			if (node < 0) { _ASSERT_EXPR_A(false, "Initialize ArraySize UnderFlow"); }	// 要素番号がマイナス指定になっちゃったよエラー
 			Stages.at(node)->Initialize();
-			// 真ん中の要素(CENTER)に行(j)を加算し、列数(COL_PARTS)をi列分乗算して減算する
-			Stages.at(node)->Parameters->Position = DirectX::SimpleMath::Vector3(j * 1.0f, -0.5f, i * -2.0f);
+			// 真ん中の要素(CENTER)に行(y)を加算し、列数(COL_PARTS)をx列分乗算して減算する
+			Stages.at(node)->Parameters->Position = DirectX::SimpleMath::Vector3(x * 1.0f, -0.5f, y * -2.0f);
 
 			bool inversion = false;	// 角度反転フラグ
-			inversion = (j % 2) ? true : false;	// もしも、奇数行目なら角度反転フラグをtrueにする
-			if (i % 2)inversion = !inversion;	// しかし、奇数列目なら角度反転フラグの「条件」を反転させる
+			inversion = (x % 2) ? true : false;	// もしも、奇数行目なら角度反転フラグをtrueにする
+			if (y % 2)inversion = !inversion;	// しかし、奇数列目なら角度反転フラグの「条件」を反転させる
 			if (inversion)	// 180°回転させる
 			{
 				Stages.at(node)->Parameters->Orientation = DirectX::SimpleMath::Quaternion::CreateFromYawPitchRoll(DirectX::XMConvertToRadians(180.0f), 0.0f, 0.0);
