@@ -45,7 +45,7 @@ dcl_temps 2
 //   v1.z <- Input.Life; 
 //   o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
 //
-#line 8 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine\Shaders\GPUParticle_ps.hlsl"
+#line 8 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine Bloom実裁E\Shaders\GPUParticle_ps.hlsl"
 sample_indexable(texture2d)(float,float,float,float) r0.xyzw, v1.xyxx, t0.xyzw, s0
 mul r0.xyzw, r0.xyzw, v3.xyzw  // r0.x <- color.x; r0.y <- color.y; r0.z <- color.z; r0.w <- color.w
 

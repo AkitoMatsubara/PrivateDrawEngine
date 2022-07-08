@@ -87,10 +87,10 @@ void SceneGame::Update() {
 	{
 		setScene(std::make_unique<SceneLoading>(std::make_unique<SceneTitle>()));
 	}
-	if (GetAsyncKeyState('C') & 1)
-	{
-		setScene(std::make_unique<SceneLoading>(std::make_unique<SceneClear>()));
-	}
+	//if (GetAsyncKeyState('C') & 1)
+	//{
+	//	setScene(std::make_unique<SceneLoading>(std::make_unique<SceneClear>()));
+	//}
 
 	player->Update();
 	StageManager::getInstance().Update();
@@ -104,7 +104,7 @@ void SceneGame::Update() {
 	// 敵関連
 	{
 		// お試し右クリックでランダム位置に敵を生成
-		// TODO デバッグ用
+		// TODO デバッグ用 追記：とか言いながらも敵の出現まで実装できなかったので現状の正規出現方法として使用していくことにする。
 		if (GetAsyncKeyState(VK_RBUTTON) < 0)
 		{
 			Object3d obj3d_desc;
@@ -159,7 +159,7 @@ void SceneGame::DepthShadowMapping() {
 	immediate_context->ClearDepthStencilView(dsv, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 	// ビューポートの設定
-	FRAMEWORK->CreateViewPort(immediate_context.Get(), ShadowMapTexture[0]->GetWidth(), ShadowMapTexture[0]->GetHeight());
+	FRAMEWORK->CreateViewPort(immediate_context.Get(), static_cast<float>(ShadowMapTexture[0]->GetWidth()), static_cast<float>(ShadowMapTexture[0]->GetHeight()));
 
 	// 3Dオブジェクトの描画設定
 	{
@@ -297,7 +297,7 @@ void SceneGame::Render() {
 				immediate_context->OMSetDepthStencilState(FRAMEWORK->GetDepthStencileState(FRAMEWORK->DS_FALSE), 1);		// 3Dオブジェクトの前に出すため
 				immediate_context->OMSetBlendState(FRAMEWORK->GetBlendState(FRAMEWORK->BS_ALPHA), nullptr, 0xFFFFFFFF);	// ブレンドインターフェースのポインタ、ブレンドファクターの配列値、サンプルカバレッジ(今回はデフォルト指定)
 				if (renderShadowMap) {
-					ShadowMapDrawer->setTexSize(ShadowDepth->GetWidth(), ShadowDepth->GetHeight());
+					ShadowMapDrawer->setTexSize(static_cast<float>(ShadowDepth->GetWidth()), static_cast<float>(ShadowDepth->GetHeight()));
 					DirectX::XMFLOAT2 size = { static_cast<float>(ShadowDepth->GetWidth() / 3), static_cast<float>(ShadowDepth->GetHeight() / 3) };
 					ShadowMapDrawer->setPos(0,0);
 					ShadowMapDrawer->setSize(size.x*0.5f, size.y*0.5f);

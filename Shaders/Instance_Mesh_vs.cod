@@ -96,7 +96,7 @@ dcl_temps 11
 //   o1.x <- <main return value>.world_position.x; o1.y <- <main return value>.world_position.y; o1.z <- <main return value>.world_position.z; o1.w <- <main return value>.world_position.w; 
 //   o0.x <- <main return value>.position.x; o0.y <- <main return value>.position.y; o0.z <- <main return value>.position.z; o0.w <- <main return value>.position.w
 //
-#line 14 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine\Shaders\Instance_Mesh_vs.hlsl"
+#line 14 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine Bloom実裁E\Shaders\Instance_Mesh_vs.hlsl"
 mov r0.xyzw, v0.xyzw  // r0.x <- pos.x; r0.y <- pos.y; r0.z <- pos.z; r0.w <- pos.w
 
 #line 15
@@ -210,7 +210,7 @@ mov r9.z, cb3[2].w
 mov r9.w, cb3[3].w
 mov r1.xyz, r1.xyzx
 
-#line 25 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine\Shaders\ShadowFunc.hlsli"
+#line 25 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine Bloom実装中\Shaders\ShadowFunc.hlsli"
 mov r1.xyz, r1.xyzx  // r1.x <- wvpPos.x; r1.y <- wvpPos.y; r1.z <- wvpPos.z
 
 #line 26
@@ -236,7 +236,7 @@ add r0.xy, r1.xyxx, l(0.500000, 0.500000, 0.000000, 0.000000)  // r0.y <- wvpPos
 mov r0.xy, r0.xyxx  // r0.x <- <GetShadowTex return value>.x; r0.y <- <GetShadowTex return value>.y
 mov r0.z, r0.z  // r0.z <- <GetShadowTex return value>.z
 
-#line 28 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine\Shaders\Instance_Mesh_vs.hlsl"
+#line 28 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine Bloom実裁E\Shaders\Instance_Mesh_vs.hlsl"
 mov r0.xyz, r0.xyzx  // r0.x <- vout.vShadow.x; r0.y <- vout.vShadow.y; r0.z <- vout.vShadow.z
 
 #line 29

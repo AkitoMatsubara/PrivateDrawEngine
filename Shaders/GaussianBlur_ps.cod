@@ -55,7 +55,7 @@ dcl_temps 4
 //   v2.x <- input.color.x; v2.y <- input.color.y; v2.z <- input.color.z; v2.w <- input.color.w; 
 //   o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
 //
-#line 8 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine\Shaders\GaussianBlur_ps.hlsl"
+#line 8 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine Bloom実裁E\Shaders\GaussianBlur_ps.hlsl"
 itof r0.xyz, l(0, 0, 0, 0)  // r0.x <- color.x; r0.y <- color.y; r0.z <- color.z
 
 #line 9

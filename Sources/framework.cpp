@@ -247,7 +247,6 @@ bool framework::CreateRasterizerState()
 	return true;
 }
 
-
 // ブレンドステートの作成
 bool framework::CreateBlendState() {
 	HRESULT hr = { S_OK };
@@ -438,7 +437,7 @@ int framework::run() {
 #endif
 
 	FrameRateCalculator::getInstance().Init();
-	SceneManager::getInstance().ChangeScene(new SceneTitle());
+	SceneManager::getInstance().ChangeScene(new SceneGame());
 	//SceneManager::getInstance().ChangeScene(new SceneLoading(std::make_unique<SceneGame>()));
 
 	while (WM_QUIT != msg.message)
@@ -454,9 +453,11 @@ int framework::run() {
 			SceneManager::getInstance().Update();
 			if (SceneManager::getInstance().getLoadComplete())	// ロードが終わったらループ先頭に戻る
 			{
+#ifdef USE_IMGUI
 				// ImGui用に一回描画、エラー回避
 				ImGui::Render();
 				ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+#endif
 				SceneManager::getInstance().setLoadComplete(false);
 				continue;
 			}
@@ -477,7 +478,7 @@ int framework::run() {
 			ImGui::End();
 			ImGui::Render();
 			ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-			Flip(1);
+			Flip();
 #endif
 
 			// fps計算

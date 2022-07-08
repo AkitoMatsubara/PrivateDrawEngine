@@ -406,9 +406,6 @@
     <ClCompile Include="Sources\Judge.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="Sources\Camera.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
     <ClCompile Include="Sources\UseComputeShader.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
@@ -421,9 +418,6 @@
     <ClCompile Include="Sources\SceneClear.cpp">
       <Filter>Sources\Scenes</Filter>
     </ClCompile>
-    <ClCompile Include="Sources\Font.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
     <ClCompile Include="Sources\SkyBox.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
@@ -432,6 +426,12 @@
     </ClCompile>
     <ClCompile Include="Sources\FrameRateCalculator.cpp">
       <Filter>Sources\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\Camera.cpp">
+      <Filter>Sources\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\Font.cpp">
+      <Filter>Sources\RenderOptions</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

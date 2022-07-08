@@ -35,7 +35,6 @@ bool FrameRateCalculator::Stop()
 	if (frameTime < MIN_FREAM_TIME) { // 処理時間が想定時間より短かったら
 		// Sleep時間を計算、ミリ秒から変換
 		DWORD sleepTime = static_cast<DWORD>((MIN_FREAM_TIME - frameTime) * 1000.0f);
-		//float sleepTime = ((MIN_FREAM_TIME - frameTime) * 1000.0f);
 		if (static_cast<float>(sleepTime) > 0.0f)
 		{
 			timeBeginPeriod(1); // 分解能を1msに上げる(こうしないとSleepの精度はガタガタらしい)

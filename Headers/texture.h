@@ -12,7 +12,7 @@ protected:
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> DepthStencilView = nullptr;
 
 	// テクスチャ情報
-	D3D11_TEXTURE2D_DESC texture2d_desc;
+	D3D11_TEXTURE2D_DESC texture2d_desc{};
 
 public:
 	Texture();

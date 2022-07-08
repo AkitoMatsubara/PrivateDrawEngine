@@ -314,8 +314,9 @@ bool Texture::CreateFontImage(u_int width, u_int height, ID3D11Texture2D* textur
 	srvd.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 	srvd.Texture2D.MostDetailedMip = 0;
 	srvd.Texture2D.MipLevels = texture2d_desc.MipLevels;
-	hr = device->CreateShaderResourceView(texture2d, &srvd, ShaderResourceView.GetAddressOf());	// SRVの作成 これでシェーダに渡せるようになる
-
+	if (texture2d != 0) {
+		hr = device->CreateShaderResourceView(texture2d, &srvd, ShaderResourceView.GetAddressOf());	// SRVの作成 これでシェーダに渡せるようになる
+	}
 	assert(SUCCEEDED(hr));
 
 	return true;

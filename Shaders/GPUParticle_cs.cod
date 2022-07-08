@@ -72,7 +72,7 @@ dcl_thread_group 500, 1, 1
 //   vThreadIDInGroup.x <- GTid.x; vThreadIDInGroup.y <- GTid.y; vThreadIDInGroup.z <- GTid.z; 
 //   vThreadID.x <- DTid.x; vThreadID.y <- DTid.y; vThreadID.z <- DTid.z
 //
-#line 75 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine\Shaders\GPUParticle_cs.hlsl"
+#line 75 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine Bloom実裁E\Shaders\GPUParticle_cs.hlsl"
 mov r0.x, vThreadID.x  // r0.x <- node
 
 #line 78

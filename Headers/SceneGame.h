@@ -16,7 +16,6 @@ private:
 	// シャドウマップ関連
 	std::unique_ptr<Sprite> ShadowMapDrawer; // シャドウマップ描画用
 	std::unique_ptr<Texture> ShadowMapTexture[2];	// シャドウマップ書き込み先[0]:通常 [1]:ガウスブラー処理後
-	//std::unique_ptr<Texture> ShadowMapTexture;	// シャドウマップ書き込み先	配列で管理しようとしたら警告が出てしまうので二つに分けた
 	std::unique_ptr<Texture> GaussShadowMapTexture;	// ガウスブラー処理後シャドウマップ
 	inline constexpr static float SHADOW_SIZE = 2048;
 	std::unique_ptr<Texture> ShadowDepth;	// シャドウマップ用深度書き込み先？
@@ -39,6 +38,11 @@ private:
 		DirectX::SimpleMath::Vector4 light_position;
 		DirectX::SimpleMath::Vector4 shadow_color;
 	}ShadowConstant;
+
+	// Bloomエフェクト実装用変数
+	std::unique_ptr<Texture> BloomDepth;	// シャドウマップ用深度書き込み先？
+	std::unique_ptr<ShaderEx> BloomShader;	// シャドウマップに書き込ませるシェーダー
+
 
 public:
 	// Sprite型 画像描画用

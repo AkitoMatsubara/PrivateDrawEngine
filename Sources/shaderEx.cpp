@@ -270,7 +270,7 @@ bool ShaderEx::CreateVS(const WCHAR* vsfilename, const UINT IL_NUM, D3D11_INPUT_
 	}
 	else	// 未指定であればデフォルトのdescを使用
 	{
-		numElements = std::size(input_element_desc);
+		numElements = static_cast<UINT>(std::size(input_element_desc));
 		create_vs_from_cso(device, fullname, VS.GetAddressOf(), InputLayout.GetAddressOf(), input_element_desc, numElements);
 	}
  	return false;

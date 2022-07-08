@@ -87,7 +87,7 @@
     <LinkIncremental>false</LinkIncremental>
     <IntDir>Cache\$(Platform)\$(Configuration)\</IntDir>
     <TargetName>ReleaseBuild</TargetName>
-    <OutDir>Build\$(Configuration)\</OutDir>
+    <OutDir>ReleaseBuild\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

@@ -70,7 +70,7 @@ dcl_maxout 4
 //   v[0][2].x <- In[0].Color.x; v[0][2].y <- In[0].Color.y; v[0][2].z <- In[0].Color.z; v[0][2].w <- In[0].Color.w; 
 //   v[0][1].z <- In[0].Life
 //
-#line 7 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine\Shaders\GPUParticle_gs.hlsl"
+#line 7 "C:\Users\2190322\Desktop\描画エンジン開発\PrivateEngine Bloom実裁E\Shaders\GPUParticle_gs.hlsl"
 mov r0.xyz, v[0][0].xyzx  // r0.x <- pos.x; r0.y <- pos.y; r0.z <- pos.z
 
 #line 8

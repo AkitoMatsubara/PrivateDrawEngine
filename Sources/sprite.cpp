@@ -63,7 +63,6 @@ Sprite::~Sprite() {}
 
 void Sprite::LoadImages(const wchar_t* filename)
 {
-	HRESULT hr;
 	// テクスチャのロード
 	SpriteTexture->Load(filename);
 

@@ -44,8 +44,8 @@ bool GPUParticle::Init()
 			for (int i = 0; i < ParticleAmount; ++i) {
 				VBuffer data;
 				// 初期位置の設定
-				data.Position.x = rand() % 41 - 20;
-				data.Position.z = rand() % 41 - 20;
+				data.Position.x = static_cast<float>(rand() % 41 - 20);
+				data.Position.z = static_cast<float>(rand() % 41 - 20);
 				data.Position.y = 0.1f;
 				data.Position.w = ((rand() % 101) + 50) * 0.01f;	// ここは最大ライフを格納する
 				// 初期速度の設定
@@ -140,8 +140,8 @@ void GPUParticle::Update(ID3D11DeviceContext* device_context)
 
 	g_cbCBuffer.projection	= DirectX::XMMatrixTranspose(Camera::getInstance().GetProjection());
 	g_cbCBuffer.view		= DirectX::XMMatrixTranspose(Camera::getInstance().GetView());	// 行列をシェーダに渡すには転置行列にする
-	g_cbCBuffer.ParticleSize.x = 0.03f;
-	g_cbCBuffer.ParticleSize.y = 0.03f;
+	g_cbCBuffer.ParticleSize.x = 0.025f;
+	g_cbCBuffer.ParticleSize.y = 0.025f;
 	g_cbCBuffer.EyePos = DirectX::SimpleMath::Vector4(Camera::getInstance().GetPos().x, Camera::getInstance().GetPos().y, Camera::getInstance().GetPos().z, 1.0f);
 
 	// ***************************************
@@ -308,7 +308,7 @@ void GPUParticle::SpaceEffect() {
 		data.Velocity.x = ((rand() % 2000) - 1000) * 0.00005f;
 		data.Velocity.y = ((rand() % 2000) - 1000) * 0.00005f;
 		data.Velocity.z = ((rand() % 2000) - 1000) * 0.00005f;
-		const static float GRABITY = -0.005;
+		const static float GRABITY = -0.005f;
 		data.Force = DirectX::XMFLOAT3(0, GRABITY, 0); //加速度
 
 		// その他
